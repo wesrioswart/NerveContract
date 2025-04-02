@@ -1,0 +1,33 @@
+Z CLAUSE ADDITION TO NEC4 ENGINEERING AND CONSTRUCTION CONTRACT
+
+Z1: LIMITATION OF CONTRACTOR'S LIABILITY
+
+Z1.1 Notwithstanding any other provision of this contract, the total liability of the Contractor to the Client under or in connection with this contract shall be limited to the lesser of:
+(a) £2,000,000 (two million pounds); or
+(b) the total of the Prices.
+
+Z1.2 The limitation of liability set out in clause Z1.1 shall not apply to:
+(a) liability for death or personal injury caused by the Contractor's negligence;
+(b) liability for fraud or fraudulent misrepresentation;
+(c) the Contractor's liability under clause 83.1 (breach of intellectual property rights).
+
+Z2: ADDITIONAL COMPENSATION EVENTS
+
+Z2.1 The following is added to the list of compensation events in clause 60.1:
+"An unexpected archaeological discovery on the Site that requires the Contractor to stop or change the works in a way that would not otherwise be required by the Works Information."
+
+Z2.2 For any compensation event under Z2.1, the Contractor must notify the Project Manager within 3 working days of discovery, otherwise the Contractor loses the right to claim.
+
+Z3: PAYMENT TERMS
+
+Z3.1 Notwithstanding the provisions of clause 51, the first assessment date is 14 days after the Contract Date, and subsequent assessment dates occur at 30-day intervals thereafter.
+
+Z3.2 The payment due date for each assessment is 10 days after the assessment date.
+
+Z3.3 The interest rate for late payment is 8% per annum above the Bank of England base rate.
+
+Z4: MATERIALS OWNERSHIP
+
+Z4.1 Materials and equipment for which the Client has paid the Contractor shall become the property of the Client, whether or not the materials have been delivered to the Site.
+
+Z4.2 The Contractor shall mark such materials as the property of the Client and shall store them separately from other materials.

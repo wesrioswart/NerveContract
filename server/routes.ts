@@ -301,6 +301,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Z Clause Analysis Test route
+  app.get("/api/test/z-clause-analysis", async (_req: Request, res: Response) => {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      // Read the sample Z clause file
+      const zClauseContent = fs.readFileSync(
+        path.join(process.cwd(), 'test_data/z_clause_sample.txt'),
+        'utf8'
+      );
+      
+      // Call OpenAI to analyze the Z clause
+      const analysis = await analyzeContractDocument(zClauseContent);
+      
+      return res.status(200).json({
+        zClause: zClauseContent,
+        analysis: analysis
+      });
+    } catch (error) {
+      console.error("Error in Z clause analysis test:", error);
+      return res.status(500).json({ 
+        message: "Z clause analysis test failed", 
+        error: error.message
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
