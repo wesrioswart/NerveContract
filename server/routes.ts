@@ -3,10 +3,14 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarningSchema } from "@shared/schema";
-import { askContractAssistant } from "./utils/openai";
+import { askContractAssistant, analyzeContractDocument } from "./utils/openai";
 
 const parseXMLSchema = z.object({
   xmlContent: z.string(),
+});
+
+const documentAnalysisSchema = z.object({
+  documentText: z.string().min(1),
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -259,6 +263,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       return res.status(400).json({ message: "Invalid XML content" });
+    }
+  });
+
+  // Document Analysis route
+  app.post("/api/document/analyze", async (req: Request, res: Response) => {
+    try {
+      const { documentText } = documentAnalysisSchema.parse(req.body);
+      
+      // Call OpenAI to analyze the document
+      const analysis = await analyzeContractDocument(documentText);
+      
+      return res.status(200).json(analysis);
+    } catch (error) {
+      console.error("Error in document analysis:", error);
+      return res.status(400).json({ 
+        message: "Invalid document text or analysis failed", 
+        issues: ["Error analyzing document"],
+        recommendations: ["Please try again later or contact support"]
+      });
     }
   });
 

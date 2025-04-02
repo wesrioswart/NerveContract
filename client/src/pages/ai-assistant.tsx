@@ -21,25 +21,28 @@ export default function AIAssistant() {
     setDocumentAnalysis(null);
     
     try {
-      // This would be a real API call to analyze the document
-      // Mocking the response for now
-      setTimeout(() => {
-        setDocumentAnalysis({
-          issues: [
-            "Clause 61.3 notification deadline not clearly stated",
-            "Unclear responsibility for design approvals",
-            "Missing key completion criteria"
-          ],
-          recommendations: [
-            "Add specific timeline for notifications per NEC4 requirement",
-            "Explicitly define design approval workflow and responsibilities",
-            "Include detailed completion criteria with measurable outcomes"
-          ]
-        });
-        setIsAnalyzing(false);
-      }, 2000);
+      // Call the document analysis API
+      const response = await fetch('/api/document/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ documentText }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Analysis request failed');
+      }
+      
+      const result = await response.json();
+      setDocumentAnalysis(result);
     } catch (error) {
       console.error("Error analyzing document:", error);
+      setDocumentAnalysis({
+        issues: ["An error occurred during document analysis"],
+        recommendations: ["Please try again or contact support"]
+      });
+    } finally {
       setIsAnalyzing(false);
     }
   };
