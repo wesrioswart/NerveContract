@@ -224,13 +224,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/chat-messages", async (req: Request, res: Response) => {
     try {
+      console.log("Chat message request body:", req.body);
       const validatedData = insertChatMessageSchema.parse(req.body);
       
+      console.log("Validated chat message data:", validatedData);
+      
       // Create the user message
-      await storage.createChatMessage(validatedData);
+      const userMessage = await storage.createChatMessage(validatedData);
+      console.log("User message created:", userMessage);
       
       // Get AI response
+      console.log("Getting AI response for:", validatedData.content);
       const aiResponse = await askContractAssistant(validatedData.content);
+      console.log("AI response received");
       
       // Create the AI response message
       const assistantMessage = await storage.createChatMessage({
@@ -241,9 +247,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timestamp: new Date()
       });
       
+      console.log("Assistant message created");
       return res.status(201).json(assistantMessage);
     } catch (error) {
-      return res.status(400).json({ message: "Invalid chat message data" });
+      console.error("Error in chat message creation:", error);
+      if (error instanceof Error) {
+        return res.status(400).json({ message: "Invalid chat message data", error: error.message });
+      }
+      return res.status(400).json({ message: "Invalid chat message data", error: "Unknown error" });
     }
   });
 
@@ -287,11 +298,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const analysis = await analyzeContractDocument(documentText);
       
       return res.status(200).json(analysis);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error in document analysis:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      
       return res.status(400).json({ 
         message: "Invalid document text or analysis failed", 
-        issues: ["Error analyzing document: " + (error.message || "Unknown error")],
+        issues: ["Error analyzing document: " + errorMessage],
         recommendations: ["Please try again later or contact support"]
       });
     }
@@ -332,11 +345,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         zClause: zClauseContent,
         analysis: analysis
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error in Z clause analysis test:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      
       return res.status(500).json({ 
         message: "Z clause analysis test failed", 
-        error: error.message || "Unknown error"
+        error: errorMessage
       });
     }
   });

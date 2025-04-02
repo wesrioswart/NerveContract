@@ -17,10 +17,13 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
   const queryClient = useQueryClient();
 
   // Fetch chat messages
-  const { data: messages = [], isLoading } = useQuery({
+  const { data: chatMessages = [], isLoading } = useQuery<ChatMessage[]>({
     queryKey: [`/api/projects/${projectId}/chat-messages`],
     staleTime: 10000, // 10 seconds
   });
+  
+  // Ensure type safety
+  const messages: ChatMessage[] = chatMessages as ChatMessage[];
 
   // Send message mutation
   const sendMessageMutation = useMutation({
@@ -74,13 +77,13 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
         </button>
       </div>
       
-      <div className="bg-gray-50 rounded-lg p-4 mb-4 h-64 overflow-y-auto">
+      <div className="bg-gray-50 rounded-lg p-4 mb-4 h-80 overflow-y-auto">
         {showWelcomeMessage && (
           <div className="flex mb-4">
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white mr-3 flex-shrink-0">
               <span className="material-icons text-sm">smart_toy</span>
             </div>
-            <div className="bg-gray-100 rounded-lg p-3 max-w-3xl">
+            <div className="bg-gray-100 rounded-lg p-3 max-w-3xl break-words">
               <p className="text-sm">
                 Hello! I'm your NEC4 Assistant. I can help with contract queries, summarize events, or explain clauses. How can I help you today?
               </p>
@@ -107,10 +110,10 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
               
               <div className={`${
                 msg.role === 'user' 
-                  ? 'bg-primary bg-opacity-10'
+                  ? 'bg-blue-100' 
                   : 'bg-gray-100'
-              } rounded-lg p-3 max-w-3xl`}>
-                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+              } rounded-lg p-3 max-w-[70%] break-words`}>
+                <p className="text-sm whitespace-pre-wrap selection:bg-blue-200 selection:text-blue-800">{msg.content}</p>
                 <p className="text-xs text-gray-500 mt-1">
                   {formatDate(msg.timestamp, "h:mm a")}
                 </p>
