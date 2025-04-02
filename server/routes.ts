@@ -225,7 +225,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat-messages", async (req: Request, res: Response) => {
     try {
       console.log("Chat message request body:", req.body);
-      const validatedData = insertChatMessageSchema.parse(req.body);
+      
+      // Process the request body to ensure timestamp is a Date object
+      const messageData = {
+        ...req.body,
+        timestamp: new Date(req.body.timestamp) // Convert ISO string to Date
+      };
+      
+      const validatedData = insertChatMessageSchema.parse(messageData);
       
       console.log("Validated chat message data:", validatedData);
       
@@ -244,7 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: validatedData.userId,
         role: "assistant",
         content: aiResponse,
-        timestamp: new Date().toISOString() // Use consistent ISO string format
+        timestamp: new Date() // Use Date object for server-side creation
       });
       
       console.log("Assistant message created");
