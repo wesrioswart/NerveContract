@@ -11,6 +11,7 @@ import NCRTqr from "@/pages/ncr-tqr";
 import Programme from "@/pages/programme";
 import PaymentCertificates from "@/pages/payment-certificates";
 import Reports from "@/pages/reports";
+import Templates from "@/pages/templates";
 import Login from "@/pages/login";
 import { useEffect, useState } from "react";
 
@@ -72,6 +73,7 @@ function App() {
           <Route path="/programme" component={Programme} />
           <Route path="/payment-certificates" component={PaymentCertificates} />
           <Route path="/reports" component={Reports} />
+          <Route path="/templates" component={Templates} />
           <Route component={NotFound} />
         </Switch>
       </main>

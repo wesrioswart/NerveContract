@@ -17,6 +17,7 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
     { path: "/ncr-tqr", label: "NCRs & TQRs", icon: "report_problem" },
     { path: "/programme", label: "Programme", icon: "today" },
     { path: "/payment-certificates", label: "Payment Certificates", icon: "receipt" },
+    { path: "/templates", label: "NEC4 Templates", icon: "description" },
     { path: "/reports", label: "Reports", icon: "bar_chart" },
   ];
 
