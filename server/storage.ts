@@ -3,7 +3,11 @@ import {
   EarlyWarning, InsertEarlyWarning, NonConformanceReport, InsertNonConformanceReport,
   TechnicalQuery, InsertTechnicalQuery, ProgrammeMilestone, InsertProgrammeMilestone,
   PaymentCertificate, InsertPaymentCertificate, ChatMessage, InsertChatMessage,
+  users, projects, compensationEvents, earlyWarnings, nonConformanceReports,
+  technicalQueries, programmeMilestones, paymentCertificates, chatMessages
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -505,4 +509,270 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+  
+  // Project methods
+  async getProject(id: number): Promise<Project | undefined> {
+    const [project] = await db.select().from(projects).where(eq(projects.id, id));
+    return project || undefined;
+  }
+
+  async getAllProjects(): Promise<Project[]> {
+    return await db.select().from(projects);
+  }
+
+  async createProject(insertProject: InsertProject): Promise<Project> {
+    const [project] = await db
+      .insert(projects)
+      .values(insertProject)
+      .returning();
+    return project;
+  }
+  
+  // Compensation Events methods
+  async getCompensationEvent(id: number): Promise<CompensationEvent | undefined> {
+    const [ce] = await db.select().from(compensationEvents).where(eq(compensationEvents.id, id));
+    return ce || undefined;
+  }
+
+  async getCompensationEventsByProject(projectId: number): Promise<CompensationEvent[]> {
+    return await db
+      .select()
+      .from(compensationEvents)
+      .where(eq(compensationEvents.projectId, projectId));
+  }
+
+  async createCompensationEvent(ce: InsertCompensationEvent): Promise<CompensationEvent> {
+    const [event] = await db
+      .insert(compensationEvents)
+      .values(ce)
+      .returning();
+    return event;
+  }
+
+  async updateCompensationEvent(id: number, ce: Partial<CompensationEvent>): Promise<CompensationEvent> {
+    const [updated] = await db
+      .update(compensationEvents)
+      .set(ce)
+      .where(eq(compensationEvents.id, id))
+      .returning();
+      
+    if (!updated) {
+      throw new Error(`Compensation Event with id ${id} not found`);
+    }
+    
+    return updated;
+  }
+  
+  // Early Warnings methods
+  async getEarlyWarning(id: number): Promise<EarlyWarning | undefined> {
+    const [ew] = await db.select().from(earlyWarnings).where(eq(earlyWarnings.id, id));
+    return ew || undefined;
+  }
+
+  async getEarlyWarningsByProject(projectId: number): Promise<EarlyWarning[]> {
+    return await db
+      .select()
+      .from(earlyWarnings)
+      .where(eq(earlyWarnings.projectId, projectId));
+  }
+
+  async createEarlyWarning(ew: InsertEarlyWarning): Promise<EarlyWarning> {
+    const [warning] = await db
+      .insert(earlyWarnings)
+      .values(ew)
+      .returning();
+    return warning;
+  }
+
+  async updateEarlyWarning(id: number, ew: Partial<EarlyWarning>): Promise<EarlyWarning> {
+    const [updated] = await db
+      .update(earlyWarnings)
+      .set(ew)
+      .where(eq(earlyWarnings.id, id))
+      .returning();
+      
+    if (!updated) {
+      throw new Error(`Early Warning with id ${id} not found`);
+    }
+    
+    return updated;
+  }
+  
+  // Non-Conformance Reports methods
+  async getNonConformanceReport(id: number): Promise<NonConformanceReport | undefined> {
+    const [ncr] = await db.select().from(nonConformanceReports).where(eq(nonConformanceReports.id, id));
+    return ncr || undefined;
+  }
+
+  async getNonConformanceReportsByProject(projectId: number): Promise<NonConformanceReport[]> {
+    return await db
+      .select()
+      .from(nonConformanceReports)
+      .where(eq(nonConformanceReports.projectId, projectId));
+  }
+
+  async createNonConformanceReport(ncr: InsertNonConformanceReport): Promise<NonConformanceReport> {
+    const [report] = await db
+      .insert(nonConformanceReports)
+      .values(ncr)
+      .returning();
+    return report;
+  }
+
+  async updateNonConformanceReport(id: number, ncr: Partial<NonConformanceReport>): Promise<NonConformanceReport> {
+    const [updated] = await db
+      .update(nonConformanceReports)
+      .set(ncr)
+      .where(eq(nonConformanceReports.id, id))
+      .returning();
+      
+    if (!updated) {
+      throw new Error(`Non-Conformance Report with id ${id} not found`);
+    }
+    
+    return updated;
+  }
+  
+  // Technical Queries methods
+  async getTechnicalQuery(id: number): Promise<TechnicalQuery | undefined> {
+    const [tq] = await db.select().from(technicalQueries).where(eq(technicalQueries.id, id));
+    return tq || undefined;
+  }
+
+  async getTechnicalQueriesByProject(projectId: number): Promise<TechnicalQuery[]> {
+    return await db
+      .select()
+      .from(technicalQueries)
+      .where(eq(technicalQueries.projectId, projectId));
+  }
+
+  async createTechnicalQuery(tq: InsertTechnicalQuery): Promise<TechnicalQuery> {
+    const [query] = await db
+      .insert(technicalQueries)
+      .values(tq)
+      .returning();
+    return query;
+  }
+
+  async updateTechnicalQuery(id: number, tq: Partial<TechnicalQuery>): Promise<TechnicalQuery> {
+    const [updated] = await db
+      .update(technicalQueries)
+      .set(tq)
+      .where(eq(technicalQueries.id, id))
+      .returning();
+      
+    if (!updated) {
+      throw new Error(`Technical Query with id ${id} not found`);
+    }
+    
+    return updated;
+  }
+  
+  // Programme Milestones methods
+  async getProgrammeMilestone(id: number): Promise<ProgrammeMilestone | undefined> {
+    const [ms] = await db.select().from(programmeMilestones).where(eq(programmeMilestones.id, id));
+    return ms || undefined;
+  }
+
+  async getProgrammeMilestonesByProject(projectId: number): Promise<ProgrammeMilestone[]> {
+    return await db
+      .select()
+      .from(programmeMilestones)
+      .where(eq(programmeMilestones.projectId, projectId));
+  }
+
+  async createProgrammeMilestone(milestone: InsertProgrammeMilestone): Promise<ProgrammeMilestone> {
+    const [ms] = await db
+      .insert(programmeMilestones)
+      .values(milestone)
+      .returning();
+    return ms;
+  }
+
+  async updateProgrammeMilestone(id: number, milestone: Partial<ProgrammeMilestone>): Promise<ProgrammeMilestone> {
+    const [updated] = await db
+      .update(programmeMilestones)
+      .set(milestone)
+      .where(eq(programmeMilestones.id, id))
+      .returning();
+      
+    if (!updated) {
+      throw new Error(`Programme Milestone with id ${id} not found`);
+    }
+    
+    return updated;
+  }
+  
+  // Payment Certificates methods
+  async getPaymentCertificate(id: number): Promise<PaymentCertificate | undefined> {
+    const [pc] = await db.select().from(paymentCertificates).where(eq(paymentCertificates.id, id));
+    return pc || undefined;
+  }
+
+  async getPaymentCertificatesByProject(projectId: number): Promise<PaymentCertificate[]> {
+    return await db
+      .select()
+      .from(paymentCertificates)
+      .where(eq(paymentCertificates.projectId, projectId));
+  }
+
+  async createPaymentCertificate(certificate: InsertPaymentCertificate): Promise<PaymentCertificate> {
+    const [pc] = await db
+      .insert(paymentCertificates)
+      .values(certificate)
+      .returning();
+    return pc;
+  }
+
+  async updatePaymentCertificate(id: number, certificate: Partial<PaymentCertificate>): Promise<PaymentCertificate> {
+    const [updated] = await db
+      .update(paymentCertificates)
+      .set(certificate)
+      .where(eq(paymentCertificates.id, id))
+      .returning();
+      
+    if (!updated) {
+      throw new Error(`Payment Certificate with id ${id} not found`);
+    }
+    
+    return updated;
+  }
+  
+  // Chat Messages methods
+  async getChatMessagesByProject(projectId: number): Promise<ChatMessage[]> {
+    return await db
+      .select()
+      .from(chatMessages)
+      .where(eq(chatMessages.projectId, projectId));
+  }
+
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const [msg] = await db
+      .insert(chatMessages)
+      .values(message)
+      .returning();
+    return msg;
+  }
+}
+
+// Create an instance of the database storage
+export const storage = new DatabaseStorage();
