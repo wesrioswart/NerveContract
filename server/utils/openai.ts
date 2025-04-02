@@ -4,7 +4,17 @@ import OpenAI from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 
 // Structure for NEC4 contract knowledge base
-const NEC4_KNOWLEDGE_BASE = {
+type ClauseInfo = {
+  text: string;
+  explanation: string;
+};
+
+type KnowledgeBase = {
+  [clauseNumber: string]: ClauseInfo;
+};
+
+const NEC4_KNOWLEDGE_BASE: KnowledgeBase = {
+  // Compensation Event Clauses
   "61.3": {
     text: "The Contractor notifies the Project Manager of an event which has happened or which is expected to happen as a compensation event if the Contractor believes that the event is a compensation event and the Project Manager has not notified the event to the Contractor.",
     explanation: "This requires the Contractor to notify the Project Manager of any events they consider to be compensation events if the Project Manager hasn't already notified them about it."
@@ -16,12 +26,78 @@ const NEC4_KNOWLEDGE_BASE = {
   "60.1": {
     text: "The following are compensation events...",
     explanation: "This clause lists all the situations that qualify as compensation events under the contract."
+  },
+  
+  // Instructions Clauses
+  "14.3": {
+    text: "The Project Manager may give an instruction to the Contractor which changes the Scope or a Key Date.",
+    explanation: "This is a key clause giving the Project Manager authority to issue instructions that change the project Scope or deadlines through a PMI (Project Manager's Instruction)."
+  },
+  "27.3": {
+    text: "The Contractor obeys an instruction which is in accordance with this contract and is given to it by the Project Manager or the Supervisor.",
+    explanation: "This clause obligates the Contractor to follow all valid instructions from either the Project Manager or Supervisor."
+  },
+  
+  // Subcontract Management
+  "26.3": {
+    text: "If the Contractor subcontracts work, it is responsible for Providing the Works as if it had not subcontracted. This contract applies as if a Subcontractor's employees and equipment were the Contractor's.",
+    explanation: "The Contractor remains fully responsible for all subcontracted work and all subcontractor actions are treated as if they were the Contractor's own."
+  },
+  
+  // Communication Requirements
+  "13.1": {
+    text: "Each instruction, certificate, submission, proposal, record, acceptance, notification, reply and other communication which this contract requires is communicated in a form which can be read, copied and recorded.",
+    explanation: "All formal communications under the contract must be in a recordable format. This means emails, formal letters, or the project's document management system, not verbal instructions."
+  },
+  "13.2": {
+    text: "A communication has effect when it is received at the last address notified by the recipient for receiving communications or, if none is notified, at the address of the recipient stated in the Contract Data.",
+    explanation: "Communications are only effective once received at the designated address."
+  },
+  
+  // Early Warning and Risk Reduction
+  "15.1": {
+    text: "The Contractor and the Project Manager give an early warning by notifying the other as soon as either becomes aware of any matter which could increase the total of the Prices, delay Completion, delay meeting a Key Date or impair the performance of the works in use.",
+    explanation: "Both parties must promptly notify each other of any issues that could affect cost, time, or quality of the project."
   }
 };
 
 // Function to ask question to OpenAI about NEC4 contracts
 async function askContractAssistant(question: string): Promise<string> {
   try {
+    // Define known clause numbers
+    const instructionClauses = ["14.3", "27.3", "13.1"];
+    const subcontractClauses = ["26.3"];
+    
+    // Search for relevant clauses in our knowledge base
+    const relevantClauseNumbers = Object.keys(NEC4_KNOWLEDGE_BASE).filter(clause => {
+      // Direct mention of a clause number
+      if (question.toLowerCase().includes(clause)) {
+        return true;
+      }
+      
+      // Question about instructions
+      if (question.toLowerCase().includes("instruction") && instructionClauses.includes(clause)) {
+        return true;
+      }
+      
+      // Question about subcontracts
+      if (question.toLowerCase().includes("subcontract") && subcontractClauses.includes(clause)) {
+        return true;
+      }
+      
+      return false;
+    });
+    
+    // Format the relevant clauses as context
+    let knowledgeContext = "";
+    if (relevantClauseNumbers.length > 0) {
+      knowledgeContext = "Here are the relevant NEC4 clauses:\n\n";
+      relevantClauseNumbers.forEach(clause => {
+        const clauseInfo = NEC4_KNOWLEDGE_BASE[clause];
+        knowledgeContext += `Clause ${clause}: "${clauseInfo.text}"\n\n`;
+      });
+    }
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -29,18 +105,21 @@ async function askContractAssistant(question: string): Promise<string> {
           role: "system",
           content: 
             "You are an expert NEC4 contract assistant. Follow these guidelines carefully:\n\n" +
-            "1. Always provide clear, direct, and actionable answers\n" +
-            "2. Use simple language and avoid complex terminology\n" +
-            "3. Structure your answers with bullet points or numbered steps when appropriate\n" +
-            "4. For questions about process or communications, clearly state WHO should do WHAT and HOW\n" +
-            "5. For questions about clauses, state the clause number and brief summary first, then explain in practical terms\n" +
-            "6. Be specific about the actions required by different parties (Contractor, Subcontractor, Project Manager)\n" +
-            "7. Always conclude with practical implications or next steps\n\n" +
-            "Keep answers focused on practical NEC4 contract management guidance."
+            "1. ALWAYS begin your answer by referencing the specific NEC4 clause number that relates to the question (e.g., 'According to Clause 14.3 of the NEC4 contract...')\n" +
+            "2. For questions about instructions, always explain that under NEC4, formal instructions are issued as Project Manager's Instructions (PMIs) with reference to the relevant clause\n" +
+            "3. Structure your answers with bullet points or numbered steps\n" +
+            "4. Clearly state WHO should do WHAT and HOW, with specific reference to the contract clauses\n" +
+            "5. Always provide the exact process that should be followed according to the contract\n" +
+            "6. Be specific about the actions required by different parties (Contractor, Subcontractor, Project Manager, Supervisor)\n" +
+            "7. Include any relevant notice periods or timeframes from the contract\n" +
+            "8. Always conclude with practical implications or next steps\n\n" +
+            "Use simple language but ensure all answers are technically accurate and reference the correct NEC4 clauses."
         },
         {
           role: "user",
-          content: question
+          content: knowledgeContext ? 
+            `${knowledgeContext}\n\nPlease answer the following question using the NEC4 clauses above:\n${question}` : 
+            question
         }
       ],
       max_tokens: 500,
@@ -66,10 +145,12 @@ async function analyzeContractDocument(documentText: string): Promise<{
     
     Provide a structured analysis with:
     1. Clear, specific issues that could impact project delivery or create liability
-    2. Practical, actionable recommendations for addressing each issue
-    3. For each issue, identify which party (Contractor, Subcontractor, Project Manager) should take action
+    2. For each issue, reference the specific NEC4 clause number that relates to the issue
+    3. Practical, actionable recommendations for addressing each issue
+    4. For each issue, identify which party (Contractor, Subcontractor, Project Manager) should take action and by when
     
     Focus on clarity and practical application. Avoid vague statements.
+    For each issue and recommendation, include the specific NEC4 clause number.
     Format your response as JSON with 'issues' and 'recommendations' arrays.
     `;
 
