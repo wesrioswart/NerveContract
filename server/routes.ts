@@ -22,16 +22,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Username and password are required" });
     }
     
-    const user = await storage.getUserByUsername(username);
-    
-    if (!user || user.password !== password) {
-      return res.status(401).json({ message: "Invalid credentials" });
+    try {
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user || user.password !== password) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Exclude password from the response
+      const { password: _, ...userWithoutPassword } = user;
+      
+      // For client compatibility, ensure fields use camelCase
+      const responseUser = {
+        ...userWithoutPassword,
+        fullName: user.fullName,
+        avatarInitials: user.avatarInitials
+      };
+      
+      return res.status(200).json(responseUser);
+    } catch (error) {
+      console.error("Login error:", error);
+      return res.status(500).json({ message: "Server error during login" });
     }
-    
-    // Exclude password from the response
-    const { password: _, ...userWithoutPassword } = user;
-    
-    return res.status(200).json(userWithoutPassword);
   });
 
   // Project routes
@@ -275,11 +287,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const analysis = await analyzeContractDocument(documentText);
       
       return res.status(200).json(analysis);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in document analysis:", error);
       return res.status(400).json({ 
         message: "Invalid document text or analysis failed", 
-        issues: ["Error analyzing document"],
+        issues: ["Error analyzing document: " + (error.message || "Unknown error")],
         recommendations: ["Please try again later or contact support"]
       });
     }
@@ -320,11 +332,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         zClause: zClauseContent,
         analysis: analysis
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in Z clause analysis test:", error);
       return res.status(500).json({ 
         message: "Z clause analysis test failed", 
-        error: error.message
+        error: error.message || "Unknown error"
       });
     }
   });

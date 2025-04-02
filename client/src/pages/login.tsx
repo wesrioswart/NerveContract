@@ -36,18 +36,23 @@ export default function Login({ onLogin }: LoginProps) {
         password,
       });
       
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Authentication failed");
+      }
+      
       const userData = await response.json();
       onLogin(userData);
       
       toast({
         title: "Welcome",
-        description: `Successfully logged in as ${userData.fullName}`,
+        description: `Successfully logged in as ${userData.fullName || username}`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
       toast({
         title: "Authentication Failed",
-        description: "Invalid username or password. Please try again.",
+        description: error.message || "Invalid username or password. Please try again.",
         variant: "destructive",
       });
     } finally {
