@@ -244,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: validatedData.userId,
         role: "assistant",
         content: aiResponse,
-        timestamp: new Date()
+        timestamp: new Date().toISOString() // Use consistent ISO string format
       });
       
       console.log("Assistant message created");

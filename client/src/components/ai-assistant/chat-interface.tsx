@@ -28,12 +28,16 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
+      // Convert the date to ISO string format for consistent handling
+      const timestamp = new Date().toISOString();
+      console.log("Sending chat message with timestamp:", timestamp);
+      
       return apiRequest("POST", "/api/chat-messages", {
         projectId,
         userId,
         role: "user",
         content,
-        timestamp: new Date(),
+        timestamp,
       });
     },
     onSuccess: () => {

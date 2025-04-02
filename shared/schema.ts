@@ -165,9 +165,14 @@ export const chatMessages = pgTable("chat_messages", {
   timestamp: timestamp("timestamp").notNull(),
 });
 
-export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
-  id: true,
-});
+export const insertChatMessageSchema = createInsertSchema(chatMessages)
+  .omit({
+    id: true,
+  })
+  .extend({
+    // Allow timestamp to be either a Date object or an ISO string
+    timestamp: z.union([z.date(), z.string().transform((val) => new Date(val))])
+  });
 
 // Defining types
 export type User = typeof users.$inferSelect;
