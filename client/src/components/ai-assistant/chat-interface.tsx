@@ -76,9 +76,6 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex justify-between items-center mb-5">
         <h3 className="text-lg font-medium">AI Contract Assistant</h3>
-        <button className="text-gray-500 hover:text-primary">
-          <span className="material-icons">settings</span>
-        </button>
       </div>
       
       <div className="bg-gray-50 rounded-lg p-4 mb-4 h-80 overflow-y-auto">
