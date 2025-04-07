@@ -1,5 +1,6 @@
 import { formatDate } from "@/lib/utils";
 import { ProgrammeMilestone } from "@shared/schema";
+import { Settings, HardHat, ArrowRight } from 'lucide-react';
 
 type TimelineProps = {
   milestones: ProgrammeMilestone[];
@@ -16,7 +17,7 @@ export default function Timeline({ milestones }: TimelineProps) {
       <div className="flex justify-between items-center mb-5">
         <h3 className="text-lg font-medium">Project Timeline</h3>
         <button className="text-gray-500 hover:text-primary flex items-center">
-          <span className="material-icons text-sm mr-1">tune</span>
+          <Settings className="w-4 h-4 mr-1" />
           <span className="text-sm">Filter</span>
         </button>
       </div>
@@ -45,7 +46,7 @@ export default function Timeline({ milestones }: TimelineProps) {
                 
                 {isInProgress ? (
                   <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white absolute top-1/2 transform -translate-y-1/2">
-                    <span className="material-icons text-sm">engineering</span>
+                    <HardHat className="w-3 h-3" />
                   </div>
                 ) : (
                   <div className={`w-3 h-3 rounded-full ${isCompleted ? 'bg-green-600' : 'bg-gray-300'} absolute top-1/2 transform -translate-y-1/2`}></div>
@@ -71,7 +72,7 @@ export default function Timeline({ milestones }: TimelineProps) {
       <div className="mt-4 text-center">
         <a href="/programme" className="text-sm text-primary hover:text-blue-800 flex items-center justify-center">
           View detailed programme
-          <span className="material-icons text-sm ml-1">arrow_forward</span>
+          <ArrowRight className="w-4 h-4 ml-1" />
         </a>
       </div>
     </div>
