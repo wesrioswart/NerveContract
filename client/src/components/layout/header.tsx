@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Menu, Bell, HelpCircle } from 'lucide-react';
+import { Menu, Bell, HelpCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type HeaderProps = {
   user: any;
+  onToggleSidebar?: () => void;
+  sidebarCollapsed?: boolean;
 };
 
-export default function Header({ user }: HeaderProps) {
+export default function Header({ user, onToggleSidebar, sidebarCollapsed = false }: HeaderProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -22,6 +24,20 @@ export default function Header({ user }: HeaderProps) {
       >
         <Menu className="w-5 h-5" />
       </button>
+      
+      {onToggleSidebar && (
+        <button
+          className="hidden md:flex mr-4 text-gray-500 hover:text-gray-900 p-1 rounded hover:bg-gray-100"
+          onClick={onToggleSidebar}
+          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {sidebarCollapsed ? (
+            <ChevronRight className="w-5 h-5" />
+          ) : (
+            <ChevronLeft className="w-5 h-5" />
+          )}
+        </button>
+      )}
       
       <div className="flex-1">
         <h2 className="text-lg font-semibold">Westfield Development Project</h2>

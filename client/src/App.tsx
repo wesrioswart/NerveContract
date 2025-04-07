@@ -14,11 +14,13 @@ import Reports from "@/pages/reports";
 import Templates from "@/pages/templates";
 import Login from "@/pages/login";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 function App() {
   const [location, setLocation] = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -57,12 +59,28 @@ function App() {
     );
   }
 
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+
   return (
     <div className="app-container flex h-screen overflow-hidden bg-gray-50">
-      <Sidebar user={currentUser} onLogout={handleLogout} />
+      <Sidebar 
+        user={currentUser} 
+        onLogout={handleLogout} 
+        collapsed={sidebarCollapsed}
+        onToggle={toggleSidebar}
+      />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header user={currentUser} />
+      <div className={cn(
+        "flex-1 flex flex-col overflow-hidden",
+        sidebarCollapsed ? "ml-16" : "ml-0"
+      )}>
+        <Header 
+          user={currentUser} 
+          onToggleSidebar={toggleSidebar}
+          sidebarCollapsed={sidebarCollapsed}
+        />
         
         <main className="flex-1 overflow-y-auto p-6">
           <div className="container mx-auto max-w-7xl">
