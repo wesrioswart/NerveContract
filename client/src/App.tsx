@@ -58,25 +58,29 @@ function App() {
   }
 
   return (
-    <div className="app-container min-h-screen grid grid-cols-[auto_1fr] grid-rows-[auto_1fr] md:grid-cols-[16rem_1fr]">
+    <div className="app-container flex h-screen overflow-hidden bg-gray-50">
       <Sidebar user={currentUser} onLogout={handleLogout} />
       
-      <Header user={currentUser} />
-      
-      <main className="p-6 overflow-y-auto col-start-2 row-start-2">
-        <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/ai-assistant" component={AIAssistant} />
-          <Route path="/compensation-events" component={CompensationEvents} />
-          <Route path="/early-warnings" component={EarlyWarnings} />
-          <Route path="/ncr-tqr" component={NCRTqr} />
-          <Route path="/programme" component={Programme} />
-          <Route path="/payment-certificates" component={PaymentCertificates} />
-          <Route path="/reports" component={Reports} />
-          <Route path="/templates" component={Templates} />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header user={currentUser} />
+        
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="container mx-auto max-w-7xl">
+            <Switch>
+              <Route path="/" component={Dashboard} />
+              <Route path="/ai-assistant" component={AIAssistant} />
+              <Route path="/compensation-events" component={CompensationEvents} />
+              <Route path="/early-warnings" component={EarlyWarnings} />
+              <Route path="/ncr-tqr" component={NCRTqr} />
+              <Route path="/programme" component={Programme} />
+              <Route path="/payment-certificates" component={PaymentCertificates} />
+              <Route path="/reports" component={Reports} />
+              <Route path="/templates" component={Templates} />
+              <Route component={NotFound} />
+            </Switch>
+          </div>
+        </main>
+      </div>
       
       <Toaster />
     </div>

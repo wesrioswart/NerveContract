@@ -4,6 +4,7 @@ import CETable from "@/components/compensation-events/ce-table";
 import EWTable from "@/components/early-warnings/ew-table";
 import ChatInterface from "@/components/ai-assistant/chat-interface";
 import Timeline from "@/components/dashboard/timeline";
+import { CompensationEvent, EarlyWarning, NonConformanceReport, PaymentCertificate, ProgrammeMilestone } from "@shared/schema";
 
 export default function Dashboard() {
   // For MVP, we'll assume project ID 1
@@ -11,38 +12,38 @@ export default function Dashboard() {
   const userId = 1;
 
   // Fetch project data, CE counts, EW counts, etc.
-  const { data: compensationEvents = [] } = useQuery({
+  const { data: compensationEvents = [] } = useQuery<CompensationEvent[]>({
     queryKey: [`/api/projects/${projectId}/compensation-events`],
   });
 
-  const { data: earlyWarnings = [] } = useQuery({
+  const { data: earlyWarnings = [] } = useQuery<EarlyWarning[]>({
     queryKey: [`/api/projects/${projectId}/early-warnings`],
   });
 
-  const { data: nonConformanceReports = [] } = useQuery({
+  const { data: nonConformanceReports = [] } = useQuery<NonConformanceReport[]>({
     queryKey: [`/api/projects/${projectId}/non-conformance-reports`],
   });
 
-  const { data: paymentCertificates = [] } = useQuery({
+  const { data: paymentCertificates = [] } = useQuery<PaymentCertificate[]>({
     queryKey: [`/api/projects/${projectId}/payment-certificates`],
   });
 
-  const { data: programmeMilestones = [] } = useQuery({
+  const { data: programmeMilestones = [] } = useQuery<ProgrammeMilestone[]>({
     queryKey: [`/api/projects/${projectId}/programme-milestones`],
   });
 
   // Calculate stats for summary cards
-  const pendingCEs = compensationEvents.filter((ce: any) => 
+  const pendingCEs = compensationEvents.filter((ce) => 
     ce.status === "Notification" || ce.status === "Quotation Due"
   ).length;
   
-  const closedEWsThisWeek = earlyWarnings.filter((ew: any) => {
+  const closedEWsThisWeek = earlyWarnings.filter((ew) => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     return ew.status === "Mitigated" && new Date(ew.raisedAt) >= oneWeekAgo;
   }).length;
   
-  const newNCRsThisWeek = nonConformanceReports.filter((ncr: any) => {
+  const newNCRsThisWeek = nonConformanceReports.filter((ncr) => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     return new Date(ncr.raisedAt) >= oneWeekAgo;
@@ -56,9 +57,14 @@ export default function Dashboard() {
     Math.ceil((new Date(nextPayment.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
   return (
-    <>
+    <div className="space-y-8">
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Project Dashboard</h1>
+        <p className="text-gray-500">Overview of your NEC4 contract activity</p>
+      </div>
+      
       {/* Dashboard Summary Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryCard
           title="Compensation Events"
           value={compensationEvents.length}
@@ -96,17 +102,31 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* AI Assistant Chat Interface */}
-      <ChatInterface projectId={projectId} userId={userId} />
-      
       {/* Contract Registers */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <CETable projectId={projectId} limit={3} showViewAll={true} />
-        <EWTable projectId={projectId} limit={3} showViewAll={true} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-5 rounded-lg shadow">
+          <h2 className="text-lg font-bold mb-4">Recent Compensation Events</h2>
+          <CETable projectId={projectId} limit={3} showViewAll={true} />
+        </div>
+        
+        <div className="bg-white p-5 rounded-lg shadow">
+          <h2 className="text-lg font-bold mb-4">Active Early Warnings</h2>
+          <EWTable projectId={projectId} limit={3} showViewAll={true} />
+        </div>
       </div>
       
       {/* Project Timeline */}
-      <Timeline milestones={programmeMilestones} />
-    </>
+      <div className="bg-white p-5 rounded-lg shadow">
+        <h2 className="text-lg font-bold mb-4">Project Timeline</h2>
+        <Timeline milestones={programmeMilestones as any} />
+      </div>
+      
+      {/* AI Assistant Chat Interface */}
+      <div className="bg-white p-5 rounded-lg shadow">
+        <h2 className="text-lg font-bold mb-4">NEC4 Contract Assistant</h2>
+        <p className="text-gray-500 mb-4">Ask questions about your contract or get help with clause interpretations</p>
+        <ChatInterface projectId={projectId} userId={userId} />
+      </div>
+    </div>
   );
 }
