@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
+import { Search, RefreshCw, ChartBar } from "lucide-react";
 
 export default function AIAssistant() {
   // For MVP, we'll assume project ID 1
@@ -96,12 +97,12 @@ export default function AIAssistant() {
                 >
                   {isAnalyzing ? (
                     <>
-                      <span className="material-icons animate-spin mr-2">refresh</span>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                       Analyzing...
                     </>
                   ) : (
                     <>
-                      <span className="material-icons mr-2">analytics</span>
+                      <ChartBar className="w-4 h-4 mr-2" />
                       Analyze Document
                     </>
                   )}
@@ -149,7 +150,7 @@ export default function AIAssistant() {
                     placeholder="Search for clause (e.g. '61.3' or 'compensation event')"
                   />
                   <Button className="rounded-l-none bg-primary hover:bg-blue-800">
-                    <span className="material-icons">search</span>
+                    <Search className="w-4 h-4" />
                   </Button>
                 </div>
                 

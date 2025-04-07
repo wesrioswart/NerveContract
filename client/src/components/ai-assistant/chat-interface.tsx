@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/lib/utils";
 import { ChatMessage } from "@shared/schema";
+import { Bot, User, Send, RefreshCw } from "lucide-react";
 
 type ChatInterfaceProps = {
   projectId: number;
@@ -82,7 +83,7 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
         {showWelcomeMessage && (
           <div className="flex mb-4">
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white mr-3 flex-shrink-0">
-              <span className="material-icons text-sm">smart_toy</span>
+              <Bot className="w-4 h-4" />
             </div>
             <div className="bg-gray-100 rounded-lg p-3 max-w-3xl break-words">
               <p className="text-sm">
@@ -94,8 +95,8 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
 
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
-            <span className="material-icons animate-spin text-primary">refresh</span>
-            <span className="ml-2">Loading messages...</span>
+            <RefreshCw className="w-5 h-5 animate-spin text-primary mr-2" />
+            <span>Loading messages...</span>
           </div>
         ) : (
           messages.map((msg: ChatMessage) => (
@@ -105,7 +106,7 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
             >
               {msg.role === 'assistant' && (
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white mr-3 flex-shrink-0">
-                  <span className="material-icons text-sm">smart_toy</span>
+                  <Bot className="w-4 h-4" />
                 </div>
               )}
               
@@ -122,7 +123,7 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
               
               {msg.role === 'user' && (
                 <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center ml-3 flex-shrink-0">
-                  <span className="material-icons text-sm text-gray-500">person</span>
+                  <User className="w-4 h-4 text-gray-500" />
                 </div>
               )}
             </div>
@@ -145,9 +146,9 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
           className="bg-primary hover:bg-blue-800 text-white px-4 rounded-r-lg flex items-center"
         >
           {sendMessageMutation.isPending ? (
-            <span className="material-icons animate-spin mr-1">refresh</span>
+            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
           ) : (
-            <span className="material-icons mr-1">send</span>
+            <Send className="w-4 h-4 mr-2" />
           )}
           Ask
         </Button>
