@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/utils";
 import PaymentCertificateList from "@/components/payment/payment-certificate-list";
 import PaymentCertificateForm from "@/components/payment/payment-certificate-form";
+import { PlusCircle, Calendar, TrendingUp } from "lucide-react";
+import { PaymentCertificate } from "@shared/schema";
 
 export default function PaymentCertificates() {
   const [activeTab, setActiveTab] = useState("certificates");
@@ -14,22 +16,22 @@ export default function PaymentCertificates() {
   // For MVP, we'll assume project ID 1
   const projectId = 1;
   
-  const { data: paymentCertificates = [], isLoading } = useQuery({
+  const { data: paymentCertificates = [], isLoading } = useQuery<Array<PaymentCertificate>>({
     queryKey: [`/api/projects/${projectId}/payment-certificates`],
   });
 
   // Calculate statistics
   const totalCertified = paymentCertificates
-    .filter((cert: any) => cert.status === "Certified" || cert.status === "Paid")
-    .reduce((total: number, cert: any) => total + cert.amount, 0);
+    .filter((cert) => cert.status === "Certified" || cert.status === "Paid")
+    .reduce((total: number, cert) => total + cert.amount, 0);
   
   const totalPending = paymentCertificates
-    .filter((cert: any) => cert.status === "Draft" || cert.status === "Submitted")
-    .reduce((total: number, cert: any) => total + cert.amount, 0);
+    .filter((cert) => cert.status === "Draft" || cert.status === "Submitted")
+    .reduce((total: number, cert) => total + cert.amount, 0);
   
   const nextPayment = paymentCertificates
-    .filter((cert: any) => cert.status === "Draft" || cert.status === "Submitted")
-    .sort((a: any, b: any) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0];
+    .filter((cert) => cert.status === "Draft" || cert.status === "Submitted")
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0];
   
   const handleNewPaymentCertificate = () => {
     setShowNewForm(true);
@@ -38,14 +40,15 @@ export default function PaymentCertificates() {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">Payment Certificates</h1>
         <Button
           onClick={handleNewPaymentCertificate}
-          className="bg-cyan-700 hover:bg-cyan-800 text-white"
+          className="bg-primary hover:bg-primary/90 text-white flex items-center gap-1.5"
+          size="sm"
         >
-          <span className="material-icons mr-2">add</span>
-          New Payment Application
+          <PlusCircle className="h-4 w-4" />
+          <span>New Payment Application</span>
         </Button>
       </div>
       
@@ -78,7 +81,7 @@ export default function PaymentCertificates() {
             </p>
             {nextPayment && (
               <p className="text-xs flex items-center text-gray-500">
-                <span className="material-icons text-sm mr-0.5">calendar_today</span>
+                <Calendar className="h-3 w-3 mr-1" />
                 Due on {new Date(nextPayment.dueDate).toLocaleDateString()}
               </p>
             )}
@@ -123,7 +126,7 @@ export default function PaymentCertificates() {
             </CardHeader>
             <CardContent className="h-96 flex items-center justify-center">
               <div className="text-center text-gray-500">
-                <span className="material-icons text-6xl mb-4">trending_up</span>
+                <TrendingUp className="h-16 w-16 mx-auto mb-4 opacity-60" />
                 <p>Payment forecast visualization will be available in the next release</p>
                 <p className="text-sm mt-2">
                   This feature will display projected cash flow for the project

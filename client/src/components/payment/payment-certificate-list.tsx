@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
+import { Search, Download, Loader2 } from "lucide-react";
 
 type PaymentCertificateListProps = {
   projectId: number;
@@ -36,13 +37,13 @@ export default function PaymentCertificateList({ projectId, certificates, isLoad
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div className="flex-1">
+        <div className="flex-1 relative">
+          <Search className="h-4 w-4 absolute left-2.5 top-2.5 text-gray-400" />
           <Input
             placeholder="Search by reference..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full"
-            prefix={<span className="material-icons text-gray-400">search</span>}
+            className="w-full pl-8"
           />
         </div>
         
@@ -63,17 +64,17 @@ export default function PaymentCertificateList({ projectId, certificates, isLoad
             </SelectContent>
           </Select>
           
-          <Button variant="outline" className="w-full md:w-auto">
-            <span className="material-icons mr-2">download</span>
-            Export List
+          <Button variant="outline" className="w-full md:w-auto flex items-center gap-1.5">
+            <Download className="h-4 w-4" />
+            <span>Export List</span>
           </Button>
         </div>
       </div>
       
       {isLoading ? (
         <div className="flex justify-center items-center py-8">
-          <span className="material-icons animate-spin text-primary">refresh</span>
-          <span className="ml-2">Loading payment certificates...</span>
+          <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
+          <span>Loading payment certificates...</span>
         </div>
       ) : sortedCertificates.length === 0 ? (
         <div className="text-center py-8 text-gray-500">

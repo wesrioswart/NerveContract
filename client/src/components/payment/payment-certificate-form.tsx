@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2, Info, X } from "lucide-react";
 
 type PaymentCertificateFormProps = {
   projectId: number;
@@ -167,7 +168,7 @@ export default function PaymentCertificateForm({ projectId, onSuccess }: Payment
           
           <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-sm text-amber-800">
             <div className="flex items-start">
-              <span className="material-icons text-amber-500 mr-2">info</span>
+              <Info className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0" />
               <p>
                 This payment application will be created in Draft status. You can review and edit before submitting.
                 Once submitted, it cannot be modified.
@@ -180,8 +181,10 @@ export default function PaymentCertificateForm({ projectId, onSuccess }: Payment
               type="button"
               variant="outline"
               onClick={onSuccess}
+              className="flex items-center gap-1.5"
             >
-              Cancel
+              <X className="h-4 w-4" />
+              <span>Cancel</span>
             </Button>
             <Button
               type="submit"
@@ -190,7 +193,7 @@ export default function PaymentCertificateForm({ projectId, onSuccess }: Payment
             >
               {createPaymentCertificateMutation.isPending ? (
                 <>
-                  <span className="material-icons animate-spin mr-2">refresh</span>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Creating...
                 </>
               ) : (
