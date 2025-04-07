@@ -88,7 +88,7 @@ export default function NewCEModal({ projectId, onClose }: NewCEModalProps) {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:border-cyan-700"
               placeholder="Enter a descriptive title"
             />
           </div>
@@ -99,7 +99,7 @@ export default function NewCEModal({ projectId, onClose }: NewCEModalProps) {
               <select
                 value={clauseReference}
                 onChange={(e) => setClauseReference(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:border-cyan-700"
               >
                 <option value="">Select a clause</option>
                 <option value="60.1(1)">60.1(1) - Changed instruction</option>
@@ -115,7 +115,7 @@ export default function NewCEModal({ projectId, onClose }: NewCEModalProps) {
                 type="text"
                 value={estimatedValue}
                 onChange={(e) => setEstimatedValue(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:border-cyan-700"
                 placeholder="£0.00"
               />
             </div>
@@ -127,7 +127,7 @@ export default function NewCEModal({ projectId, onClose }: NewCEModalProps) {
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:border-cyan-700"
               placeholder="Describe the compensation event..."
             />
           </div>
@@ -153,11 +153,11 @@ export default function NewCEModal({ projectId, onClose }: NewCEModalProps) {
             <Button
               onClick={handleSubmit}
               disabled={createCEMutation.isPending}
-              className="px-4 py-2 bg-primary hover:bg-blue-800 text-white rounded-md"
+              className="px-4 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-md"
             >
               {createCEMutation.isPending ? (
                 <>
-                  <span className="material-icons animate-spin mr-2">refresh</span>
+                  <span className="material-icons animate-spin mr-2 text-white">refresh</span>
                   Submitting...
                 </>
               ) : (

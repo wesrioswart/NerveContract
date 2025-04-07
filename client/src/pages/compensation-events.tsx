@@ -43,7 +43,7 @@ export default function CompensationEvents() {
         <h1 className="text-2xl font-bold">Compensation Events</h1>
         <Button
           onClick={() => setShowModal(true)}
-          className="bg-primary hover:bg-blue-800"
+          className="bg-cyan-700 hover:bg-cyan-800 text-white"
         >
           <span className="material-icons mr-2">add</span>
           New Compensation Event

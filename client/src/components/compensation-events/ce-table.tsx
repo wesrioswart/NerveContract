@@ -35,7 +35,7 @@ export default function CETable({ projectId, limit, showViewAll = false }: CETab
         <h3 className="text-lg font-medium">Compensation Events</h3>
         <Button
           onClick={() => setShowModal(true)}
-          className="bg-primary hover:bg-blue-800 text-white px-3 py-1 rounded-lg text-sm flex items-center"
+          className="bg-cyan-700 hover:bg-cyan-800 text-white px-3 py-1 rounded-lg text-sm flex items-center"
         >
           <span className="material-icons text-sm mr-1">add</span> New CE
         </Button>
@@ -43,7 +43,7 @@ export default function CETable({ projectId, limit, showViewAll = false }: CETab
       
       {isLoading ? (
         <div className="flex justify-center items-center py-8">
-          <span className="material-icons animate-spin text-primary">refresh</span>
+          <span className="material-icons animate-spin text-cyan-700">refresh</span>
           <span className="ml-2">Loading compensation events...</span>
         </div>
       ) : displayedCEs.length === 0 ? (
@@ -101,7 +101,7 @@ export default function CETable({ projectId, limit, showViewAll = false }: CETab
         <div className="mt-4 text-center">
           <a 
             href="/compensation-events" 
-            className="text-sm text-primary hover:text-blue-800 flex items-center justify-center"
+            className="text-sm text-cyan-700 hover:text-cyan-800 flex items-center justify-center"
           >
             View all compensation events
             <span className="material-icons text-sm ml-1">arrow_forward</span>
