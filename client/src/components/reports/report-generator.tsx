@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CompensationEvent, EarlyWarning, NonConformanceReport, ProgrammeMilestone, PaymentCertificate } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 type ReportGeneratorProps = {
   reportType: "compensation" | "earlywarning" | "programme" | "ncr" | "payment";
@@ -11,27 +12,27 @@ type ReportGeneratorProps = {
 
 export default function ReportGenerator({ reportType, projectId, dateRange }: ReportGeneratorProps) {
   // Fetch data based on report type
-  const { data: compensationEvents = [], isLoading: ceLoading } = useQuery({
+  const { data: compensationEvents = [], isLoading: ceLoading } = useQuery<CompensationEvent[]>({
     queryKey: [`/api/projects/${projectId}/compensation-events`],
     enabled: reportType === "compensation",
   });
 
-  const { data: earlyWarnings = [], isLoading: ewLoading } = useQuery({
+  const { data: earlyWarnings = [], isLoading: ewLoading } = useQuery<EarlyWarning[]>({
     queryKey: [`/api/projects/${projectId}/early-warnings`],
     enabled: reportType === "earlywarning",
   });
 
-  const { data: nonConformanceReports = [], isLoading: ncrLoading } = useQuery({
+  const { data: nonConformanceReports = [], isLoading: ncrLoading } = useQuery<NonConformanceReport[]>({
     queryKey: [`/api/projects/${projectId}/non-conformance-reports`],
     enabled: reportType === "ncr",
   });
 
-  const { data: programmeMilestones = [], isLoading: pmLoading } = useQuery({
+  const { data: programmeMilestones = [], isLoading: pmLoading } = useQuery<ProgrammeMilestone[]>({
     queryKey: [`/api/projects/${projectId}/programme-milestones`],
     enabled: reportType === "programme",
   });
 
-  const { data: paymentCertificates = [], isLoading: pcLoading } = useQuery({
+  const { data: paymentCertificates = [], isLoading: pcLoading } = useQuery<PaymentCertificate[]>({
     queryKey: [`/api/projects/${projectId}/payment-certificates`],
     enabled: reportType === "payment",
   });
@@ -42,24 +43,24 @@ export default function ReportGenerator({ reportType, projectId, dateRange }: Re
   const renderReportContent = () => {
     if (isLoading) {
       return (
-        <div className="flex justify-center items-center py-8">
-          <span className="material-icons animate-spin text-primary">refresh</span>
-          <span className="ml-2">Loading report data...</span>
+        <div className="flex flex-col justify-center items-center py-12 space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="text-sm text-gray-500">Loading report data...</span>
         </div>
       );
     }
     
     switch (reportType) {
       case "compensation":
-        return renderCompensationReport(compensationEvents);
+        return renderCompensationReport(compensationEvents as CompensationEvent[]);
       case "earlywarning":
-        return renderEarlyWarningReport(earlyWarnings);
+        return renderEarlyWarningReport(earlyWarnings as EarlyWarning[]);
       case "programme":
-        return renderProgrammeReport(programmeMilestones);
+        return renderProgrammeReport(programmeMilestones as ProgrammeMilestone[]);
       case "ncr":
-        return renderNCRReport(nonConformanceReports);
+        return renderNCRReport(nonConformanceReports as NonConformanceReport[]);
       case "payment":
-        return renderPaymentReport(paymentCertificates);
+        return renderPaymentReport(paymentCertificates as PaymentCertificate[]);
     }
   };
   
