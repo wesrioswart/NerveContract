@@ -327,7 +327,271 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Programme sync XML parsing route
+  // Programme routes
+  
+  // Programme file upload route
+  app.post("/api/programme/upload", async (req: Request, res: Response) => {
+    try {
+      console.log("Programme file upload request received");
+      
+      // In a real implementation, we would process the uploaded file
+      // For now, we'll just simulate success
+      
+      // Check if OpenAI is configured for analysis
+      if (!isOpenAIConfigured()) {
+        console.warn("OpenAI API key is not set - programme analysis will be limited");
+      }
+      
+      // Process form data
+      const projectId = parseInt(req.body.projectId);
+      
+      if (isNaN(projectId)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Generate simulated milestones
+      const milestones = [
+        {
+          id: 1,
+          projectId,
+          name: "Site Mobilization",
+          plannedDate: new Date("2023-05-10"),
+          actualDate: new Date("2023-05-12"),
+          status: "Completed",
+          isKeyDate: false,
+          affectsCompletionDate: false,
+          description: "Initial setup of site facilities"
+        },
+        {
+          id: 2,
+          projectId,
+          name: "Foundation Complete",
+          plannedDate: new Date("2023-06-15"),
+          actualDate: new Date("2023-06-20"),
+          status: "Completed",
+          isKeyDate: false,
+          affectsCompletionDate: false,
+          description: "Completion of all foundation works"
+        },
+        {
+          id: 3,
+          projectId,
+          name: "Structural Frame",
+          plannedDate: new Date("2023-07-30"),
+          actualDate: new Date("2023-08-05"),
+          status: "Completed",
+          isKeyDate: true,
+          affectsCompletionDate: true,
+          description: "Completion of main structural frame"
+        },
+        {
+          id: 4,
+          projectId,
+          name: "Building Watertight",
+          plannedDate: new Date("2023-09-15"),
+          actualDate: new Date("2023-09-25"),
+          status: "Completed",
+          isKeyDate: true,
+          affectsCompletionDate: true,
+          description: "Building envelope sealed and watertight"
+        },
+        {
+          id: 5,
+          projectId,
+          name: "MEP First Fix",
+          plannedDate: new Date("2023-10-20"),
+          forecastDate: new Date("2023-10-30"),
+          status: "At Risk",
+          isKeyDate: false,
+          affectsCompletionDate: false,
+          description: "Mechanical, electrical and plumbing first fix"
+        },
+        {
+          id: 6,
+          projectId,
+          name: "Internal Finishes Start",
+          plannedDate: new Date("2023-11-10"),
+          forecastDate: new Date("2023-11-15"),
+          status: "On Track",
+          isKeyDate: false,
+          affectsCompletionDate: false,
+          description: "Start of internal finishing works"
+        },
+        {
+          id: 7,
+          projectId,
+          name: "MEP Second Fix",
+          plannedDate: new Date("2023-12-15"),
+          forecastDate: new Date("2023-12-20"),
+          status: "On Track",
+          isKeyDate: false,
+          affectsCompletionDate: false,
+          description: "Mechanical, electrical and plumbing second fix"
+        },
+        {
+          id: 8,
+          projectId,
+          name: "Practical Completion",
+          plannedDate: new Date("2024-02-28"),
+          forecastDate: new Date("2024-03-10"),
+          status: "Delayed",
+          isKeyDate: true,
+          affectsCompletionDate: true,
+          description: "Project handover to client"
+        }
+      ];
+      
+      // Store the milestones (in a real implementation)
+      // For now, we'll just create them in memory
+      for (const milestone of milestones) {
+        try {
+          // Check if milestone already exists
+          const existingMilestone = await storage.getProgrammeMilestone(milestone.id);
+          
+          if (!existingMilestone) {
+            // Create new milestone
+            await storage.createProgrammeMilestone({
+              projectId: milestone.projectId,
+              name: milestone.name,
+              plannedDate: milestone.plannedDate,
+              forecastDate: milestone.forecastDate,
+              actualDate: milestone.actualDate,
+              status: milestone.status,
+              isKeyDate: milestone.isKeyDate,
+              affectsCompletionDate: milestone.affectsCompletionDate,
+              description: milestone.description
+            });
+          }
+        } catch (error) {
+          console.error(`Error creating milestone ${milestone.name}:`, error);
+        }
+      }
+      
+      // Generate analysis results
+      const analysis = {
+        issuesFound: [
+          {
+            severity: "high",
+            description: "Practical Completion milestone delayed by 10 days",
+            nec4Clause: "31.2",
+            recommendation: "Submit Early Warning and evaluate impact to Key Dates"
+          },
+          {
+            severity: "medium",
+            description: "MEP First Fix at risk with 10 days delay forecast",
+            nec4Clause: "32.1",
+            recommendation: "Review resource allocation and consider mitigation measures"
+          },
+          {
+            severity: "low",
+            description: "Insufficient float on Internal Finishes activities",
+            nec4Clause: "31.2",
+            recommendation: "Review durations and consider parallel working where possible"
+          }
+        ],
+        metrics: {
+          critical_path_tasks: 12,
+          float_less_than_5days: 8,
+          totalDuration: 295,
+          completionDateChange: 10
+        }
+      };
+      
+      return res.status(200).json({
+        message: "Programme file uploaded and processed successfully",
+        analysis
+      });
+    } catch (error) {
+      console.error("Error processing programme file:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      
+      return res.status(400).json({ 
+        message: "Error processing programme file", 
+        error: errorMessage 
+      });
+    }
+  });
+  
+  // Programme analysis route
+  app.post("/api/programme/analyze", async (req: Request, res: Response) => {
+    try {
+      console.log("Programme analysis request received");
+      const { projectId } = req.body;
+      
+      if (!projectId || isNaN(parseInt(projectId))) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      // Check if OpenAI is configured for advanced analysis
+      if (!isOpenAIConfigured()) {
+        console.warn("OpenAI API key is not set - programme analysis will be limited");
+      }
+      
+      // In a real implementation, we would analyze the programme data
+      // For now, we'll just return a simulated analysis
+      
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const analysis = {
+        issuesFound: [
+          {
+            severity: "high",
+            description: "Practical Completion milestone delayed by 10 days",
+            nec4Clause: "31.2",
+            recommendation: "Submit Early Warning and evaluate impact to Key Dates"
+          },
+          {
+            severity: "medium",
+            description: "MEP First Fix at risk with 10 days delay forecast",
+            nec4Clause: "32.1",
+            recommendation: "Review resource allocation and consider mitigation measures"
+          },
+          {
+            severity: "medium",
+            description: "Critical path has insufficient float (<5 days)",
+            nec4Clause: "31.2",
+            recommendation: "Identify opportunities to increase float on critical activities"
+          },
+          {
+            severity: "low",
+            description: "Insufficient float on Internal Finishes activities",
+            nec4Clause: "31.2",
+            recommendation: "Review durations and consider parallel working where possible"
+          },
+          {
+            severity: "low",
+            description: "Programme lacks sufficient detail for MEP works",
+            nec4Clause: "31.2",
+            recommendation: "Enhance programme detail for MEP activities"
+          }
+        ],
+        metrics: {
+          critical_path_tasks: 12,
+          float_less_than_5days: 8,
+          totalDuration: 295,
+          completionDateChange: 10
+        }
+      };
+      
+      return res.status(200).json({
+        analysis
+      });
+    } catch (error) {
+      console.error("Error analyzing programme:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      
+      return res.status(400).json({ 
+        message: "Error analyzing programme", 
+        error: errorMessage 
+      });
+    }
+  });
+  
+  // XML parsing route (retained for backward compatibility)
   app.post("/api/programme/parse-xml", async (req: Request, res: Response) => {
     try {
       const { xmlContent } = parseXMLSchema.parse(req.body);

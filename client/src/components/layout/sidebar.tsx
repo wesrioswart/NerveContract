@@ -12,7 +12,8 @@ import {
   BarChart, 
   Settings, 
   LogOut, 
-  User
+  User,
+  GanttChart
 } from 'lucide-react';
 
 type SidebarProps = {
@@ -32,6 +33,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/early-warnings", label: "Early Warnings", icon: AlertTriangle },
     { path: "/ncr-tqr", label: "NCRs & TQRs", icon: FileWarning },
     { path: "/programme", label: "Programme", icon: CalendarDays },
+    { path: "/programme-management", label: "Programme Management", icon: GanttChart },
     { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
     { path: "/templates", label: "NEC4 Templates", icon: FileText },
     { path: "/reports", label: "Reports", icon: BarChart },

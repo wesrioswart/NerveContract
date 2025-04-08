@@ -9,6 +9,7 @@ import CompensationEvents from "@/pages/compensation-events";
 import EarlyWarnings from "@/pages/early-warnings";
 import NCRTqr from "@/pages/ncr-tqr";
 import Programme from "@/pages/programme";
+import ProgrammeManagement from "@/pages/programme-management";
 import PaymentCertificates from "@/pages/payment-certificates";
 import Reports from "@/pages/reports";
 import Templates from "@/pages/templates";
@@ -91,6 +92,7 @@ function App() {
               <Route path="/early-warnings" component={EarlyWarnings} />
               <Route path="/ncr-tqr" component={NCRTqr} />
               <Route path="/programme" component={Programme} />
+              <Route path="/programme-management" component={ProgrammeManagement} />
               <Route path="/payment-certificates" component={PaymentCertificates} />
               <Route path="/reports" component={Reports} />
               <Route path="/templates" component={Templates} />

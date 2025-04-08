@@ -126,8 +126,12 @@ export const programmeMilestones = pgTable("programme_milestones", {
   projectId: integer("project_id").notNull(),
   name: text("name").notNull(),
   plannedDate: timestamp("planned_date").notNull(),
+  forecastDate: timestamp("forecast_date"),
   actualDate: timestamp("actual_date"),
-  status: text("status").notNull(), // Not Started, In Progress, Completed, Delayed
+  status: text("status").notNull(), // Not Started, On Track, At Risk, Delayed, Completed
+  isKeyDate: boolean("is_key_date").default(false),
+  affectsCompletionDate: boolean("affects_completion_date").default(false),
+  description: text("description"),
   delayReason: text("delay_reason"),
   delayDays: integer("delay_days"),
 });
