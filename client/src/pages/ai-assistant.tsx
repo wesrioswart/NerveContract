@@ -31,17 +31,30 @@ export default function AIAssistant() {
         body: JSON.stringify({ documentText }),
       });
       
+      const result = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Analysis request failed');
+        throw new Error(result.message || 'Analysis request failed');
       }
       
-      const result = await response.json();
+      // Validate response format
+      if (!result.issues || !result.recommendations || 
+          !Array.isArray(result.issues) || !Array.isArray(result.recommendations)) {
+        throw new Error('Invalid response format from the server');
+      }
+      
       setDocumentAnalysis(result);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error analyzing document:", error);
+      let errorMessage = "An unexpected error occurred";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       setDocumentAnalysis({
-        issues: ["An error occurred during document analysis"],
-        recommendations: ["Please try again or contact support"]
+        issues: ["An error occurred during document analysis: " + errorMessage],
+        recommendations: ["Please try again or contact support if the problem persists"]
       });
     } finally {
       setIsAnalyzing(false);

@@ -1,7 +1,21 @@
 import OpenAI from "openai";
 
 // The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
+const apiKey = process.env.OPENAI_API_KEY;
+
+// Validate OpenAI API key
+if (!apiKey) {
+  console.warn("WARNING: OPENAI_API_KEY environment variable is not set. AI features will not work properly.");
+}
+
+// Function to check if the OpenAI API key is properly configured
+function isOpenAIConfigured(): boolean {
+  return !!apiKey;
+}
+
+const openai = new OpenAI({ 
+  apiKey: apiKey || "dummy-key", // Use a dummy key to prevent initialization errors, actual requests will be checked
+});
 
 // Structure for NEC4 contract knowledge base
 type ClauseInfo = {
@@ -64,6 +78,12 @@ const NEC4_KNOWLEDGE_BASE: KnowledgeBase = {
 // Function to ask question to OpenAI about NEC4 contracts
 async function askContractAssistant(question: string): Promise<string> {
   try {
+    // Check if API key is available
+    if (!apiKey) {
+      console.error("OpenAI API key is not set");
+      return "AI features are currently unavailable. Please contact the administrator to set up the OpenAI API key.";
+    }
+    
     // Define known clause numbers
     const instructionClauses = ["14.3", "27.3", "13.1"];
     const subcontractClauses = ["26.3"];
@@ -98,6 +118,8 @@ async function askContractAssistant(question: string): Promise<string> {
       });
     }
     
+    console.log("Sending request to OpenAI...");
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -125,9 +147,23 @@ async function askContractAssistant(question: string): Promise<string> {
       max_tokens: 500,
     });
 
+    console.log("Received response from OpenAI");
     return response.choices[0].message.content || "I'm sorry, I couldn't generate a response.";
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in OpenAI request:", error);
+    
+    // More specific error handling based on error type
+    if (error.name === 'AuthenticationError') {
+      console.error("OpenAI API authentication error - check your API key");
+      return "AI features are unavailable due to an authentication issue. Please contact the administrator.";
+    } else if (error.name === 'RateLimitError') {
+      console.error("OpenAI API rate limit exceeded");
+      return "The AI service is currently experiencing high demand. Please try again in a few minutes.";
+    } else if (error.name === 'TimeoutError') {
+      console.error("OpenAI API request timed out");
+      return "The AI service is taking too long to respond. Please try again later.";
+    }
+    
     return "Sorry, I encountered an error processing your request. Please try again later.";
   }
 }
@@ -138,6 +174,22 @@ async function analyzeContractDocument(documentText: string): Promise<{
   recommendations: string[]
 }> {
   try {
+    // Check if API key is available
+    if (!apiKey) {
+      console.error("OpenAI API key is not set");
+      return {
+        issues: ["AI features are currently unavailable"],
+        recommendations: ["Please contact the administrator to set up the OpenAI API key"]
+      };
+    }
+    
+    if (!documentText || documentText.trim().length === 0) {
+      return {
+        issues: ["Empty document provided"],
+        recommendations: ["Please provide a valid document to analyze"]
+      };
+    }
+    
     const prompt = `
     Analyze the following NEC4 construction contract document extract for specific practical issues:
     
@@ -154,6 +206,8 @@ async function analyzeContractDocument(documentText: string): Promise<{
     Format your response as JSON with 'issues' and 'recommendations' arrays.
     `;
 
+    console.log("Sending document analysis request to OpenAI...");
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -170,18 +224,58 @@ async function analyzeContractDocument(documentText: string): Promise<{
       max_tokens: 1000,
     });
 
-    const parsedResponse = JSON.parse(response.choices[0].message.content || "{}");
-    return {
-      issues: parsedResponse.issues || [],
-      recommendations: parsedResponse.recommendations || []
-    };
-  } catch (error) {
+    console.log("Received document analysis response from OpenAI");
+    
+    if (!response.choices || response.choices.length === 0 || !response.choices[0].message.content) {
+      console.error("Empty response from OpenAI");
+      return {
+        issues: ["Error: Received empty response from AI service"],
+        recommendations: ["Please try again later"]
+      };
+    }
+    
+    try {
+      const parsedResponse = JSON.parse(response.choices[0].message.content);
+      return {
+        issues: parsedResponse.issues || [],
+        recommendations: parsedResponse.recommendations || []
+      };
+    } catch (parseError) {
+      console.error("Error parsing JSON response:", parseError);
+      return {
+        issues: ["Error parsing AI response"],
+        recommendations: ["The AI service returned an invalid response format. Please try again later."]
+      };
+    }
+  } catch (error: any) {
     console.error("Error in document analysis:", error);
+    
+    // More specific error handling based on error type
+    if (error.name === 'AuthenticationError') {
+      console.error("OpenAI API authentication error - check your API key");
+      return {
+        issues: ["AI features are unavailable due to an authentication issue"],
+        recommendations: ["Please contact the administrator"]
+      };
+    } else if (error.name === 'RateLimitError') {
+      console.error("OpenAI API rate limit exceeded");
+      return {
+        issues: ["The AI service is currently experiencing high demand"],
+        recommendations: ["Please try again in a few minutes"]
+      };
+    } else if (error.name === 'TimeoutError') {
+      console.error("OpenAI API request timed out");
+      return {
+        issues: ["The AI service is taking too long to respond"],
+        recommendations: ["Please try again later with a simpler document"]
+      };
+    }
+    
     return {
-      issues: ["Error analyzing document"],
+      issues: ["Error analyzing document: " + (error.message || "Unknown error")],
       recommendations: ["Please try again later or contact support"]
     };
   }
 }
 
-export { askContractAssistant, analyzeContractDocument };
+export { askContractAssistant, analyzeContractDocument, isOpenAIConfigured };

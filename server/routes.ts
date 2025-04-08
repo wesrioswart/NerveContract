@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarningSchema } from "@shared/schema";
-import { askContractAssistant, analyzeContractDocument } from "./utils/openai";
+import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured } from "./utils/openai";
 
 const parseXMLSchema = z.object({
   xmlContent: z.string(),
@@ -131,9 +131,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      const compensationEvent = await storage.updateCompensationEvent(ceId, req.body);
+      console.log("Updating compensation event with data:", req.body);
+      
+      // Convert date strings to Date objects
+      const processedData = {
+        ...req.body,
+        raisedAt: req.body.raisedAt ? new Date(req.body.raisedAt) : undefined,
+        responseDeadline: req.body.responseDeadline ? new Date(req.body.responseDeadline) : undefined,
+        implementedDate: req.body.implementedDate ? new Date(req.body.implementedDate) : undefined
+      };
+      
+      console.log("Processed compensation event data:", processedData);
+      const compensationEvent = await storage.updateCompensationEvent(ceId, processedData);
       return res.status(200).json(compensationEvent);
     } catch (error) {
+      console.error("Error updating compensation event:", error);
+      if (error instanceof Error) {
+        return res.status(400).json({ message: "Error updating compensation event", error: error.message });
+      }
       return res.status(404).json({ message: "Compensation event not found" });
     }
   });
@@ -195,9 +210,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      const earlyWarning = await storage.updateEarlyWarning(ewId, req.body);
+      console.log("Updating early warning with data:", req.body);
+      
+      // Convert date strings to Date objects
+      const processedData = {
+        ...req.body,
+        raisedAt: req.body.raisedAt ? new Date(req.body.raisedAt) : undefined,
+        meetingDate: req.body.meetingDate ? new Date(req.body.meetingDate) : undefined
+      };
+      
+      console.log("Processed early warning data:", processedData);
+      const earlyWarning = await storage.updateEarlyWarning(ewId, processedData);
       return res.status(200).json(earlyWarning);
     } catch (error) {
+      console.error("Error updating early warning:", error);
+      if (error instanceof Error) {
+        return res.status(400).json({ message: "Error updating early warning", error: error.message });
+      }
       return res.status(404).json({ message: "Early warning not found" });
     }
   });
@@ -253,6 +282,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat-messages", async (req: Request, res: Response) => {
     try {
       console.log("Chat message request body:", req.body);
+      
+      // Check if OpenAI is configured
+      if (!isOpenAIConfigured()) {
+        console.warn("OpenAI API key is not set - AI features will be limited");
+      }
       
       // Process the request body to ensure timestamp is a Date object
       const messageData = {
@@ -327,6 +361,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Document Analysis route
   app.post("/api/document/analyze", async (req: Request, res: Response) => {
     try {
+      // Check if OpenAI is configured
+      if (!isOpenAIConfigured()) {
+        console.warn("OpenAI API key is not set - document analysis will be limited");
+      }
+      
       const { documentText } = documentAnalysisSchema.parse(req.body);
       
       // Call OpenAI to analyze the document
@@ -364,6 +403,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Z Clause Analysis Test route
   app.get("/api/test/z-clause-analysis", async (_req: Request, res: Response) => {
     try {
+      // Check if OpenAI is configured
+      if (!isOpenAIConfigured()) {
+        console.warn("OpenAI API key is not set - Z clause analysis will be limited");
+        return res.status(400).json({
+          message: "OpenAI API key not configured",
+          analysis: {
+            issues: ["AI features are currently unavailable"],
+            recommendations: ["Please contact the administrator to set up the OpenAI API key"]
+          }
+        });
+      }
+      
       const fs = await import('fs');
       const path = await import('path');
       
@@ -372,6 +423,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         path.join(process.cwd(), 'test_data/z_clause_sample.txt'),
         'utf8'
       );
+      
+      if (!zClauseContent || zClauseContent.trim().length === 0) {
+        return res.status(400).json({
+          message: "Sample Z clause file is empty",
+          analysis: {
+            issues: ["Empty Z clause file provided"],
+            recommendations: ["Please provide a valid Z clause file to analyze"]
+          }
+        });
+      }
       
       // Call OpenAI to analyze the Z clause
       const analysis = await analyzeContractDocument(zClauseContent);

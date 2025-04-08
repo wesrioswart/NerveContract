@@ -18,9 +18,11 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
   const queryClient = useQueryClient();
 
   // Fetch chat messages
-  const { data: chatMessages = [], isLoading } = useQuery<ChatMessage[]>({
+  const { data: chatMessages = [], isLoading, isError } = useQuery<ChatMessage[]>({
     queryKey: [`/api/projects/${projectId}/chat-messages`],
     staleTime: 10000, // 10 seconds
+    retry: 1,
+    refetchOnWindowFocus: false
   });
   
   // Ensure type safety
@@ -29,20 +31,31 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      // Convert the date to ISO string format for consistent handling
-      const timestamp = new Date().toISOString();
-      console.log("Sending chat message with timestamp:", timestamp);
-      
-      return apiRequest("POST", "/api/chat-messages", {
-        projectId,
-        userId,
-        role: "user",
-        content,
-        timestamp,
-      });
+      try {
+        // Convert the date to ISO string format for consistent handling
+        const timestamp = new Date().toISOString();
+        console.log("Sending chat message with timestamp:", timestamp);
+        
+        const response = await apiRequest("POST", "/api/chat-messages", {
+          projectId,
+          userId,
+          role: "user",
+          content,
+          timestamp,
+        });
+        
+        return response;
+      } catch (error) {
+        console.error("Error in mutation function:", error);
+        throw error; // Re-throw for the mutation to handle
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/chat-messages`] });
+    },
+    onError: (error: unknown) => {
+      console.error("Mutation error:", error);
+      // Could add a toast notification here in a future update
     },
   });
 
@@ -54,8 +67,10 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
     
     try {
       await sendMessageMutation.mutateAsync(tempMessage);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error sending message:", error);
+      // Show an error message to the user - in a production app, we would use a toast notification
+      setMessage(tempMessage); // Restore the original message so the user can try again
     }
   };
 
