@@ -83,7 +83,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/compensation-events", async (req: Request, res: Response) => {
     try {
       console.log("Received compensation event data:", req.body);
-      const validatedData = insertCompensationEventSchema.parse(req.body);
+      
+      // Convert date strings to Date objects
+      const processedData = {
+        ...req.body,
+        raisedAt: req.body.raisedAt ? new Date(req.body.raisedAt) : undefined,
+        responseDeadline: req.body.responseDeadline ? new Date(req.body.responseDeadline) : undefined,
+        implementedDate: req.body.implementedDate ? new Date(req.body.implementedDate) : undefined
+      };
+      
+      console.log("Processed compensation event data:", processedData);
+      const validatedData = insertCompensationEventSchema.parse(processedData);
       console.log("Validated compensation event data:", validatedData);
       const compensationEvent = await storage.createCompensationEvent(validatedData);
       console.log("Created compensation event:", compensationEvent);
@@ -142,10 +152,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/early-warnings", async (req: Request, res: Response) => {
     try {
-      const validatedData = insertEarlyWarningSchema.parse(req.body);
+      // Convert date strings to Date objects
+      const processedData = {
+        ...req.body,
+        raisedAt: req.body.raisedAt ? new Date(req.body.raisedAt) : undefined,
+        meetingDate: req.body.meetingDate ? new Date(req.body.meetingDate) : undefined
+      };
+      
+      const validatedData = insertEarlyWarningSchema.parse(processedData);
       const earlyWarning = await storage.createEarlyWarning(validatedData);
       return res.status(201).json(earlyWarning);
     } catch (error) {
+      console.error("Error creating early warning:", error);
+      if (error instanceof Error) {
+        return res.status(400).json({ message: "Invalid early warning data", error: error.message });
+      }
       return res.status(400).json({ message: "Invalid early warning data" });
     }
   });
