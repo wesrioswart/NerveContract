@@ -56,8 +56,12 @@ interface ProgrammeAnalysis {
 }
 
 const ProgrammeManagement = () => {
+  console.log("Programme Management component rendering");
+  
   const { id: projectIdParam } = useParams();
   const projectId = projectIdParam ? parseInt(projectIdParam) : 1;
+  
+  console.log("Project ID:", projectId);
   
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -150,8 +154,14 @@ const ProgrammeManagement = () => {
   });
   
   // Categorize milestones
-  const keyDateMilestones = milestones.filter((m: ProgrammeMilestone) => m.isKeyDate);
-  const regularMilestones = milestones.filter((m: ProgrammeMilestone) => !m.isKeyDate);
+  console.log("Milestones data received:", milestones);
+  
+  // Check for any data issues
+  const validMilestones = Array.isArray(milestones) ? milestones.filter(m => m && typeof m === 'object') : [];
+  console.log("Valid milestones:", validMilestones);
+  
+  const keyDateMilestones = validMilestones.filter((m: ProgrammeMilestone) => m.isKeyDate);
+  const regularMilestones = validMilestones.filter((m: ProgrammeMilestone) => !m.isKeyDate);
   
   // Status badge color mapping
   const getStatusColor = (status: string) => {
@@ -295,10 +305,12 @@ const ProgrammeManagement = () => {
                         <h4 className="text-sm font-medium mb-2">Upcoming Key Dates</h4>
                         <div className="space-y-2">
                           {keyDateMilestones
-                            .filter((m: ProgrammeMilestone) => m.status !== 'Completed')
-                            .sort((a: ProgrammeMilestone, b: ProgrammeMilestone) => 
-                              new Date(a.plannedDate).getTime() - new Date(b.plannedDate).getTime()
-                            )
+                            .filter((m: ProgrammeMilestone) => m.status !== 'Completed' && m.plannedDate)
+                            .sort((a: ProgrammeMilestone, b: ProgrammeMilestone) => {
+                              if (!a.plannedDate) return 1;
+                              if (!b.plannedDate) return -1;
+                              return new Date(a.plannedDate).getTime() - new Date(b.plannedDate).getTime();
+                            })
                             .slice(0, 3)
                             .map((milestone: ProgrammeMilestone) => (
                               <div key={milestone.id} className="flex justify-between items-center">
@@ -312,7 +324,7 @@ const ProgrammeManagement = () => {
                                   </Badge>
                                 </div>
                                 <span className="text-sm">
-                                  {formatDate(milestone.plannedDate, 'dd MMM yyyy')}
+                                  {milestone.plannedDate ? formatDate(milestone.plannedDate, 'dd MMM yyyy') : 'N/A'}
                                 </span>
                               </div>
                             ))}
@@ -494,7 +506,7 @@ const ProgrammeManagement = () => {
                               <tr key={milestone.id} className="border-b hover:bg-gray-50">
                                 <td className="px-4 py-3 text-sm">{milestone.name}</td>
                                 <td className="px-4 py-3 text-sm">
-                                  {formatDate(milestone.plannedDate, 'dd MMM yyyy')}
+                                  {milestone.plannedDate ? formatDate(milestone.plannedDate, 'dd MMM yyyy') : 'N/A'}
                                 </td>
                                 <td className="px-4 py-3 text-sm">
                                   {milestone.forecastDate
@@ -554,7 +566,7 @@ const ProgrammeManagement = () => {
                               <tr key={milestone.id} className="border-b hover:bg-gray-50">
                                 <td className="px-4 py-3 text-sm">{milestone.name}</td>
                                 <td className="px-4 py-3 text-sm">
-                                  {formatDate(milestone.plannedDate, 'dd MMM yyyy')}
+                                  {milestone.plannedDate ? formatDate(milestone.plannedDate, 'dd MMM yyyy') : 'N/A'}
                                 </td>
                                 <td className="px-4 py-3 text-sm">
                                   {milestone.forecastDate 
