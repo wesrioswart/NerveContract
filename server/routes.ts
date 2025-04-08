@@ -245,14 +245,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Programme Milestones routes
   app.get("/api/projects/:id/programme-milestones", async (req: Request, res: Response) => {
-    const projectId = parseInt(req.params.id);
-    
-    if (isNaN(projectId)) {
-      return res.status(400).json({ message: "Invalid project ID" });
+    try {
+      const projectId = parseInt(req.params.id);
+      
+      if (isNaN(projectId)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      // Get existing programme milestones
+      let programmeMilestones = await storage.getProgrammeMilestonesByProject(projectId);
+      
+      // If no milestones exist, create demo data
+      if (programmeMilestones.length === 0) {
+        console.log(`No programme milestones found for project ${projectId}, creating demo data...`);
+        
+        const demoMilestones = [
+          {
+            projectId,
+            name: "Site Mobilization",
+            plannedDate: new Date("2023-05-10"),
+            actualDate: new Date("2023-05-12"),
+            status: "Completed" as const,
+            isKeyDate: false,
+            affectsCompletionDate: false,
+            description: "Initial setup of site facilities"
+          },
+          {
+            projectId,
+            name: "Foundation Complete",
+            plannedDate: new Date("2023-06-15"),
+            actualDate: new Date("2023-06-20"),
+            status: "Completed" as const,
+            isKeyDate: false,
+            affectsCompletionDate: false,
+            description: "Completion of all foundation works"
+          },
+          {
+            projectId,
+            name: "Structural Frame",
+            plannedDate: new Date("2023-07-30"),
+            actualDate: new Date("2023-08-05"),
+            status: "Completed" as const,
+            isKeyDate: true,
+            affectsCompletionDate: true,
+            description: "Completion of main structural frame"
+          },
+          {
+            projectId,
+            name: "Building Watertight",
+            plannedDate: new Date("2023-09-15"),
+            actualDate: new Date("2023-09-25"),
+            status: "Completed" as const,
+            isKeyDate: true,
+            affectsCompletionDate: true,
+            description: "Building envelope sealed and watertight"
+          },
+          {
+            projectId,
+            name: "MEP First Fix",
+            plannedDate: new Date("2023-10-20"),
+            forecastDate: new Date("2023-10-30"),
+            status: "At Risk" as const,
+            isKeyDate: false,
+            affectsCompletionDate: false,
+            description: "Mechanical, electrical and plumbing first fix"
+          },
+          {
+            projectId,
+            name: "Internal Finishes Start",
+            plannedDate: new Date("2023-11-10"),
+            forecastDate: new Date("2023-11-15"),
+            status: "On Track" as const,
+            isKeyDate: false,
+            affectsCompletionDate: false,
+            description: "Start of internal finishing works"
+          },
+          {
+            projectId,
+            name: "MEP Second Fix",
+            plannedDate: new Date("2023-12-15"),
+            forecastDate: new Date("2023-12-20"),
+            status: "On Track" as const,
+            isKeyDate: false,
+            affectsCompletionDate: false,
+            description: "Mechanical, electrical and plumbing second fix"
+          },
+          {
+            projectId,
+            name: "Practical Completion",
+            plannedDate: new Date("2024-02-28"),
+            forecastDate: new Date("2024-03-10"),
+            status: "Delayed" as const,
+            isKeyDate: true,
+            affectsCompletionDate: true,
+            description: "Project handover to client"
+          }
+        ];
+        
+        // Create each demo milestone
+        for (const milestone of demoMilestones) {
+          await storage.createProgrammeMilestone(milestone);
+        }
+        
+        // Fetch the newly created milestones
+        programmeMilestones = await storage.getProgrammeMilestonesByProject(projectId);
+      }
+      
+      return res.status(200).json(programmeMilestones);
+    } catch (error) {
+      console.error("Error retrieving programme milestones:", error);
+      return res.status(500).json({ message: "Error retrieving programme milestones" });
     }
-    
-    const programmeMilestones = await storage.getProgrammeMilestonesByProject(projectId);
-    return res.status(200).json(programmeMilestones);
   });
 
   // Payment Certificates routes
@@ -453,17 +556,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (!existingMilestone) {
             // Create new milestone
-            await storage.createProgrammeMilestone({
-              projectId: milestone.projectId,
-              name: milestone.name,
-              plannedDate: milestone.plannedDate,
-              forecastDate: milestone.forecastDate,
-              actualDate: milestone.actualDate,
-              status: milestone.status,
-              isKeyDate: milestone.isKeyDate,
-              affectsCompletionDate: milestone.affectsCompletionDate,
-              description: milestone.description
-            });
+            await storage.createProgrammeMilestone(milestone);
           }
         } catch (error) {
           console.error(`Error creating milestone ${milestone.name}:`, error);
