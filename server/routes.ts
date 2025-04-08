@@ -82,10 +82,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/compensation-events", async (req: Request, res: Response) => {
     try {
+      console.log("Received compensation event data:", req.body);
       const validatedData = insertCompensationEventSchema.parse(req.body);
+      console.log("Validated compensation event data:", validatedData);
       const compensationEvent = await storage.createCompensationEvent(validatedData);
+      console.log("Created compensation event:", compensationEvent);
       return res.status(201).json(compensationEvent);
     } catch (error) {
+      console.error("Error creating compensation event:", error);
+      if (error instanceof Error) {
+        return res.status(400).json({ message: "Invalid compensation event data", error: error.message });
+      }
       return res.status(400).json({ message: "Invalid compensation event data" });
     }
   });

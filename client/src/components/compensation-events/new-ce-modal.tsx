@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { X, RefreshCw, UploadCloud } from "lucide-react";
+import { X, RefreshCw, UploadCloud, FileText } from "lucide-react";
 
 type NewCEModalProps = {
   projectId: number;
@@ -17,6 +17,7 @@ export default function NewCEModal({ projectId, onClose }: NewCEModalProps) {
   const [clauseReference, setClauseReference] = useState("");
   const [estimatedValue, setEstimatedValue] = useState("");
   const [description, setDescription] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -53,6 +54,16 @@ export default function NewCEModal({ projectId, onClose }: NewCEModalProps) {
     }
     
     try {
+      // Process file attachments
+      const fileAttachments = files.length > 0 
+        ? files.map(file => ({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified
+          }))
+        : [];
+      
       // Here we're creating a simplified CE, in a real app we'd get the user ID from context
       // and generate a proper reference number
       await createCEMutation.mutateAsync({
@@ -66,7 +77,10 @@ export default function NewCEModal({ projectId, onClose }: NewCEModalProps) {
         raisedBy: 1, // This would be the current user's ID
         raisedAt: new Date(),
         responseDeadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+        attachments: fileAttachments.length > 0 ? fileAttachments : null,
       });
+      
+      console.log("Submitted CE with attachments:", fileAttachments);
     } catch (error) {
       console.error("Error creating CE:", error);
     }
@@ -135,12 +149,57 @@ export default function NewCEModal({ projectId, onClose }: NewCEModalProps) {
           
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">Attachments</label>
-            <div className="border border-dashed border-gray-300 rounded-md p-4 text-center">
+            <div 
+              className="border border-dashed border-gray-300 rounded-md p-4 text-center cursor-pointer hover:bg-gray-50"
+              onClick={() => document.getElementById('file-upload')?.click()}
+            >
               <UploadCloud className="h-6 w-6 text-gray-500 mx-auto mb-1" />
               <p className="text-sm text-gray-500">Drag files here or click to browse</p>
               <p className="text-xs text-gray-500 mt-1">PDF, JPG, PNG, DOC up to 10MB</p>
-              <input type="file" className="hidden" multiple />
+              <input 
+                id="file-upload"
+                type="file" 
+                className="hidden" 
+                multiple 
+                onChange={(e) => {
+                  if (e.target.files?.length) {
+                    const newFiles = Array.from(e.target.files);
+                    setFiles(prev => [...prev, ...newFiles]);
+                    toast({
+                      title: "Files selected",
+                      description: `Selected ${newFiles.length} file(s)`,
+                    });
+                  }
+                }}
+              />
             </div>
+            
+            {files.length > 0 && (
+              <div className="mt-2">
+                <p className="text-sm font-medium text-gray-500 mb-1">Selected files:</p>
+                <div className="space-y-2">
+                  {files.map((file, index) => (
+                    <div key={index} className="flex items-center bg-gray-50 p-2 rounded-md">
+                      <FileText className="h-4 w-4 text-cyan-700 mr-2" />
+                      <span className="text-sm truncate">{file.name}</span>
+                      <span className="text-xs text-gray-500 ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="ml-auto"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFiles(files.filter((_, i) => i !== index));
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
