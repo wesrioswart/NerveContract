@@ -3,6 +3,7 @@ import { CompensationEvent } from "@shared/schema";
 import { formatDate, formatCurrency, getStatusColor } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { Plus, RefreshCw, ArrowRight } from "lucide-react";
 import NewCEModal from "./new-ce-modal";
 
 type CETableProps = {
@@ -15,7 +16,7 @@ export default function CETable({ projectId, limit, showViewAll = false }: CETab
   const [showModal, setShowModal] = useState(false);
   const [selectedCE, setSelectedCE] = useState<CompensationEvent | null>(null);
   
-  const { data: compensationEvents = [], isLoading } = useQuery({
+  const { data: compensationEvents = [], isLoading } = useQuery<any[]>({
     queryKey: [`/api/projects/${projectId}/compensation-events`],
   });
 
@@ -37,13 +38,13 @@ export default function CETable({ projectId, limit, showViewAll = false }: CETab
           onClick={() => setShowModal(true)}
           className="bg-cyan-700 hover:bg-cyan-800 text-white px-3 py-1 rounded-lg text-sm flex items-center"
         >
-          <span className="material-icons text-sm mr-1">add</span> New CE
+          <Plus className="h-3 w-3 mr-1" /> New CE
         </Button>
       </div>
       
       {isLoading ? (
         <div className="flex justify-center items-center py-8">
-          <span className="material-icons animate-spin text-cyan-700">refresh</span>
+          <RefreshCw className="h-5 w-5 animate-spin text-cyan-700" />
           <span className="ml-2">Loading compensation events...</span>
         </div>
       ) : displayedCEs.length === 0 ? (
@@ -104,7 +105,7 @@ export default function CETable({ projectId, limit, showViewAll = false }: CETab
             className="text-sm text-cyan-700 hover:text-cyan-800 flex items-center justify-center"
           >
             View all compensation events
-            <span className="material-icons text-sm ml-1">arrow_forward</span>
+            <ArrowRight className="h-4 w-4 ml-1" />
           </a>
         </div>
       )}

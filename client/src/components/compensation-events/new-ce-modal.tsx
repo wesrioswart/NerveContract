@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { X, RefreshCw, UploadCloud } from "lucide-react";
 
 type NewCEModalProps = {
   projectId: number;
@@ -77,7 +78,7 @@ export default function NewCEModal({ projectId, onClose }: NewCEModalProps) {
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">New Compensation Event</h3>
           <button className="text-gray-500 hover:text-gray-900" onClick={onClose}>
-            <span className="material-icons">close</span>
+            <X className="h-5 w-5" />
           </button>
         </div>
         
@@ -135,7 +136,7 @@ export default function NewCEModal({ projectId, onClose }: NewCEModalProps) {
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">Attachments</label>
             <div className="border border-dashed border-gray-300 rounded-md p-4 text-center">
-              <span className="material-icons text-gray-500 text-xl mb-1">cloud_upload</span>
+              <UploadCloud className="h-6 w-6 text-gray-500 mx-auto mb-1" />
               <p className="text-sm text-gray-500">Drag files here or click to browse</p>
               <p className="text-xs text-gray-500 mt-1">PDF, JPG, PNG, DOC up to 10MB</p>
               <input type="file" className="hidden" multiple />
@@ -157,7 +158,7 @@ export default function NewCEModal({ projectId, onClose }: NewCEModalProps) {
             >
               {createCEMutation.isPending ? (
                 <>
-                  <span className="material-icons animate-spin mr-2 text-white">refresh</span>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                   Submitting...
                 </>
               ) : (

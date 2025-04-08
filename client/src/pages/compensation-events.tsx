@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
+import { Plus, Search, Filter, Download } from "lucide-react";
 
 export default function CompensationEvents() {
   const [showModal, setShowModal] = useState(false);
@@ -16,7 +17,7 @@ export default function CompensationEvents() {
   // For MVP, we'll assume project ID 1
   const projectId = 1;
   
-  const { data: compensationEvents = [] } = useQuery({
+  const { data: compensationEvents = [] } = useQuery<any[]>({
     queryKey: [`/api/projects/${projectId}/compensation-events`],
   });
   
@@ -45,7 +46,7 @@ export default function CompensationEvents() {
           onClick={() => setShowModal(true)}
           className="bg-cyan-700 hover:bg-cyan-800 text-white"
         >
-          <span className="material-icons mr-2">add</span>
+          <Plus className="mr-2 h-4 w-4" />
           New Compensation Event
         </Button>
       </div>
@@ -81,12 +82,13 @@ export default function CompensationEvents() {
       
       <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
+          <div className="flex-1 relative">
+            <Search className="h-4 w-4 absolute left-2.5 top-2.5 text-gray-400" />
             <Input
               placeholder="Search by reference or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              prefix={<span className="material-icons text-gray-400">search</span>}
+              className="w-full pl-8"
             />
           </div>
           
@@ -109,12 +111,12 @@ export default function CompensationEvents() {
           </div>
           
           <Button variant="outline" className="w-full md:w-auto">
-            <span className="material-icons mr-2">filter_list</span>
+            <Filter className="mr-2 h-4 w-4" />
             More Filters
           </Button>
           
           <Button variant="outline" className="w-full md:w-auto">
-            <span className="material-icons mr-2">download</span>
+            <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
         </div>
