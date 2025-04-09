@@ -21,6 +21,10 @@ const openai = new OpenAI({
 type ClauseInfo = {
   text: string;
   explanation: string;
+  relatedClauses?: string[];
+  actionableBy?: string;
+  timeframe?: string;
+  riskTrigger?: string;
 };
 
 type KnowledgeBase = {
@@ -31,47 +35,117 @@ const NEC4_KNOWLEDGE_BASE: KnowledgeBase = {
   // Compensation Event Clauses
   "61.3": {
     text: "The Contractor notifies the Project Manager of an event which has happened or which is expected to happen as a compensation event if the Contractor believes that the event is a compensation event and the Project Manager has not notified the event to the Contractor.",
-    explanation: "This requires the Contractor to notify the Project Manager of any events they consider to be compensation events if the Project Manager hasn't already notified them about it."
+    explanation: "This requires the Contractor to notify the Project Manager of any events they consider to be compensation events if the Project Manager hasn't already notified them about it.",
+    relatedClauses: ["60.1", "61.4", "61.5", "15.1"],
+    actionableBy: "Contractor",
+    timeframe: "As soon as becoming aware of the event"
   },
   "61.4": {
     text: "If the Contractor does not notify a compensation event within eight weeks of becoming aware that the event has happened, the Prices, the Completion Date or a Key Date are not changed unless the Project Manager should have notified the event to the Contractor but did not.",
-    explanation: "The Contractor must notify a compensation event within 8 weeks of becoming aware of it, otherwise they lose the right to claim unless the Project Manager should have notified it but didn't."
+    explanation: "The Contractor must notify a compensation event within 8 weeks of becoming aware of it, otherwise they lose the right to claim unless the Project Manager should have notified it but didn't.",
+    relatedClauses: ["61.3", "60.1", "61.1", "15.1"],
+    actionableBy: "Contractor",
+    timeframe: "Within 8 weeks of becoming aware of the event",
+    riskTrigger: "Exceeding the 8-week notification period leads to loss of entitlement"
   },
   "60.1": {
     text: "The following are compensation events...",
-    explanation: "This clause lists all the situations that qualify as compensation events under the contract."
+    explanation: "This clause lists all the situations that qualify as compensation events under the contract.",
+    relatedClauses: ["61.1", "61.3", "63.1", "11.2(29)"],
+    actionableBy: "Project Manager/Contractor",
+    timeframe: "Varies by event type"
+  },
+  
+  // Early Warning Clauses
+  "15.1": {
+    text: "The Contractor and the Project Manager give an early warning by notifying the other as soon as either becomes aware of any matter which could increase the total of the Prices, delay Completion, delay meeting a Key Date or impair the performance of the works in use.",
+    explanation: "Both parties must notify each other as soon as they become aware of any issue that could affect cost, time, or quality.",
+    relatedClauses: ["15.2", "15.3", "61.5", "36"],
+    actionableBy: "Both Contractor and Project Manager",
+    timeframe: "As soon as becoming aware of the matter",
+    riskTrigger: "Failing to raise early warnings may affect later compensation event assessments"
+  },
+  "15.2": {
+    text: "The Contractor or the Project Manager may instruct the other to attend an early warning meeting.",
+    explanation: "Either party can call a meeting to discuss early warnings.",
+    relatedClauses: ["15.1", "15.3"],
+    actionableBy: "Both Contractor and Project Manager",
+    timeframe: "After an early warning has been notified"
+  },
+  "15.3": {
+    text: "At an early warning meeting, those who attend co-operate in making and considering proposals about how the effect of each matter which has been notified as an early warning can be avoided or reduced.",
+    explanation: "Early warning meetings are collaborative sessions to find solutions to notified issues.",
+    relatedClauses: ["15.1", "15.2", "63.7"],
+    actionableBy: "All meeting attendees",
+    timeframe: "During the early warning meeting"
+  },
+  
+  // Programme Clauses
+  "31.2": {
+    text: "The Contractor shows on each programme which he submits for acceptance the information which the Scope requires the Contractor to show on a programme submitted for acceptance, the starting date, possession dates, access dates, Key Dates, Completion Date, planned Completion, the order and timing of the operations which the Contractor plans to do in order to Provide the Works, the order and timing of the work of the Client and Others as last agreed with them by the Contractor or, if not so agreed, as stated in the Scope, the dates when the Contractor plans to meet each Condition stated for a Key Date and to complete other work which is a condition precedent for achieving a Key Date and provisions for float, time risk allowances, health and safety requirements and the procedures set out in this contract.",
+    explanation: "Defines the required content of the Contractor's programme submittals.",
+    relatedClauses: ["31.1", "31.3", "32.1", "36"],
+    actionableBy: "Contractor",
+    timeframe: "Within 8 weeks of receiving request for programme"
+  },
+  "32.1": {
+    text: "The Contractor submits a revised programme to the Project Manager for acceptance within the period for reply after the Project Manager has instructed the Contractor to submit a revised programme or the Contractor has notified the Project Manager of a compensation event.",
+    explanation: "Requires the Contractor to submit revised programmes when instructed or after compensation events.",
+    relatedClauses: ["31.2", "61.1", "63.5", "36"],
+    actionableBy: "Contractor",
+    timeframe: "Within the period for reply after instruction or CE notification"
   },
   
   // Instructions Clauses
   "14.3": {
     text: "The Project Manager may give an instruction to the Contractor which changes the Scope or a Key Date.",
-    explanation: "This is a key clause giving the Project Manager authority to issue instructions that change the project Scope or deadlines through a PMI (Project Manager's Instruction)."
+    explanation: "This is a key clause giving the Project Manager authority to issue instructions that change the project Scope or deadlines through a PMI (Project Manager's Instruction).",
+    relatedClauses: ["14.1", "27.3", "60.1(1)"],
+    actionableBy: "Project Manager",
+    timeframe: "As needed throughout the project",
+    riskTrigger: "If the instruction creates a compensation event, must be notified within 8 weeks"
   },
   "27.3": {
     text: "The Contractor obeys an instruction which is in accordance with this contract and is given to it by the Project Manager or the Supervisor.",
-    explanation: "This clause obligates the Contractor to follow all valid instructions from either the Project Manager or Supervisor."
+    explanation: "This clause obligates the Contractor to follow all valid instructions from either the Project Manager or Supervisor.",
+    relatedClauses: ["14.3", "27.1", "27.2"],
+    actionableBy: "Contractor",
+    timeframe: "Immediately upon receiving an instruction"
   },
   
   // Subcontract Management
   "26.3": {
     text: "If the Contractor subcontracts work, it is responsible for Providing the Works as if it had not subcontracted. This contract applies as if a Subcontractor's employees and equipment were the Contractor's.",
-    explanation: "The Contractor remains fully responsible for all subcontracted work and all subcontractor actions are treated as if they were the Contractor's own."
+    explanation: "The Contractor remains fully responsible for all subcontracted work and all subcontractor actions are treated as if they were the Contractor's own.",
+    relatedClauses: ["26.1", "26.2", "26.4"],
+    actionableBy: "Contractor",
+    timeframe: "Throughout the subcontract",
+    riskTrigger: "Contractor remains liable for subcontractor performance issues"
   },
   
   // Communication Requirements
   "13.1": {
     text: "Each instruction, certificate, submission, proposal, record, acceptance, notification, reply and other communication which this contract requires is communicated in a form which can be read, copied and recorded.",
-    explanation: "All formal communications under the contract must be in a recordable format. This means emails, formal letters, or the project's document management system, not verbal instructions."
+    explanation: "All formal communications under the contract must be in a recordable format. This means emails, formal letters, or the project's document management system, not verbal instructions.",
+    relatedClauses: ["13.2", "13.3", "13.4"],
+    actionableBy: "All parties",
+    timeframe: "For all communications throughout the project"
   },
   "13.2": {
     text: "A communication has effect when it is received at the last address notified by the recipient for receiving communications or, if none is notified, at the address of the recipient stated in the Contract Data.",
-    explanation: "Communications are only effective once received at the designated address."
+    explanation: "Communications are only effective once received at the designated address.",
+    relatedClauses: ["13.1", "13.7"],
+    actionableBy: "All parties",
+    timeframe: "For all communications throughout the project"
   },
   
-  // Early Warning and Risk Reduction
-  "15.1": {
-    text: "The Contractor and the Project Manager give an early warning by notifying the other as soon as either becomes aware of any matter which could increase the total of the Prices, delay Completion, delay meeting a Key Date or impair the performance of the works in use.",
-    explanation: "Both parties must promptly notify each other of any issues that could affect cost, time, or quality of the project."
+  // Communication and Collaboration
+  "13.4": {
+    text: "The Project Manager, Supervisor and Contractor acknowledge that their collaboration is important to the success of the project.",
+    explanation: "This clause emphasizes the importance of collaboration between all parties for project success.",
+    relatedClauses: ["15.1", "15.2", "10.1"],
+    actionableBy: "All parties",
+    timeframe: "Throughout the project"
   }
 };
 
@@ -84,37 +158,108 @@ async function askContractAssistant(question: string): Promise<string> {
       return "AI features are currently unavailable. Please contact the administrator to set up the OpenAI API key.";
     }
     
-    // Define known clause numbers
-    const instructionClauses = ["14.3", "27.3", "13.1"];
-    const subcontractClauses = ["26.3"];
+    // Define common NEC4 topics and their related clauses
+    const topicMap: Record<string, string[]> = {
+      "instruction": ["14.3", "27.3", "13.1", "14.1"],
+      "subcontract": ["26.3", "26.1", "26.2"],
+      "early warning": ["15.1", "15.2", "15.3"],
+      "programme": ["31.2", "32.1", "32.2", "36"],
+      "compensation event": ["60.1", "61.3", "61.4", "63.1", "65.2"],
+      "payment": ["50.1", "51.1", "51.2"],
+      "dispute": ["90.1", "92", "93"],
+      "defect": ["41.1", "42.1", "43.1", "44.1"],
+      "change": ["14.3", "60.1", "65.1"],
+      "delay": ["32.1", "15.1", "61.3", "62.2"],
+      "key date": ["31.2", "14.3", "36", "60.1(5)"],
+      "time": ["30.1", "31.2", "32.1", "36", "60.1(5)", "60.1(16)"],
+      "cost": ["60.1", "63.1", "65.2"],
+      "quality": ["40.1", "41.1", "42.1", "43.1", "44.1"],
+      "completion": ["30.1", "31.2", "35.1", "36"],
+      "risk": ["15.1", "80.1", "81.1", "82.1", "83.1"],
+      "document": ["13.1", "13.2", "13.4"],
+      "certificate": ["35.2", "50.1", "51.1"]
+    };
     
     // Search for relevant clauses in our knowledge base
-    const relevantClauseNumbers = Object.keys(NEC4_KNOWLEDGE_BASE).filter(clause => {
-      // Direct mention of a clause number
+    let relevantClauseNumbers: string[] = [];
+    
+    // Direct mention of a clause number
+    Object.keys(NEC4_KNOWLEDGE_BASE).forEach(clause => {
       if (question.toLowerCase().includes(clause)) {
-        return true;
+        relevantClauseNumbers.push(clause);
+        
+        // Also include related clauses if we have an exact clause match
+        const clauseInfo = NEC4_KNOWLEDGE_BASE[clause];
+        if (clauseInfo.relatedClauses) {
+          // Add related clauses without using spread operator
+          clauseInfo.relatedClauses.forEach(relatedClause => {
+            relevantClauseNumbers.push(relatedClause);
+          });
+        }
       }
-      
-      // Question about instructions
-      if (question.toLowerCase().includes("instruction") && instructionClauses.includes(clause)) {
-        return true;
-      }
-      
-      // Question about subcontracts
-      if (question.toLowerCase().includes("subcontract") && subcontractClauses.includes(clause)) {
-        return true;
-      }
-      
-      return false;
     });
     
-    // Format the relevant clauses as context
+    // Topic-based search if no direct clause number is found
+    if (relevantClauseNumbers.length === 0) {
+      // Check for topic mentions
+      Object.entries(topicMap).forEach(([topic, clauses]) => {
+        if (question.toLowerCase().includes(topic)) {
+          // Add clauses without using spread operator
+          clauses.forEach(clause => {
+            relevantClauseNumbers.push(clause);
+          });
+        }
+      });
+    }
+    
+    // Detect questions about dispute/delay patterns if no other matches
+    if (relevantClauseNumbers.length === 0) {
+      const delayPattern = /delay|late|behind schedule|miss(ed|ing)? deadline|overrun/i;
+      const disputePattern = /disagree|dispute|conflict|reject|challenge|denied|refuse/i;
+      
+      if (delayPattern.test(question)) {
+        // Add delay-related clauses without using spread
+        topicMap["delay"].forEach(clause => {
+          relevantClauseNumbers.push(clause);
+        });
+      }
+      
+      if (disputePattern.test(question)) {
+        // Add dispute-related clauses without using spread
+        topicMap["dispute"].forEach(clause => {
+          relevantClauseNumbers.push(clause);
+        });
+      }
+    }
+    
+    // Remove duplicates using filter
+    relevantClauseNumbers = relevantClauseNumbers.filter((clause, index) => {
+      return relevantClauseNumbers.indexOf(clause) === index;
+    });
+    
+    // Format the relevant clauses as context with enhanced information
     let knowledgeContext = "";
     if (relevantClauseNumbers.length > 0) {
       knowledgeContext = "Here are the relevant NEC4 clauses:\n\n";
       relevantClauseNumbers.forEach(clause => {
         const clauseInfo = NEC4_KNOWLEDGE_BASE[clause];
-        knowledgeContext += `Clause ${clause}: "${clauseInfo.text}"\n\n`;
+        if (clauseInfo) {
+          knowledgeContext += `Clause ${clause}: "${clauseInfo.text}"\n`;
+          
+          if (clauseInfo.actionableBy) {
+            knowledgeContext += `Actionable by: ${clauseInfo.actionableBy}\n`;
+          }
+          
+          if (clauseInfo.timeframe) {
+            knowledgeContext += `Timeframe: ${clauseInfo.timeframe}\n`;
+          }
+          
+          if (clauseInfo.riskTrigger) {
+            knowledgeContext += `Risk trigger: ${clauseInfo.riskTrigger}\n`;
+          }
+          
+          knowledgeContext += "\n";
+        }
       });
     }
     
@@ -190,7 +335,35 @@ async function analyzeContractDocument(documentText: string): Promise<{
       };
     }
     
-    const prompt = `
+    // Detect if this is a Z-clause analysis
+    const isZClauseAnalysis = documentText.toLowerCase().includes('z clause') || 
+                            documentText.toLowerCase().includes('z1') || 
+                            documentText.toLowerCase().includes('additional conditions of contract');
+    
+    const prompt = isZClauseAnalysis ? 
+    `
+    Analyze the following Z clauses added to an NEC4 construction contract for specific legal and practical issues:
+    
+    ${documentText}
+    
+    Provide a structured analysis with:
+    1. Clear, specific issues that could create liability, shift risk inappropriately, or conflict with NEC4 principles
+    2. For each issue, reference the specific NEC4 core clause that conflicts with the Z clause
+    3. Identify ambiguous wording that could lead to disputes
+    4. Assess impact on time, cost, and quality management
+    5. Provide specific, actionable recommendations to improve the Z clause wording
+    6. For each issue, explain which party (Client or Contractor) is disadvantaged by the clause
+    
+    Categorize issues by severity:
+    - Critical: Fundamentally alters NEC4 risk allocation or creates severe contractual imbalance
+    - Moderate: Creates potential disputes or ambiguity but doesn't fundamentally undermine the contract
+    - Minor: Technical issues that should be addressed but don't create significant risk
+    
+    Focus on clarity and practical application. Avoid vague statements.
+    For each issue and recommendation, include the specific NEC4 clause number it relates to.
+    Format your response as JSON with 'issues' and 'recommendations' arrays.
+    ` :
+    `
     Analyze the following NEC4 construction contract document extract for specific practical issues:
     
     ${documentText}
@@ -213,7 +386,17 @@ async function analyzeContractDocument(documentText: string): Promise<{
       messages: [
         {
           role: "system",
-          content: "You are an expert NEC4 contract analyzer that identifies practical issues and provides specific, actionable recommendations. Focus on clarity and directness in your analysis. Highlight who needs to take what action. Use plain language that professionals without legal training can understand."
+          content: isZClauseAnalysis ? 
+            "You are an expert NEC4 construction contract Z-clause analyzer with legal expertise. Your analysis must:\n\n" +
+            "1. Identify clauses that shift risk in ways that contradict NEC4 philosophy of fair risk allocation\n" +
+            "2. Highlight ambiguous wording that could lead to disputes\n" +
+            "3. Focus on liability caps, time bars, notice periods, and payment terms that differ from standard NEC4\n" +
+            "4. Reference specific main NEC4 clause numbers (e.g. 'conflicts with clause 60.1')\n" +
+            "5. Provide very specific, actionable recommendations to improve each Z clause\n" +
+            "6. Categorize issues by severity (Critical/Moderate/Minor)\n" +
+            "7. Explain which party (Client or Contractor) is disadvantaged by each problematic clause\n\n" +
+            "Use plain language for construction professionals without legal training. Focus on practical implications." :
+            "You are an expert NEC4 contract analyzer that identifies practical issues and provides specific, actionable recommendations. Focus on clarity and directness in your analysis. Highlight who needs to take what action. Use plain language that professionals without legal training can understand."
         },
         {
           role: "user",

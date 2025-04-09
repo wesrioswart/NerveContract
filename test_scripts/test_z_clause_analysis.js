@@ -1,12 +1,9 @@
 // Test script for Z clause analysis using OpenAI
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { analyzeContractDocument } from '../server/utils/openai.js';
+const fs = require('fs');
+const path = require('path');
+const { analyzeContractDocument } = require('../server/utils/openai');
 
-// Get the directory name properly in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// __dirname is available in CommonJS
 
 async function testZClauseAnalysis() {
   try {
