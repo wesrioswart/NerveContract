@@ -34,9 +34,10 @@ export default function EWTable({ projectId, limit, showViewAll = false }: EWTab
         <h3 className="text-lg font-medium">Early Warnings</h3>
         <Button
           onClick={handleNewEarlyWarning}
-          className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-lg text-sm flex items-center"
+          className="bg-amber-500 hover:bg-amber-600 text-white"
         >
-          <span className="material-icons text-sm mr-1">add</span> New EW
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+          New Early Warning
         </Button>
       </div>
       
