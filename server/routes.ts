@@ -440,166 +440,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Programme file upload request received");
       
-      // In a real implementation, we would process the uploaded file
-      // For now, we'll just simulate success
+      // Create tmp directory if it doesn't exist
+      const tmpDir = path.join(process.cwd(), 'tmp');
+      if (!fs.existsSync(tmpDir)) {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      }
       
       // Check if OpenAI is configured for analysis
       if (!isOpenAIConfigured()) {
         console.warn("OpenAI API key is not set - programme analysis will be limited");
       }
       
-      // Process form data
-      const projectId = parseInt(req.body.projectId);
-      
-      if (isNaN(projectId)) {
-        return res.status(400).json({ message: "Invalid project ID" });
-      }
-      
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Generate simulated milestones
-      const milestones = [
-        {
-          id: 1,
-          projectId,
-          name: "Site Mobilization",
-          plannedDate: new Date("2023-05-10"),
-          actualDate: new Date("2023-05-12"),
-          status: "Completed",
-          isKeyDate: false,
-          affectsCompletionDate: false,
-          description: "Initial setup of site facilities"
-        },
-        {
-          id: 2,
-          projectId,
-          name: "Foundation Complete",
-          plannedDate: new Date("2023-06-15"),
-          actualDate: new Date("2023-06-20"),
-          status: "Completed",
-          isKeyDate: false,
-          affectsCompletionDate: false,
-          description: "Completion of all foundation works"
-        },
-        {
-          id: 3,
-          projectId,
-          name: "Structural Frame",
-          plannedDate: new Date("2023-07-30"),
-          actualDate: new Date("2023-08-05"),
-          status: "Completed",
-          isKeyDate: true,
-          affectsCompletionDate: true,
-          description: "Completion of main structural frame"
-        },
-        {
-          id: 4,
-          projectId,
-          name: "Building Watertight",
-          plannedDate: new Date("2023-09-15"),
-          actualDate: new Date("2023-09-25"),
-          status: "Completed",
-          isKeyDate: true,
-          affectsCompletionDate: true,
-          description: "Building envelope sealed and watertight"
-        },
-        {
-          id: 5,
-          projectId,
-          name: "MEP First Fix",
-          plannedDate: new Date("2023-10-20"),
-          forecastDate: new Date("2023-10-30"),
-          status: "At Risk",
-          isKeyDate: false,
-          affectsCompletionDate: false,
-          description: "Mechanical, electrical and plumbing first fix"
-        },
-        {
-          id: 6,
-          projectId,
-          name: "Internal Finishes Start",
-          plannedDate: new Date("2023-11-10"),
-          forecastDate: new Date("2023-11-15"),
-          status: "On Track",
-          isKeyDate: false,
-          affectsCompletionDate: false,
-          description: "Start of internal finishing works"
-        },
-        {
-          id: 7,
-          projectId,
-          name: "MEP Second Fix",
-          plannedDate: new Date("2023-12-15"),
-          forecastDate: new Date("2023-12-20"),
-          status: "On Track",
-          isKeyDate: false,
-          affectsCompletionDate: false,
-          description: "Mechanical, electrical and plumbing second fix"
-        },
-        {
-          id: 8,
-          projectId,
-          name: "Practical Completion",
-          plannedDate: new Date("2024-02-28"),
-          forecastDate: new Date("2024-03-10"),
-          status: "Delayed",
-          isKeyDate: true,
-          affectsCompletionDate: true,
-          description: "Project handover to client"
-        }
-      ];
-      
-      // Store the milestones (in a real implementation)
-      // For now, we'll just create them in memory
-      for (const milestone of milestones) {
-        try {
-          // Check if milestone already exists
-          const existingMilestone = await storage.getProgrammeMilestone(milestone.id);
+      try {
+        // Process the uploaded file using our utility function
+        const result = await processProjectFileUpload(req);
+        const { milestones, projectId, fileName } = result;
+        
+        console.log(`Successfully processed ${fileName} with ${milestones.length} milestones for project ${projectId}`);
+        
+        // Store the extracted milestones in the database
+        const savedMilestones = [];
+        for (const milestone of milestones) {
+          // Create a new milestone or update an existing one with the same name
+          const existingMilestones = await storage.getProgrammeMilestonesByProject(projectId);
+          const existingMilestone = existingMilestones.find(m => m.name === milestone.name);
           
-          if (!existingMilestone) {
+          if (existingMilestone) {
+            // Update existing milestone
+            const updatedMilestone = await storage.updateProgrammeMilestone(existingMilestone.id, {
+              ...milestone,
+              projectId
+            });
+            savedMilestones.push(updatedMilestone);
+          } else {
             // Create new milestone
-            await storage.createProgrammeMilestone(milestone);
+            const newMilestone = await storage.createProgrammeMilestone({
+              ...milestone,
+              projectId
+            });
+            savedMilestones.push(newMilestone);
           }
-        } catch (error) {
-          console.error(`Error creating milestone ${milestone.name}:`, error);
         }
+        
+        // Analyze the programme
+        const analysis = analyzeNEC4Compliance(milestones);
+        
+        return res.status(200).json({
+          message: `Successfully processed programme file: ${fileName}`,
+          milestones: savedMilestones,
+          analysis
+        });
+      } catch (error) {
+        console.error("Error processing programme file:", error);
+        return res.status(400).json({ 
+          message: "Error processing programme file", 
+          error: error instanceof Error ? error.message : "Unknown error" 
+        });
       }
-      
-      // Generate analysis results
-      const analysis = {
-        issuesFound: [
-          {
-            severity: "high",
-            description: "Practical Completion milestone delayed by 10 days",
-            nec4Clause: "31.2",
-            recommendation: "Submit Early Warning and evaluate impact to Key Dates"
-          },
-          {
-            severity: "medium",
-            description: "MEP First Fix at risk with 10 days delay forecast",
-            nec4Clause: "32.1",
-            recommendation: "Review resource allocation and consider mitigation measures"
-          },
-          {
-            severity: "low",
-            description: "Insufficient float on Internal Finishes activities",
-            nec4Clause: "31.2",
-            recommendation: "Review durations and consider parallel working where possible"
-          }
-        ],
-        metrics: {
-          critical_path_tasks: 12,
-          float_less_than_5days: 8,
-          totalDuration: 295,
-          completionDateChange: 10
-        }
-      };
-      
-      return res.status(200).json({
-        message: "Programme file uploaded and processed successfully",
-        analysis
-      });
     } catch (error) {
       console.error("Error processing programme file:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -692,29 +589,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { xmlContent } = parseXMLSchema.parse(req.body);
       
-      // In a real implementation, we would parse the XML and extract milestone data
-      // For the MVP, we'll just return a dummy response
-      return res.status(200).json({
-        milestones: [
-          {
-            name: "Foundation Work",
-            plannedDate: new Date("2023-07-15"),
-            status: "Completed"
-          },
-          {
-            name: "Structural Steel",
-            plannedDate: new Date("2023-08-30"),
-            status: "In Progress"
-          },
-          {
-            name: "Roof Installation",
-            plannedDate: new Date("2023-10-15"),
-            status: "Not Started"
-          }
-        ]
-      });
+      // Parse the XML using our utility function
+      try {
+        const milestones = await parseProjectXml(xmlContent);
+        
+        console.log(`Successfully parsed XML with ${milestones.length} milestones`);
+        
+        return res.status(200).json({
+          milestones,
+          message: "XML parsed successfully"
+        });
+      } catch (parseError) {
+        console.error("Error parsing XML:", parseError);
+        return res.status(400).json({ 
+          message: "Error parsing XML content", 
+          error: parseError instanceof Error ? parseError.message : "Unknown parsing error" 
+        });
+      }
     } catch (error) {
-      return res.status(400).json({ message: "Invalid XML content" });
+      return res.status(400).json({ message: "Invalid XML content format" });
     }
   });
 
