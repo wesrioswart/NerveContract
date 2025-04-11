@@ -10,8 +10,10 @@ import {
   AlertCircle, 
   Check, 
   Clock, 
-  Info 
+  Info,
+  GanttChart
 } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 // Define simplified milestone type to avoid schema mismatch
 interface Milestone {
@@ -42,7 +44,7 @@ type GanttChartProps = {
   programmeAnalysis?: any;
 };
 
-export default function GanttChart({ milestones, programmeAnalysis }: GanttChartProps) {
+export default function GanttChartComponent({ milestones, programmeAnalysis }: GanttChartProps) {
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -273,6 +275,20 @@ export default function GanttChart({ milestones, programmeAnalysis }: GanttChart
   
   // Get all identified issues from programme analysis
   const issuesFound = programmeAnalysis?.issuesFound || [];
+  
+  // Helper function for severity class
+  const getSeverityClass = (severity: string) => {
+    switch (severity) {
+      case "high":
+        return "bg-red-50 border-red-200 text-red-800";
+      case "medium":
+        return "bg-amber-50 border-amber-200 text-amber-800";
+      case "low":
+        return "bg-blue-50 border-blue-200 text-blue-800";
+      default:
+        return "bg-gray-50 border-gray-200 text-gray-800";
+    }
+  };
 
   return (
     <Card className="w-full">

@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import GanttChartComponent from '@/components/programme/gantt-chart';
+import GanttChartComponent from '@/components/programme/gantt-chart-component';
 
 // Define interface for projects
 interface Project {
