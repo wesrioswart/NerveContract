@@ -24,6 +24,7 @@ import { queryClient, apiRequest } from '@/lib/queryClient';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
 // Define interface for programme milestones
 interface ProgrammeMilestone {
@@ -60,6 +61,7 @@ const ProgrammeManagement = () => {
   
   const { id: projectIdParam } = useParams();
   const projectId = projectIdParam ? parseInt(projectIdParam) : 1;
+  const { toast } = useToast();
   
   console.log("Project ID:", projectId);
   
@@ -126,9 +128,25 @@ const ProgrammeManagement = () => {
       // Invalidate milestones query to refresh the list
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/programme-milestones`] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Upload error:', error);
       setUploadProgress(0);
+      
+      // Check for specific error responses
+      if (error.status === 413) {
+        toast({
+          title: "File Too Large",
+          description: "The programme file exceeds the maximum allowed size of 50MB.",
+          variant: "destructive"
+        });
+      } else {
+        // Generic error message
+        toast({
+          title: "Upload Failed",
+          description: error.message || "Failed to upload programme file. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   });
   
