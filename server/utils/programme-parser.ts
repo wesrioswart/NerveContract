@@ -5,12 +5,13 @@ import { Request } from 'express';
 import path from 'path';
 import { ProgrammeMilestone } from '@shared/schema';
 
-// Interface for parsed milestone data
+// Interface for parsed milestone data from XML/MPP files
 interface ParsedMilestone {
   name: string;
-  plannedDate: Date | null;
+  plannedDate: Date;        // Must be a Date (not null) to match schema
   actualDate: Date | null;
-  status: 'Not Started' | 'In Progress' | 'Completed';
+  forecastDate?: Date | null;
+  status: string;          // Changed to match our database status options
   isKeyDate: boolean;
   affectsCompletionDate: boolean;
   description?: string | null;
@@ -46,24 +47,37 @@ export async function parseProjectXml(xmlContent: string): Promise<ParsedMilesto
                (task.Duration && task.Duration.$ === 'PT0H0M0S');
       })
       .map((task: any) => {
-        // Get dates
-        let plannedDate = null;
-        let actualDate = null;
+        // Get dates - ensure plannedDate is always a Date (not null)
+        let plannedDate: Date;
+        let actualDate: Date | null = null;
+        let forecastDate: Date | null = null;
         
         if (task.Start) {
           plannedDate = new Date(task.Start);
+        } else {
+          // Default to current date if no start date is available
+          plannedDate = new Date();
         }
         
         if (task.Finish && task.PercentComplete === '100') {
           actualDate = new Date(task.Finish);
+        } else if (task.Finish && task.PercentComplete !== '100') {
+          // If task isn't complete but has a finish date, it's a forecast
+          forecastDate = new Date(task.Finish);
         }
         
-        // Determine status
-        let status: 'Not Started' | 'In Progress' | 'Completed' = 'Not Started';
+        // Map MS Project status to our status options
+        let status: string;
         if (task.PercentComplete === '100') {
           status = 'Completed';
         } else if (parseInt(task.PercentComplete || '0') > 0) {
           status = 'In Progress';
+        } else if (task.Start && new Date(task.Start) < new Date()) {
+          status = 'Delayed';
+        } else if (task.ConstraintType && task.ConstraintType.includes('ASAP')) {
+          status = 'On Track';
+        } else {
+          status = 'Not Started';
         }
         
         // Determine if key date
@@ -75,11 +89,12 @@ export async function parseProjectXml(xmlContent: string): Promise<ParsedMilesto
         // Check if milestone affects completion date
         const affectsCompletionDate = task.IsCritical === 'true';
         
-        // Build milestone object
+        // Build milestone object with required fields
         const milestone: ParsedMilestone = {
           name: task.Name || `Milestone ${task.ID}`,
           plannedDate,
           actualDate,
+          forecastDate,
           status,
           isKeyDate: !!isKeyDate,
           affectsCompletionDate: !!affectsCompletionDate,
@@ -181,6 +196,7 @@ export async function processProjectFileUpload(req: Request): Promise<{
                 name,
                 plannedDate: date,
                 actualDate: null,
+                forecastDate: null,
                 status: 'Not Started',
                 isKeyDate: false,
                 affectsCompletionDate: false
@@ -202,6 +218,7 @@ export async function processProjectFileUpload(req: Request): Promise<{
                 name: 'Project Start (from MPP)',
                 plannedDate: new Date(),
                 actualDate: null,
+                forecastDate: null,
                 status: 'Not Started',
                 isKeyDate: true,
                 affectsCompletionDate: true,
@@ -211,7 +228,8 @@ export async function processProjectFileUpload(req: Request): Promise<{
                 name: 'Foundation Work (from MPP)',
                 plannedDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days in future
                 actualDate: null,
-                status: 'Not Started',
+                forecastDate: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000), // 35 days in future (slightly delayed)
+                status: 'On Track',
                 isKeyDate: false,
                 affectsCompletionDate: true,
                 description: 'Milestone extracted from MPP file'
@@ -220,7 +238,8 @@ export async function processProjectFileUpload(req: Request): Promise<{
                 name: 'Project Completion (from MPP)',
                 plannedDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days in future
                 actualDate: null,
-                status: 'Not Started',
+                forecastDate: new Date(Date.now() + 100 * 24 * 60 * 60 * 1000), // 100 days (delayed)
+                status: 'Delayed',
                 isKeyDate: true,
                 affectsCompletionDate: true,
                 description: 'Milestone extracted from MPP file'
