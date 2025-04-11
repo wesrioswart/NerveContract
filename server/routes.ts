@@ -1,9 +1,12 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarningSchema } from "@shared/schema";
 import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured } from "./utils/openai";
+import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
+import path from "path";
+import fs from "fs";
 
 const parseXMLSchema = z.object({
   xmlContent: z.string(),

@@ -1,6 +1,6 @@
 import * as xml2js from 'xml2js';
 import { promises as fs } from 'fs';
-import { IncomingForm } from 'formidable';
+import formidable, { IncomingForm } from 'formidable';
 import { Request } from 'express';
 import path from 'path';
 import { ProgrammeMilestone } from '@shared/schema';
@@ -124,7 +124,7 @@ export async function processProjectFileUpload(req: Request): Promise<{
       multiples: false,
     });
     
-    form.parse(req, async (err, fields, files) => {
+    form.parse(req, async (err: Error | null, fields: any, files: any) => {
       if (err) {
         return reject(new Error(`File upload error: ${err.message}`));
       }
@@ -136,7 +136,7 @@ export async function processProjectFileUpload(req: Request): Promise<{
       }
       
       // Get the uploaded file
-      const file = files.file;
+      const file = files.file as any;
       if (!file || Array.isArray(file)) {
         return reject(new Error('No file uploaded or multiple files not supported'));
       }

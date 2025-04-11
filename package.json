@@ -46,6 +46,8 @@
     "@stripe/react-stripe-js": "^3.6.0",
     "@stripe/stripe-js": "^7.0.0",
     "@tanstack/react-query": "^5.60.5",
+    "@types/formidable": "^3.4.5",
+    "@types/xml2js": "^0.4.14",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
