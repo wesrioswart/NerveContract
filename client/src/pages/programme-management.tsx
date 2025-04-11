@@ -25,6 +25,18 @@ import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+// Define interface for projects
+interface Project {
+  id: number;
+  name: string;
+  description?: string;
+  client?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: string;
+}
 
 // Define interface for programme milestones
 interface ProgrammeMilestone {
@@ -69,7 +81,14 @@ const ProgrammeManagement = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showUploadSuccess, setShowUploadSuccess] = useState(false);
   const [programmeAnalysis, setProgrammeAnalysis] = useState<ProgrammeAnalysis | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<number>(projectId);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Fetch all projects for the dropdown
+  const { data: projects = [] } = useQuery<Project[]>({
+    queryKey: ['/api/projects'],
+    refetchOnWindowFocus: false
+  });
   
   // Fetch programme milestones
   const { 
