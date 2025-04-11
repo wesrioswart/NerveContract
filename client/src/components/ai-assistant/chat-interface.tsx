@@ -44,7 +44,7 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
           timestamp,
         });
         
-        return response;
+        return await response.json();
       } catch (error) {
         console.error("Error in mutation function:", error);
         throw error; // Re-throw for the mutation to handle
