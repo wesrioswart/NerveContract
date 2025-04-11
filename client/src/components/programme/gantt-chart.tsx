@@ -244,15 +244,23 @@ export default function GanttChart({ milestones, programmeAnalysis }: GanttChart
     const months = [];
     const currentDate = new Date(startDate);
     
+    // Set to first of month for clean month boundaries
+    currentDate.setDate(1);
+    
     while (currentDate <= endDate) {
+      // Calculate position more precisely to avoid overlapping
+      const position = getPositionPercentage(currentDate);
+      
+      // Create evenly spaced month markers
       months.push({
         label: formatDate(currentDate, "MMM yyyy"),
-        position: getPositionPercentage(currentDate)
+        position: position,
+        month: currentDate.getMonth(),
+        year: currentDate.getFullYear()
       });
       
       // Move to next month
       currentDate.setMonth(currentDate.getMonth() + 1);
-      currentDate.setDate(1);
     }
     
     return months;
@@ -337,22 +345,54 @@ export default function GanttChart({ milestones, programmeAnalysis }: GanttChart
               </div>
             )}
             
-            {/* Month header */}
-            <div className="relative h-8 border-b border-gray-200 mb-1">
-              {getMonthLabels().map((month, index) => (
-                <div 
-                  key={index}
-                  className="absolute text-xs text-gray-500 transform -translate-x-1/2"
-                  style={{ left: `${month.position}%` }}
-                >
-                  {month.label}
+            {/* MS Project style timeline header */}
+            <div className="flex mb-2">
+              {/* Left side - task names column */}
+              <div className="w-1/3 min-w-[300px] bg-gray-100 p-2 font-medium text-sm border-r border-gray-200">
+                Task Name
+              </div>
+              
+              {/* Right side - timeline header */}
+              <div className="flex-1 relative overflow-hidden">
+                {/* Year and Month markers using grid for consistent spacing */}
+                <div className="grid grid-cols-12 h-12 border-b border-gray-200">
+                  {/* MS Project style year/month headers */}
+                  <div className="col-span-12 h-6 border-b border-gray-200 flex">
+                    {Array.from(new Set(getMonthLabels().map(m => m.year))).map((year, idx) => {
+                      // Count how many months belong to this year
+                      const monthsInYear = getMonthLabels().filter(m => m.year === year).length;
+                      // Width based on number of months (each month is 1/12 of grid)
+                      const width = (monthsInYear / 12) * 100;
+                      
+                      return (
+                        <div 
+                          key={`year-${idx}`}
+                          className="h-full flex items-center border-r border-gray-200 bg-gray-50"
+                          style={{ width: `${width}%` }}
+                        >
+                          <span className="px-2 font-medium text-xs text-gray-600">{year}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Month cells */}
+                  <div className="col-span-12 h-6 flex">
+                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, idx) => (
+                      <div 
+                        key={`month-${idx}`}
+                        className="flex-1 h-full flex items-center justify-center border-r border-gray-200"
+                      >
+                        <span className="text-xs text-gray-500">{month}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
             
-            {/* Gantt chart grid */}
-            <div className="relative border border-gray-100 rounded-md min-h-[400px]">
-              {/* Tasks */}
+            {/* MS Project style Gantt chart */}
+            <div className="flex flex-col border border-gray-200 rounded-md overflow-hidden">
               {tasks.map((task, index) => {
                 const startPos = getPositionPercentage(task.start);
                 const width = getTaskWidth(task.start, task.end);
@@ -364,61 +404,104 @@ export default function GanttChart({ milestones, programmeAnalysis }: GanttChart
                 return (
                   <div 
                     key={task.id}
-                    className="flex items-center h-12 border-b border-gray-100 relative hover:bg-gray-50"
+                    className="flex border-b border-gray-100 hover:bg-gray-50"
                   >
-                    {/* Task name */}
-                    <div className="absolute left-0 top-0 bottom-0 w-1/4 min-w-[250px] px-3 py-2 flex items-center bg-white border-r border-gray-200 z-10">
-                      <div className="truncate">
-                        <div className="flex items-center">
-                          <span className="font-medium truncate">{task.name}</span>
-                          {task.isKeyDate && (
-                            <Badge className="ml-1 px-1 py-0 h-4 bg-blue-100 text-blue-800 text-[10px]">
-                              Key Date
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {formatDate(task.start, "dd MMM")} - {formatDate(task.end, "dd MMM yyyy")}
-                        </div>
+                    {/* Task name and dates column */}
+                    <div className="w-1/3 min-w-[300px] p-3 flex flex-col justify-center border-r border-gray-200 bg-white">
+                      <div className="font-medium">
+                        {task.name} 
+                        {task.isKeyDate && (
+                          <Badge className="ml-1 px-1 py-0 h-4 bg-blue-100 text-blue-800 text-[10px]">
+                            Key Date
+                          </Badge>
+                        )}
+                        {task.status === "At Risk" && (
+                          <Badge className="ml-1 px-1 py-0 h-4 bg-amber-100 text-amber-800 text-[10px]">
+                            At Risk
+                          </Badge>
+                        )}
+                        {task.status === "Delayed" && (
+                          <Badge className="ml-1 px-1 py-0 h-4 bg-red-100 text-red-800 text-[10px]">
+                            Delayed
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {formatDate(task.start, "dd MMM")} - {formatDate(task.end, "dd MMM yyyy")}
                       </div>
                     </div>
                     
-                    {/* Task bar */}
-                    <div 
-                      className={`absolute h-6 rounded-sm ${task.isRisk ? "border-2 border-red-400" : ""} ${statusColor} flex items-center`}
-                      style={{ 
-                        left: `calc(25% + ${startPos}%)`, 
-                        width: `${Math.max(width, 1)}%`,
-                      }}
-                    >
-                      {/* Progress indicator */}
+                    {/* Gantt bar section with grid background */}
+                    <div className="flex-1 relative py-4">
+                      {/* Monthly grid lines */}
+                      <div className="absolute inset-0 grid grid-cols-12">
+                        {Array(12).fill(0).map((_, i) => (
+                          <div 
+                            key={`grid-${i}`} 
+                            className="h-full border-r border-gray-100"
+                          ></div>
+                        ))}
+                      </div>
+                      
+                      {/* Today vertical line - classic MS Project style */}
                       <div 
-                        className="h-full bg-opacity-30 bg-white rounded-l-sm"
-                        style={{ width: `${task.progress}%` }}
+                        className="absolute h-full w-[2px] bg-red-500 z-10"
+                        style={{ 
+                          left: `${getPositionPercentage(new Date())}%`,
+                        }}
                       ></div>
                       
-                      {/* Risk indicator */}
-                      {task.isRisk && (
-                        <AlertCircle className="absolute -right-1 -top-1 w-4 h-4 text-red-600 bg-white rounded-full" />
-                      )}
+                      {/* Task bar */}
+                      <div 
+                        className={`absolute h-5 ${task.isRisk ? "border border-red-400" : ""} ${statusColor} flex items-center shadow-sm`}
+                        style={{ 
+                          left: `${startPos}%`, 
+                          width: `${Math.max(width, 0.5)}%`,
+                          top: '50%',
+                          transform: 'translateY(-50%)'
+                        }}
+                      >
+                        {/* Progress indicator */}
+                        <div 
+                          className="h-full bg-opacity-30 bg-white"
+                          style={{ width: `${task.progress}%` }}
+                        ></div>
+                        
+                        {/* Task label (only shown for longer tasks) */}
+                        {width > 10 && (
+                          <span className="absolute text-xs text-white font-medium ml-1 whitespace-nowrap overflow-hidden"
+                            style={{
+                              maxWidth: `calc(${width}% - 8px)`,
+                              textOverflow: 'ellipsis',
+                            }}>
+                            {task.name}
+                          </span>
+                        )}
+                        
+                        {/* Risk indicator */}
+                        {task.isRisk && (
+                          <AlertCircle className="absolute -right-1 -top-1 w-4 h-4 text-red-600 bg-white rounded-full shadow-sm" />
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
               })}
-              
-              {/* Today marker */}
-              <div 
-                className="absolute top-0 bottom-0 w-[2px] bg-red-500 z-20"
-                style={{ 
-                  left: `calc(25% + ${getPositionPercentage(new Date())}%)`,
-                }}
-              >
-                <div className="w-0 h-0 border-left-[4px] border-right-[4px] border-top-[6px] border-transparent border-top-red-500 mx-auto"></div>
+            </div>
+            
+            {/* MS Project style 'Today' line */}
+            <div className="relative mt-4 border-t border-gray-100 pt-2 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-2 h-12 bg-red-500 mr-2"></div>
+                <span className="text-xs font-medium text-gray-700">Today: {formatDate(new Date(), "dd MMM yyyy")}</span>
+              </div>
+              <div className="text-xs text-gray-500">
+                {tasks.length} tasks • {tasks.filter(t => t.status === "Completed").length} completed
               </div>
             </div>
             
             {/* Legend */}
-            <div className="mt-4 flex items-center justify-end space-x-4 text-xs">
+            <div className="mt-4 flex items-center justify-center space-x-6 text-xs border-t border-gray-200 pt-4">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-green-500 rounded-sm mr-1"></div>
                 <span>Completed</span>
