@@ -22,15 +22,26 @@ export default function MSProjectUpload({ projectId }: MSProjectUploadProps) {
     if (selectedFile) {
       setFile(selectedFile);
       
-      // Read the file content
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setXmlContent(event.target.result as string);
-          setUploadStep("preview");
-        }
-      };
-      reader.readAsText(selectedFile);
+      // For XML files, read the content for preview
+      // For MPP files, just show file info
+      const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase();
+      
+      if (fileExtension === 'xml') {
+        // Read the file content if it's XML
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setXmlContent(event.target.result as string);
+          }
+        };
+        reader.readAsText(selectedFile);
+      } else if (fileExtension === 'mpp') {
+        // For MPP files, we don't try to read them as text
+        setXmlContent("Binary MPP file - preview not available");
+      }
+      
+      // Move to preview step regardless of file type
+      setUploadStep("preview");
     }
   };
 
@@ -66,13 +77,55 @@ export default function MSProjectUpload({ projectId }: MSProjectUploadProps) {
     },
   });
 
+  // Direct file upload mutation for MPP files
+  const fileUploadMutation = useMutation({
+    mutationFn: async (fileToUpload: File) => {
+      const formData = new FormData();
+      formData.append('file', fileToUpload);
+      formData.append('projectId', projectId.toString());
+      
+      return apiRequest('POST', '/api/programme/upload', formData as FormData, true);
+    },
+    onSuccess: async (response) => {
+      const result = await response.json();
+      
+      // Refresh milestones data
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/programme-milestones`] });
+      
+      setUploadStep("success");
+      toast({
+        title: "Programme Updated",
+        description: "Project file has been successfully uploaded and processed.",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload programme file. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleSubmit = async () => {
-    if (!xmlContent) return;
+    if (!file) return;
     
     try {
-      await parseXmlMutation.mutateAsync();
+      // Check file extension to determine upload method
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      
+      if (fileExtension === 'xml' && xmlContent) {
+        // For XML files, use XML parsing
+        await parseXmlMutation.mutateAsync();
+      } else if (fileExtension === 'mpp') {
+        // For MPP files, use direct file upload
+        await fileUploadMutation.mutateAsync(file);
+      } else {
+        throw new Error("Unsupported file type");
+      }
     } catch (error) {
-      console.error("Error parsing XML:", error);
+      console.error("Error processing file:", error);
     }
   };
 
@@ -135,10 +188,10 @@ export default function MSProjectUpload({ projectId }: MSProjectUploadProps) {
               </Button>
               <Button 
                 onClick={handleSubmit}
-                disabled={parseXmlMutation.isPending}
+                disabled={parseXmlMutation.isPending || fileUploadMutation.isPending}
                 className="bg-primary hover:bg-blue-800"
               >
-                {parseXmlMutation.isPending ? (
+                {parseXmlMutation.isPending || fileUploadMutation.isPending ? (
                   <>
                     <span className="material-icons animate-spin mr-2">refresh</span>
                     Processing...
