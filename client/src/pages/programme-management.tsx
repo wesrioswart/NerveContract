@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import GanttChartComponent from '@/components/programme/gantt-chart';
 
 // Define interface for projects
 interface Project {
@@ -807,134 +808,143 @@ const ProgrammeManagement = () => {
         
         {/* Programme Analysis Tab */}
         <TabsContent value="analysis">
-          <Card>
-            <CardHeader>
-              <CardTitle>Programme Analysis</CardTitle>
-              <CardDescription>
-                AI-powered analysis of your programme in line with NEC4 requirements
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!programmeAnalysis ? (
-                <div className="text-center py-8">
-                  <GanttChart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <h3 className="text-lg font-medium text-gray-500">No Analysis Available</h3>
-                  <p className="text-gray-500 mt-1">
-                    Upload a programme and run an analysis to get insights
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    className="mt-4"
-                    onClick={() => analyzeProgrammeMutation.mutate()}
-                    disabled={analyzeProgrammeMutation.isPending || milestones.length === 0}
-                  >
-                    {analyzeProgrammeMutation.isPending ? (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <GanttChart className="mr-2 h-4 w-4" />
-                        Run Analysis
-                      </>
-                    )}
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Programme Metrics */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3">
-                      Programme Metrics
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <p className="text-sm text-gray-500">Total Duration</p>
-                        <p className="text-2xl font-bold">{programmeAnalysis.metrics.totalDuration} days</p>
-                      </div>
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <p className="text-sm text-gray-500">Critical Path Tasks</p>
-                        <p className="text-2xl font-bold">{programmeAnalysis.metrics.critical_path_tasks}</p>
-                      </div>
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <p className="text-sm text-gray-500">Low Float Tasks</p>
-                        <p className="text-2xl font-bold">{programmeAnalysis.metrics.float_less_than_5days}</p>
-                        <p className="text-xs text-gray-500">Tasks with less than 5 days float</p>
+          <div className="space-y-6">
+            {/* Gantt Chart Section */}
+            <GanttChartComponent 
+              milestones={milestones} 
+              programmeAnalysis={programmeAnalysis}
+            />
+            
+            {/* Analysis Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Programme Analysis</CardTitle>
+                <CardDescription>
+                  AI-powered analysis of your programme in line with NEC4 requirements
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!programmeAnalysis ? (
+                  <div className="text-center py-8">
+                    <GanttChart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-gray-500">No Analysis Available</h3>
+                    <p className="text-gray-500 mt-1">
+                      Upload a programme and run an analysis to get insights
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => analyzeProgrammeMutation.mutate()}
+                      disabled={analyzeProgrammeMutation.isPending || milestones.length === 0}
+                    >
+                      {analyzeProgrammeMutation.isPending ? (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          Analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <GanttChart className="mr-2 h-4 w-4" />
+                          Run Analysis
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Programme Metrics */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">
+                        Programme Metrics
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <p className="text-sm text-gray-500">Total Duration</p>
+                          <p className="text-2xl font-bold">{programmeAnalysis.metrics.totalDuration} days</p>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <p className="text-sm text-gray-500">Critical Path Tasks</p>
+                          <p className="text-2xl font-bold">{programmeAnalysis.metrics.critical_path_tasks}</p>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <p className="text-sm text-gray-500">Low Float Tasks</p>
+                          <p className="text-2xl font-bold">{programmeAnalysis.metrics.float_less_than_5days}</p>
+                          <p className="text-xs text-gray-500">Tasks with less than 5 days float</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  {/* NEC4 Compliance Issues */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3">
-                      NEC4 Compliance & Issues
-                    </h3>
                     
-                    {!programmeAnalysis.issuesFound || programmeAnalysis.issuesFound.length === 0 ? (
-                      <Alert className="bg-green-50 text-green-800 border-green-200">
-                        <Check className="h-4 w-4" />
-                        <AlertTitle>No Issues Found</AlertTitle>
+                    {/* NEC4 Compliance Issues */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">
+                        NEC4 Compliance & Issues
+                      </h3>
+                      
+                      {!programmeAnalysis.issuesFound || programmeAnalysis.issuesFound.length === 0 ? (
+                        <Alert className="bg-green-50 text-green-800 border-green-200">
+                          <Check className="h-4 w-4" />
+                          <AlertTitle>No Issues Found</AlertTitle>
+                          <AlertDescription>
+                            Your programme appears to be compliant with NEC4 requirements.
+                          </AlertDescription>
+                        </Alert>
+                      ) : (
+                        <div className="space-y-4">
+                          {programmeAnalysis.issuesFound && programmeAnalysis.issuesFound.map((issue, index) => (
+                            <div 
+                              key={index} 
+                              className={`p-4 rounded-md border ${getSeverityClass(issue.severity)}`}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <h4 className="font-medium text-sm flex items-center">
+                                    <AlertCircle className="h-4 w-4 mr-2" />
+                                    {issue.description}
+                                  </h4>
+                                  <p className="text-sm mt-1">{issue.recommendation}</p>
+                                </div>
+                                {issue.nec4Clause && (
+                                  <Badge variant="outline">
+                                    Clause {issue.nec4Clause}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {programmeAnalysis.metrics?.completionDateChange && (
+                      <Alert 
+                        className={
+                          programmeAnalysis.metrics?.completionDateChange > 0
+                            ? "bg-red-50 text-red-800 border-red-200"
+                            : "bg-green-50 text-green-800 border-green-200"
+                        }
+                      >
+                        {programmeAnalysis.metrics?.completionDateChange > 0 ? (
+                          <AlertCircle className="h-4 w-4" />
+                        ) : (
+                          <Check className="h-4 w-4" />
+                        )}
+                        <AlertTitle>
+                          {programmeAnalysis.metrics?.completionDateChange > 0
+                            ? "Completion Date at Risk"
+                            : "Completion Date Ahead of Schedule"}
+                        </AlertTitle>
                         <AlertDescription>
-                          Your programme appears to be compliant with NEC4 requirements.
+                          {programmeAnalysis.metrics?.completionDateChange > 0
+                            ? `Current forecast shows the Completion Date is delayed by ${programmeAnalysis.metrics?.completionDateChange} days.`
+                            : `Current forecast shows the Completion Date is ${Math.abs(programmeAnalysis.metrics?.completionDateChange || 0)} days ahead of schedule.`}
                         </AlertDescription>
                       </Alert>
-                    ) : (
-                      <div className="space-y-4">
-                        {programmeAnalysis.issuesFound && programmeAnalysis.issuesFound.map((issue, index) => (
-                          <div 
-                            key={index} 
-                            className={`p-4 rounded-md border ${getSeverityClass(issue.severity)}`}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h4 className="font-medium text-sm flex items-center">
-                                  <AlertCircle className="h-4 w-4 mr-2" />
-                                  {issue.description}
-                                </h4>
-                                <p className="text-sm mt-1">{issue.recommendation}</p>
-                              </div>
-                              {issue.nec4Clause && (
-                                <Badge variant="outline">
-                                  Clause {issue.nec4Clause}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
                     )}
                   </div>
-                  
-                  {programmeAnalysis.metrics?.completionDateChange && (
-                    <Alert 
-                      className={
-                        programmeAnalysis.metrics?.completionDateChange > 0
-                          ? "bg-red-50 text-red-800 border-red-200"
-                          : "bg-green-50 text-green-800 border-green-200"
-                      }
-                    >
-                      {programmeAnalysis.metrics?.completionDateChange > 0 ? (
-                        <AlertCircle className="h-4 w-4" />
-                      ) : (
-                        <Check className="h-4 w-4" />
-                      )}
-                      <AlertTitle>
-                        {programmeAnalysis.metrics?.completionDateChange > 0
-                          ? "Completion Date at Risk"
-                          : "Completion Date Ahead of Schedule"}
-                      </AlertTitle>
-                      <AlertDescription>
-                        {programmeAnalysis.metrics?.completionDateChange > 0
-                          ? `Current forecast shows the Completion Date is delayed by ${programmeAnalysis.metrics?.completionDateChange} days.`
-                          : `Current forecast shows the Completion Date is ${Math.abs(programmeAnalysis.metrics?.completionDateChange || 0)} days ahead of schedule.`}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </>
