@@ -492,14 +492,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } catch (error) {
         console.error("Error processing programme file:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        
+        // Specific handling for file size errors
+        if (errorMessage.includes('entity too large') || errorMessage.includes('maxFileSize exceeded')) {
+          return res.status(413).json({ 
+            message: "File is too large. Maximum file size is 50MB.", 
+            error: "FILE_TOO_LARGE" 
+          });
+        }
+        
         return res.status(400).json({ 
           message: "Error processing programme file", 
-          error: error instanceof Error ? error.message : "Unknown error" 
+          error: errorMessage 
         });
       }
     } catch (error) {
       console.error("Error processing programme file:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      
+      // Specific handling for file size errors
+      if (errorMessage.includes('entity too large') || errorMessage.includes('maxFileSize exceeded')) {
+        return res.status(413).json({ 
+          message: "File is too large. Maximum file size is 50MB.", 
+          error: "FILE_TOO_LARGE" 
+        });
+      }
       
       return res.status(400).json({ 
         message: "Error processing programme file", 

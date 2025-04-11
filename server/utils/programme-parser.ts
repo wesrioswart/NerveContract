@@ -135,7 +135,7 @@ export async function processProjectFileUpload(req: Request): Promise<{
     const form = new IncomingForm({
       uploadDir: path.join(process.cwd(), 'tmp'),
       keepExtensions: true,
-      maxFileSize: 10 * 1024 * 1024, // 10MB max file size
+      maxFileSize: 50 * 1024 * 1024, // 50MB max file size
       multiples: false,
     });
     

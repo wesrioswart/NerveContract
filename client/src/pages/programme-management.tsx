@@ -651,7 +651,7 @@ const ProgrammeManagement = () => {
                           Drop your programme file here or click to browse
                         </p>
                         <p className="mt-1 text-xs text-gray-500">
-                          Supported formats: .mpp, .xer, .xml, .xlsx, .xls (Max 10MB)
+                          Supported formats: .mpp, .xer, .xml, .xlsx, .xls (Max 50MB)
                         </p>
                       </div>
                       <input
