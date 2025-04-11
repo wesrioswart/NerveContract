@@ -116,10 +116,7 @@ export default function Dashboard() {
       </div>
       
       {/* Project Timeline */}
-      <div className="bg-white p-5 rounded-lg shadow">
-        <h2 className="text-lg font-bold mb-4">Project Timeline</h2>
-        <Timeline milestones={programmeMilestones as any} />
-      </div>
+      <Timeline milestones={programmeMilestones as any} />
       
       {/* AI Assistant Chat Interface */}
       <div className="bg-white p-5 rounded-lg shadow">
