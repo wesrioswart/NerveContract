@@ -426,11 +426,11 @@ const ProgrammeManagement = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-gray-50 p-3 rounded-md">
                         <p className="text-xs text-gray-500">Critical Path Tasks</p>
-                        <p className="text-xl font-bold">{programmeAnalysis.metrics.critical_path_tasks}</p>
+                        <p className="text-xl font-bold">{programmeAnalysis.metrics?.critical_path_milestones || 0}</p>
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <p className="text-xs text-gray-500">Tasks with Low Float</p>
-                        <p className="text-xl font-bold">{programmeAnalysis.metrics.float_less_than_5days}</p>
+                        <p className="text-xl font-bold">{programmeAnalysis.metrics?.delayed_milestones || 0}</p>
                       </div>
                     </div>
                     
@@ -439,7 +439,7 @@ const ProgrammeManagement = () => {
                     <div>
                       <h4 className="text-sm font-medium mb-2">Critical Issues</h4>
                       <div className="space-y-2">
-                        {programmeAnalysis.issuesFound.length === 0 ? (
+                        {!programmeAnalysis.issuesFound || programmeAnalysis.issuesFound.length === 0 ? (
                           <div className="bg-green-50 p-3 rounded-md flex items-center">
                             <Check className="h-5 w-5 text-green-500 mr-2" />
                             <span className="text-sm text-green-700">No critical issues found</span>
