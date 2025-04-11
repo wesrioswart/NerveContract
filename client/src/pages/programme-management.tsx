@@ -426,11 +426,11 @@ const ProgrammeManagement = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-gray-50 p-3 rounded-md">
                         <p className="text-xs text-gray-500">Critical Path Tasks</p>
-                        <p className="text-xl font-bold">{programmeAnalysis.metrics?.critical_path_milestones || 0}</p>
+                        <p className="text-xl font-bold">{programmeAnalysis.metrics?.critical_path_tasks || 0}</p>
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <p className="text-xs text-gray-500">Tasks with Low Float</p>
-                        <p className="text-xl font-bold">{programmeAnalysis.metrics?.delayed_milestones || 0}</p>
+                        <p className="text-xl font-bold">{programmeAnalysis.metrics?.float_less_than_5days || 0}</p>
                       </div>
                     </div>
                     
@@ -818,7 +818,7 @@ const ProgrammeManagement = () => {
                       NEC4 Compliance & Issues
                     </h3>
                     
-                    {programmeAnalysis.issuesFound.length === 0 ? (
+                    {!programmeAnalysis.issuesFound || programmeAnalysis.issuesFound.length === 0 ? (
                       <Alert className="bg-green-50 text-green-800 border-green-200">
                         <Check className="h-4 w-4" />
                         <AlertTitle>No Issues Found</AlertTitle>
@@ -828,7 +828,7 @@ const ProgrammeManagement = () => {
                       </Alert>
                     ) : (
                       <div className="space-y-4">
-                        {programmeAnalysis.issuesFound.map((issue, index) => (
+                        {programmeAnalysis.issuesFound && programmeAnalysis.issuesFound.map((issue, index) => (
                           <div 
                             key={index} 
                             className={`p-4 rounded-md border ${getSeverityClass(issue.severity)}`}
@@ -853,28 +853,28 @@ const ProgrammeManagement = () => {
                     )}
                   </div>
                   
-                  {programmeAnalysis.metrics.completionDateChange && (
+                  {programmeAnalysis.metrics?.completionDateChange && (
                     <Alert 
                       className={
-                        programmeAnalysis.metrics.completionDateChange > 0
+                        programmeAnalysis.metrics?.completionDateChange > 0
                           ? "bg-red-50 text-red-800 border-red-200"
                           : "bg-green-50 text-green-800 border-green-200"
                       }
                     >
-                      {programmeAnalysis.metrics.completionDateChange > 0 ? (
+                      {programmeAnalysis.metrics?.completionDateChange > 0 ? (
                         <AlertCircle className="h-4 w-4" />
                       ) : (
                         <Check className="h-4 w-4" />
                       )}
                       <AlertTitle>
-                        {programmeAnalysis.metrics.completionDateChange > 0
+                        {programmeAnalysis.metrics?.completionDateChange > 0
                           ? "Completion Date at Risk"
                           : "Completion Date Ahead of Schedule"}
                       </AlertTitle>
                       <AlertDescription>
-                        {programmeAnalysis.metrics.completionDateChange > 0
-                          ? `Current forecast shows the Completion Date is delayed by ${programmeAnalysis.metrics.completionDateChange} days.`
-                          : `Current forecast shows the Completion Date is ${Math.abs(programmeAnalysis.metrics.completionDateChange)} days ahead of schedule.`}
+                        {programmeAnalysis.metrics?.completionDateChange > 0
+                          ? `Current forecast shows the Completion Date is delayed by ${programmeAnalysis.metrics?.completionDateChange} days.`
+                          : `Current forecast shows the Completion Date is ${Math.abs(programmeAnalysis.metrics?.completionDateChange || 0)} days ahead of schedule.`}
                       </AlertDescription>
                     </Alert>
                   )}
