@@ -150,10 +150,31 @@ export async function processProjectFileUpload(req: Request): Promise<{
         return reject(new Error('Invalid or missing project ID'));
       }
       
-      // Get the uploaded file
-      const file = files.file as any;
-      if (!file || Array.isArray(file)) {
-        return reject(new Error('No file uploaded or multiple files not supported'));
+      console.log("Files received:", Object.keys(files));
+      console.log("Fields received:", Object.keys(fields));
+      
+      // Get the uploaded file - handle different formidable versions
+      let file: any;
+      if (files.file) {
+        // Handle single file directly
+        file = files.file;
+      } else if (Array.isArray(files) && files.length > 0) {
+        // Handle array of files
+        file = files[0];
+      } else if (Object.keys(files).length > 0) {
+        // Handle first file from object
+        file = Object.values(files)[0];
+      } else {
+        // No file found
+        return reject(new Error('No file uploaded'));
+      }
+      
+      // Handle file array or multi-file cases
+      if (Array.isArray(file)) {
+        if (file.length === 0) {
+          return reject(new Error('No file uploaded'));
+        }
+        file = file[0]; // Take the first file
       }
       
       try {
