@@ -112,7 +112,7 @@ const ProgrammeManagement = () => {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('projectId', projectId.toString());
+      formData.append('projectId', selectedProjectId.toString());
       
       // Simulate progress for demo purposes
       const simulateProgress = () => {
@@ -145,7 +145,12 @@ const ProgrammeManagement = () => {
       setFile(null);
       
       // Invalidate milestones query to refresh the list
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/programme-milestones`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${selectedProjectId}/programme-milestones`] });
+      
+      // Also invalidate the current project's milestones if different
+      if (selectedProjectId !== projectId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/programme-milestones`] });
+      }
     },
     onError: (error: any) => {
       console.error('Upload error:', error);
@@ -168,6 +173,11 @@ const ProgrammeManagement = () => {
       }
     }
   });
+  
+  // Handle project selection change
+  const handleProjectChange = (value: string) => {
+    setSelectedProjectId(parseInt(value));
+  };
   
   // Handle file upload
   const handleUpload = async () => {
@@ -713,6 +723,30 @@ const ProgrammeManagement = () => {
                 
                 {file && (
                   <>
+                    <div className="my-4">
+                      <label className="text-sm font-medium mb-2 block">
+                        Select Project for this Programme
+                      </label>
+                      <Select 
+                        value={selectedProjectId.toString()} 
+                        onValueChange={handleProjectChange}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select project" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projects.map((project) => (
+                            <SelectItem key={project.id} value={project.id.toString()}>
+                              {project.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Select which project this programme should be associated with
+                      </p>
+                    </div>
+                  
                     {uploadProgress > 0 && (
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
@@ -724,7 +758,7 @@ const ProgrammeManagement = () => {
                     )}
                     
                     <Button
-                      className="w-full"
+                      className="w-full mt-4"
                       onClick={handleUpload}
                       disabled={fileUploadMutation.isPending || uploadProgress > 0}
                     >
