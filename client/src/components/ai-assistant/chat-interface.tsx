@@ -88,6 +88,17 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
 
   // If there are no messages yet, show welcome message
   const showWelcomeMessage = messages.length === 0 && !isLoading;
+  
+  const welcomeMessage = `## Welcome to NEC4 Contract Consultant
+
+I'm your expert NEC4 contract consultant. I can help with:
+
+* **Contract interpretation** and clause explanations
+* **Process guidance** for compensation events, early warnings and PMIs
+* **Risk management** strategies under NEC4 provisions
+* **Programme compliance** with contract requirements
+
+How can I assist with your NEC4 contract today?`;
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
@@ -102,18 +113,9 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
               <Bot className="w-4 h-4" />
             </div>
             <div className="bg-gray-100 rounded-lg p-3 max-w-3xl break-words prose prose-sm prose-blue prose-headings:mb-1 prose-p:my-1 prose-ul:my-1 prose-ul:pl-4 prose-li:my-0">
-              <ReactMarkdown>
-                {`## Welcome to NEC4 Contract Consultant
-
-I'm your expert NEC4 contract consultant. I can help with:
-
-* **Contract interpretation** and clause explanations
-* **Process guidance** for compensation events, early warnings and PMIs
-* **Risk management** strategies under NEC4 provisions
-* **Programme compliance** with contract requirements
-
-How can I assist with your NEC4 contract today?`}
-              </ReactMarkdown>
+              <div className="text-sm">
+                <ReactMarkdown>{welcomeMessage}</ReactMarkdown>
+              </div>
             </div>
           </div>
         )}
@@ -142,9 +144,7 @@ How can I assist with your NEC4 contract today?`}
               } rounded-lg p-3 max-w-[70%] break-words prose prose-sm prose-blue prose-headings:mb-1 prose-p:my-1 prose-ul:my-1 prose-ul:pl-4 prose-li:my-0`}>
                 {msg.role === 'assistant' ? (
                   <div className="text-sm selection:bg-blue-200 selection:text-blue-800">
-                    <ReactMarkdown>
-                      {msg.content}
-                    </ReactMarkdown>
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
                 ) : (
                   <p className="text-sm whitespace-pre-wrap selection:bg-blue-200 selection:text-blue-800">{msg.content}</p>
