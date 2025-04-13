@@ -36,7 +36,6 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/programme", label: "Programme", icon: CalendarDays },
     { path: "/programme-management", label: "Programme Management", icon: GanttChart },
     { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
-    { path: "/document-templates", label: "NEC4 Documents", icon: ClipboardList },
     { path: "/templates", label: "NEC4 Templates", icon: FileText },
     { path: "/reports", label: "Reports", icon: BarChart },
   ];

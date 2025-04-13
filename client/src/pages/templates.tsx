@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertTriangle } from "lucide-react";
 import PMITemplate from '@/components/templates/pmi-template';
+import EarlyWarningTemplate from '@/components/document-templates/early-warning-template';
 
 export default function TemplatesPage() {
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
@@ -12,6 +14,8 @@ export default function TemplatesPage() {
     switch (activeTemplate) {
       case 'pmi':
         return <PMITemplate />;
+      case 'early-warning':
+        return <EarlyWarningTemplate />;
       default:
         return (
           <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -52,9 +56,12 @@ export default function TemplatesPage() {
         </Card>
         
         {/* Template Card - Early Warning */}
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="hover:shadow-md transition-shadow border-2 border-amber-500">
           <CardHeader>
-            <CardTitle>Early Warning Notice</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Early Warning Notice</CardTitle>
+              <AlertTriangle className="text-amber-500 w-5 h-5" />
+            </div>
             <CardDescription>
               Template for issuing Early Warnings under NEC4 Clause 15.1
             </CardDescription>
@@ -67,11 +74,10 @@ export default function TemplatesPage() {
           </CardContent>
           <CardFooter>
             <Button 
-              onClick={() => alert("This template will be available soon")}
-              className="w-full"
-              variant="outline"
+              onClick={() => setActiveTemplate('early-warning')}
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white"
             >
-              Coming Soon
+              Create Early Warning
             </Button>
           </CardFooter>
         </Card>

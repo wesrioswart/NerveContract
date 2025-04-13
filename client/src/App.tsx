@@ -13,7 +13,6 @@ import ProgrammeManagement from "@/pages/programme-management";
 import PaymentCertificates from "@/pages/payment-certificates";
 import Reports from "@/pages/reports";
 import Templates from "@/pages/templates";
-import DocumentTemplates from "@/pages/document-templates";
 import Login from "@/pages/login";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -97,7 +96,6 @@ function App() {
               <Route path="/payment-certificates" component={PaymentCertificates} />
               <Route path="/reports" component={Reports} />
               <Route path="/templates" component={Templates} />
-              <Route path="/document-templates" component={DocumentTemplates} />
               <Route component={NotFound} />
             </Switch>
           </div>
