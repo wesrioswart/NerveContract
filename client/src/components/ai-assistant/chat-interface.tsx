@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { formatDate } from "@/lib/utils";
 import { ChatMessage } from "@shared/schema";
 import { Bot, User, Send, RefreshCw } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 type ChatInterfaceProps = {
   projectId: number;
@@ -100,10 +101,19 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white mr-3 flex-shrink-0">
               <Bot className="w-4 h-4" />
             </div>
-            <div className="bg-gray-100 rounded-lg p-3 max-w-3xl break-words">
-              <p className="text-sm">
-                Hello! I'm your NEC4 Assistant. I can help with contract queries, summarize events, or explain clauses. How can I help you today?
-              </p>
+            <div className="bg-gray-100 rounded-lg p-3 max-w-3xl break-words prose prose-sm prose-blue prose-headings:mb-1 prose-p:my-1 prose-ul:my-1 prose-ul:pl-4 prose-li:my-0">
+              <ReactMarkdown>
+                {`## Welcome to NEC4 Contract Consultant
+
+I'm your expert NEC4 contract consultant. I can help with:
+
+* **Contract interpretation** and clause explanations
+* **Process guidance** for compensation events, early warnings and PMIs
+* **Risk management** strategies under NEC4 provisions
+* **Programme compliance** with contract requirements
+
+How can I assist with your NEC4 contract today?`}
+              </ReactMarkdown>
             </div>
           </div>
         )}
@@ -129,8 +139,16 @@ export default function ChatInterface({ projectId, userId }: ChatInterfaceProps)
                 msg.role === 'user' 
                   ? 'bg-blue-100' 
                   : 'bg-gray-100'
-              } rounded-lg p-3 max-w-[70%] break-words`}>
-                <p className="text-sm whitespace-pre-wrap selection:bg-blue-200 selection:text-blue-800">{msg.content}</p>
+              } rounded-lg p-3 max-w-[70%] break-words prose prose-sm prose-blue prose-headings:mb-1 prose-p:my-1 prose-ul:my-1 prose-ul:pl-4 prose-li:my-0`}>
+                {msg.role === 'assistant' ? (
+                  <div className="text-sm selection:bg-blue-200 selection:text-blue-800">
+                    <ReactMarkdown>
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap selection:bg-blue-200 selection:text-blue-800">{msg.content}</p>
+                )}
                 <p className="text-xs text-gray-500 mt-1">
                   {formatDate(msg.timestamp, "h:mm a")}
                 </p>
