@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle } from "lucide-react";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { AnimatedButton } from "@/components/ui/animated-button";
+import { AnimationWrapper } from "@/components/ui/animation-wrapper";
 import { animatedToast } from "@/components/ui/animated-toast";
 import { useToast } from "@/hooks/use-toast";
 import PMITemplate from '@/components/templates/pmi-template';
