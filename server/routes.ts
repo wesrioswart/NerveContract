@@ -10,6 +10,7 @@ import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from
 import { parseProgrammeFile } from "./services/programme-parser";
 import { analyzeProgramme } from "./services/programme-analysis";
 import { EmailController } from "./controllers/email-controller";
+import { portfolioRouter } from "./routes/portfolio-routes";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
@@ -1061,6 +1062,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/email/initialize", EmailController.initializeEmailService);
   app.get("/api/email/test-connection", EmailController.testConnection);
   app.post("/api/email/process", EmailController.processEmails);
+
+  // Register portfolio routes for executives
+  app.use("/api/portfolio", portfolioRouter);
 
   const httpServer = createServer(app);
   return httpServer;
