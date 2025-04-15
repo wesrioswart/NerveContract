@@ -125,21 +125,25 @@ export async function analyzeProgramme(programmeId: number) {
     const analysisResult = JSON.parse(response.choices[0].message.content);
     
     // Store analysis in database
-    const [analysis] = await db.insert(programmeAnalyses).values({
-      programmeId,
-      qualityScore: analysisResult.qualityScore,
-      criticalPathLength: analysisResult.criticalPathLength,
-      scheduleRisk: analysisResult.scheduleRisk,
-      issuesFound: analysisResult.issuesFound,
-      nec4Compliance: analysisResult.nec4Compliance,
+    // Format results for our API
+    const formattedResults = {
+      findings: {
+        qualityScore: analysisResult.qualityScore,
+        criticalPathLength: analysisResult.criticalPathLength,
+        scheduleRisk: analysisResult.scheduleRisk
+      },
+      issues: analysisResult.issuesFound,
       recommendations: analysisResult.recommendations,
-    }).returning();
-    
-    return {
-      ...analysisResult,
-      id: analysis.id,
-      analysisDate: analysis.analysisDate,
+      nec4Compliance: analysisResult.nec4Compliance,
+      metrics: {
+        totalActivities: programmeData.activities.length,
+        totalMilestones: programmeData.activities.filter(a => a.milestone).length,
+        criticalActivities: programmeData.activities.filter(a => a.isCritical).length,
+        lowFloat: programmeData.activities.filter(a => !a.milestone && a.totalFloat !== null && a.totalFloat < 5).length
+      }
     };
+    
+    return formattedResults;
     
   } catch (error: any) {
     console.error('Error analyzing programme:', error);
@@ -204,12 +208,14 @@ function performBasicAnalysis(programmeData: any) {
   
   const clause31Compliance = hasActivities && hasMilestones && hasCriticalPath;
   
-  // Build the analysis result
-  const analysisResult = {
-    qualityScore,
-    criticalPathLength: criticalActivities,
-    scheduleRisk,
-    issuesFound: [
+  // Build the analysis result in the same format as our AI-powered analysis
+  return {
+    findings: {
+      qualityScore,
+      criticalPathLength: criticalActivities,
+      scheduleRisk
+    },
+    issues: [
       {
         severity: 'medium' as const,
         category: 'Network Logic',
@@ -217,19 +223,23 @@ function performBasicAnalysis(programmeData: any) {
         activities: []
       }
     ],
+    recommendations: [
+      'Review network logic to ensure all activities are properly connected',
+      'Ensure critical path is properly defined',
+      'Add key milestones to track project progress',
+      'Include total float values for all activities'
+    ],
     nec4Compliance: {
       clause31: clause31Compliance,
       clause32: true, // Assume true for basic analysis
       overallCompliant: clause31Compliance,
       issues: !clause31Compliance ? ['Programme missing required elements per clause 31 (critical path, key dates, etc.)'] : []
     },
-    recommendations: [
-      'Review network logic to ensure all activities are properly connected',
-      'Ensure critical path is properly defined',
-      'Add key milestones to track project progress',
-      'Include total float values for all activities'
-    ]
+    metrics: {
+      totalActivities,
+      totalMilestones: milestones,
+      criticalActivities,
+      lowFloat: activities.filter(a => !a.milestone && a.totalFloat !== null && a.totalFloat < 5).length
+    }
   };
-  
-  return analysisResult;
 }

@@ -449,14 +449,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Programme routes
   
   // Programme file upload route
-  app.post("/api/programme/upload", async (req: Request, res: Response) => {
+  app.post("/api/programme/upload", upload.single('file'), async (req: Request, res: Response) => {
     try {
       console.log("Programme file upload request received");
       
-      // Create tmp directory if it doesn't exist
-      const tmpDir = path.join(process.cwd(), 'tmp');
-      if (!fs.existsSync(tmpDir)) {
-        fs.mkdirSync(tmpDir, { recursive: true });
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(process.cwd(), 'uploads/programme');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const { projectId, name, version } = req.body;
+      
+      if (!projectId || !name || !version) {
+        return res.status(400).json({ 
+          message: "Missing required fields: projectId, name, and version are required" 
+        });
       }
       
       // Check if OpenAI is configured for analysis
@@ -464,62 +477,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn("OpenAI API key is not set - programme analysis will be limited");
       }
       
-      try {
-        // Process the uploaded file using our utility function
-        const result = await processProjectFileUpload(req);
-        const { milestones, projectId, fileName } = result;
-        
-        console.log(`Successfully processed ${fileName} with ${milestones.length} milestones for project ${projectId}`);
-        
-        // Store the extracted milestones in the database
-        const savedMilestones = [];
-        for (const milestone of milestones) {
-          // Create a new milestone or update an existing one with the same name
-          const existingMilestones = await storage.getProgrammeMilestonesByProject(projectId);
-          const existingMilestone = existingMilestones.find(m => m.name === milestone.name);
-          
-          if (existingMilestone) {
-            // Update existing milestone
-            const updatedMilestone = await storage.updateProgrammeMilestone(existingMilestone.id, {
-              ...milestone,
-              projectId
-            });
-            savedMilestones.push(updatedMilestone);
-          } else {
-            // Create new milestone
-            const newMilestone = await storage.createProgrammeMilestone({
-              ...milestone,
-              projectId
-            });
-            savedMilestones.push(newMilestone);
-          }
-        }
-        
-        // Analyze the programme
-        const analysis = analyzeNEC4Compliance(milestones);
-        
-        return res.status(200).json({
-          message: `Successfully processed programme file: ${fileName}`,
-          milestones: savedMilestones,
-          analysis
-        });
-      } catch (error) {
-        console.error("Error processing programme file:", error);
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        
-        // Specific handling for file size errors
-        if (errorMessage.includes('entity too large') || errorMessage.includes('maxFileSize exceeded')) {
-          return res.status(413).json({ 
-            message: "File is too large. Maximum file size is 50MB.", 
-            error: "FILE_TOO_LARGE" 
-          });
-        }
-        
+      // Determine file type
+      let fileType: 'xml' | 'msp' | 'xer';
+      if (file.originalname.endsWith('.xml')) {
+        fileType = 'xml';
+      } else if (file.originalname.endsWith('.mpp')) {
+        fileType = 'msp';
+      } else if (file.originalname.endsWith('.xer')) {
+        fileType = 'xer';
+      } else {
         return res.status(400).json({ 
-          message: "Error processing programme file", 
-          error: errorMessage 
+          message: "Unsupported file type. Supported formats are: .xml, .mpp, and .xer" 
         });
       }
+      
+      // Create programme record
+      const programme = await storage.createProgramme({
+        projectId: parseInt(projectId),
+        name,
+        version,
+        submissionDate: new Date(),
+        status: "draft",
+        plannedCompletionDate: new Date(), // Will be updated after parsing
+        fileUrl: file.path,
+        fileType,
+        submittedBy: 1, // Default user ID for now
+      });
+      
+      // Parse the file (async) to extract activities and relationships
+      const parseResult = await parseProgrammeFile(file.path, fileType, programme.id);
+      
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          message: "Error parsing programme file", 
+          error: parseResult.errorMessage 
+        });
+      }
+      
+      return res.status(200).json({
+        message: `Successfully processed programme file: ${file.originalname}`,
+        programme,
+        activities: parseResult.activityCount,
+        milestones: parseResult.milestoneCount
+      });
     } catch (error) {
       console.error("Error processing programme file:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -543,10 +543,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/programme/analyze", async (req: Request, res: Response) => {
     try {
       console.log("Programme analysis request received");
-      const { projectId } = req.body;
+      const { programmeId } = req.body;
       
-      if (!projectId || isNaN(parseInt(projectId))) {
-        return res.status(400).json({ message: "Invalid project ID" });
+      if (!programmeId || isNaN(parseInt(programmeId))) {
+        return res.status(400).json({ message: "Invalid programme ID" });
       }
       
       // Check if OpenAI is configured for advanced analysis
@@ -554,54 +554,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn("OpenAI API key is not set - programme analysis will be limited");
       }
       
-      // In a real implementation, we would analyze the programme data
-      // For now, we'll just return a simulated analysis
+      // Get the programme
+      const programme = await storage.getProgramme(parseInt(programmeId));
+      if (!programme) {
+        return res.status(404).json({ message: "Programme not found" });
+      }
       
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Analyze the programme
+      const analysis = await analyzeProgramme(parseInt(programmeId));
       
-      const analysis = {
-        issuesFound: [
-          {
-            severity: "high",
-            description: "Practical Completion milestone delayed by 10 days",
-            nec4Clause: "31.2",
-            recommendation: "Submit Early Warning and evaluate impact to Key Dates"
-          },
-          {
-            severity: "medium",
-            description: "MEP First Fix at risk with 10 days delay forecast",
-            nec4Clause: "32.1",
-            recommendation: "Review resource allocation and consider mitigation measures"
-          },
-          {
-            severity: "medium",
-            description: "Critical path has insufficient float (<5 days)",
-            nec4Clause: "31.2",
-            recommendation: "Identify opportunities to increase float on critical activities"
-          },
-          {
-            severity: "low",
-            description: "Insufficient float on Internal Finishes activities",
-            nec4Clause: "31.2",
-            recommendation: "Review durations and consider parallel working where possible"
-          },
-          {
-            severity: "low",
-            description: "Programme lacks sufficient detail for MEP works",
-            nec4Clause: "31.2",
-            recommendation: "Enhance programme detail for MEP activities"
-          }
-        ],
-        metrics: {
-          critical_path_tasks: 12,
-          float_less_than_5days: 8,
-          totalDuration: 295,
-          completionDateChange: 10
-        }
-      };
+      // Store the analysis in the database
+      const programmeAnalysis = await storage.createProgrammeAnalysis({
+        programmeId: parseInt(programmeId),
+        analysisDate: new Date(),
+        findings: JSON.stringify(analysis.findings),
+        issues: JSON.stringify(analysis.issues),
+        recommendations: JSON.stringify(analysis.recommendations),
+        nec4Compliance: JSON.stringify(analysis.nec4Compliance),
+        metrics: JSON.stringify(analysis.metrics)
+      });
       
       return res.status(200).json({
+        programmeAnalysis,
         analysis
       });
     } catch (error) {
