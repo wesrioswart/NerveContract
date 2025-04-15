@@ -75,39 +75,24 @@ export default function AnnotationInterface({
   useEffect(() => {
     const fetchAnnotations = async () => {
       try {
-        // This will need to be replaced with a real API call
-        // For now, we'll use a mock that would be replaced with real data
-        const mockAnnotations: Annotation[] = [
-          {
-            id: "annotation-1",
-            x: 150,
-            y: 100,
-            text: "Delayed activity may impact critical path. Consider mitigation measures.",
-            type: "issue",
-            taskId: "task-5", // This should reference a task ID from your Gantt chart
-            timestamp: new Date().toISOString(),
-            status: "pending",
-            nec4Clause: "31.3"
-          },
-          {
-            id: "annotation-2",
-            x: 350,
-            y: 250,
-            text: "Early completion opportunity if resources are increased.",
-            type: "comment",
-            taskId: "task-7",
-            timestamp: new Date().toISOString(),
-            status: "pending"
-          }
-        ];
+        // Fetch annotations from the API
+        const response = await apiRequest('GET', `/api/programmes/${programmeId}/annotations`);
+        const data = await response.json();
         
-        // In reality, the data would come from an API
-        // const response = await apiRequest('GET', `/api/programmes/${programmeId}/annotations`);
-        // const data = await response.json();
-        // setAnnotations(data);
+        // Transform server data to client annotation format if needed
+        const formattedAnnotations: Annotation[] = data.map((item: any) => ({
+          id: item.id.toString(),
+          x: item.xPosition,
+          y: item.yPosition,
+          text: item.content,
+          type: item.annotationType || "comment",
+          taskId: item.taskId ? item.taskId.toString() : undefined,
+          timestamp: item.createdAt,
+          nec4Clause: item.nec4Clause,
+          status: item.status || "pending"
+        }));
         
-        // Use mock data for demonstration (remove in production)
-        setAnnotations(mockAnnotations);
+        setAnnotations(formattedAnnotations);
       } catch (error) {
         console.error("Error fetching annotations:", error);
         toast({
@@ -115,6 +100,9 @@ export default function AnnotationInterface({
           description: "Could not load annotation data. Please try again.",
           variant: "destructive"
         });
+        
+        // If API fails, use empty array
+        setAnnotations([]);
       }
     };
 
@@ -124,20 +112,43 @@ export default function AnnotationInterface({
   // Save annotation mutation
   const saveAnnotationMutation = useMutation({
     mutationFn: async (annotation: Partial<Annotation>) => {
-      // This would be a real API call in production
-      // For now, simulate API behavior
+      // Transform client annotation to server format
+      const serverAnnotation = {
+        xPosition: annotation.x,
+        yPosition: annotation.y,
+        content: annotation.text,
+        annotationType: annotation.type,
+        taskId: annotation.taskId ? parseInt(annotation.taskId) : null,
+        nec4Clause: annotation.nec4Clause,
+        status: annotation.status
+      };
       
       // New annotation
       if (!annotation.id) {
-        const newId = `annotation-${Date.now()}`;
-        const newAnn: Annotation = {
-          ...annotation as any,
-          id: newId,
-          timestamp: new Date().toISOString()
-        };
+        const response = await apiRequest(
+          'POST', 
+          `/api/programmes/${programmeId}/annotations`, 
+          serverAnnotation
+        );
         
-        // Simulate API post
-        // await apiRequest('POST', `/api/programmes/${programmeId}/annotations`, newAnn);
+        if (!response.ok) {
+          throw new Error('Failed to create annotation');
+        }
+        
+        const savedAnnotation = await response.json();
+        
+        // Transform server response to client format
+        const newAnn: Annotation = {
+          id: savedAnnotation.id.toString(),
+          x: savedAnnotation.xPosition,
+          y: savedAnnotation.yPosition,
+          text: savedAnnotation.content,
+          type: savedAnnotation.annotationType || "comment",
+          taskId: savedAnnotation.taskId ? savedAnnotation.taskId.toString() : undefined,
+          timestamp: savedAnnotation.createdAt,
+          nec4Clause: savedAnnotation.nec4Clause,
+          status: savedAnnotation.status || "pending"
+        };
         
         // Update local state
         setAnnotations(prev => [...prev, newAnn]);
@@ -145,14 +156,36 @@ export default function AnnotationInterface({
       } 
       // Update existing annotation
       else {
-        // Simulate API put/patch
-        // await apiRequest('PATCH', `/api/programmes/${programmeId}/annotations/${annotation.id}`, annotation);
+        const response = await apiRequest(
+          'PATCH', 
+          `/api/programmes/${programmeId}/annotations/${annotation.id}`, 
+          serverAnnotation
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to update annotation');
+        }
+        
+        const updatedAnnotation = await response.json();
+        
+        // Transform server response to client format
+        const updatedAnn: Annotation = {
+          id: updatedAnnotation.id.toString(),
+          x: updatedAnnotation.xPosition,
+          y: updatedAnnotation.yPosition,
+          text: updatedAnnotation.content,
+          type: updatedAnnotation.annotationType || "comment",
+          taskId: updatedAnnotation.taskId ? updatedAnnotation.taskId.toString() : undefined,
+          timestamp: updatedAnnotation.updatedAt || updatedAnnotation.createdAt,
+          nec4Clause: updatedAnnotation.nec4Clause,
+          status: updatedAnnotation.status || "pending"
+        };
         
         // Update local state
         setAnnotations(prev => 
-          prev.map(ann => ann.id === annotation.id ? { ...ann, ...annotation } : ann)
+          prev.map(ann => ann.id === annotation.id ? updatedAnn : ann)
         );
-        return annotation;
+        return updatedAnn;
       }
     },
     onSuccess: () => {

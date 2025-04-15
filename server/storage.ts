@@ -5,9 +5,10 @@ import {
   PaymentCertificate, InsertPaymentCertificate, ChatMessage, InsertChatMessage,
   Programme, InsertProgramme, ProgrammeActivity, InsertProgrammeActivity,
   ActivityRelationship, InsertActivityRelationship, ProgrammeAnalysis, InsertProgrammeAnalysis,
+  ProgrammeAnnotation, InsertProgrammeAnnotation,
   users, projects, compensationEvents, earlyWarnings, nonConformanceReports,
   technicalQueries, programmeMilestones, paymentCertificates, chatMessages,
-  programmes, programmeActivities, activityRelationships, programmeAnalyses
+  programmes, programmeActivities, activityRelationships, programmeAnalyses, programmeAnnotations
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -84,6 +85,13 @@ export interface IStorage {
   getProgrammeAnalysis(id: number): Promise<ProgrammeAnalysis | undefined>;
   getProgrammeAnalysesByProgramme(programmeId: number): Promise<ProgrammeAnalysis[]>;
   createProgrammeAnalysis(analysis: InsertProgrammeAnalysis): Promise<ProgrammeAnalysis>;
+  
+  // Programme Annotations
+  getProgrammeAnnotation(id: number): Promise<ProgrammeAnnotation | undefined>;
+  getProgrammeAnnotationsByProgramme(programmeId: number): Promise<ProgrammeAnnotation[]>;
+  createProgrammeAnnotation(annotation: InsertProgrammeAnnotation): Promise<ProgrammeAnnotation>;
+  updateProgrammeAnnotation(id: number, annotation: Partial<ProgrammeAnnotation>): Promise<ProgrammeAnnotation>;
+  deleteProgrammeAnnotation(id: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -934,6 +942,53 @@ export class DatabaseStorage implements IStorage {
       .values(analysis)
       .returning();
     return newAnalysis;
+  }
+  
+  // Programme Annotations methods
+  async getProgrammeAnnotation(id: number): Promise<ProgrammeAnnotation | undefined> {
+    const [annotation] = await db
+      .select()
+      .from(programmeAnnotations)
+      .where(eq(programmeAnnotations.id, id));
+    return annotation;
+  }
+
+  async getProgrammeAnnotationsByProgramme(programmeId: number): Promise<ProgrammeAnnotation[]> {
+    return db
+      .select()
+      .from(programmeAnnotations)
+      .where(eq(programmeAnnotations.programmeId, programmeId));
+  }
+
+  async createProgrammeAnnotation(annotation: InsertProgrammeAnnotation): Promise<ProgrammeAnnotation> {
+    const [newAnnotation] = await db
+      .insert(programmeAnnotations)
+      .values(annotation)
+      .returning();
+    return newAnnotation;
+  }
+
+  async updateProgrammeAnnotation(id: number, annotation: Partial<ProgrammeAnnotation>): Promise<ProgrammeAnnotation> {
+    const [updatedAnnotation] = await db
+      .update(programmeAnnotations)
+      .set({
+        ...annotation,
+        updatedAt: new Date()
+      })
+      .where(eq(programmeAnnotations.id, id))
+      .returning();
+    
+    if (!updatedAnnotation) {
+      throw new Error(`Programme Annotation with ID ${id} not found`);
+    }
+    
+    return updatedAnnotation;
+  }
+
+  async deleteProgrammeAnnotation(id: number): Promise<void> {
+    await db
+      .delete(programmeAnnotations)
+      .where(eq(programmeAnnotations.id, id));
   }
 }
 

@@ -666,6 +666,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Programme Annotations routes
+  app.get("/api/programmes/:programmeId/annotations", async (req: Request, res: Response) => {
+    try {
+      const programmeId = parseInt(req.params.programmeId);
+      
+      if (isNaN(programmeId)) {
+        return res.status(400).json({ error: "Invalid programme ID" });
+      }
+      
+      const annotations = await storage.getProgrammeAnnotationsByProgramme(programmeId);
+      res.json(annotations);
+    } catch (error) {
+      console.error("Error fetching programme annotations:", error);
+      res.status(500).json({ error: "Failed to fetch annotations" });
+    }
+  });
+  
+  app.post("/api/programmes/:programmeId/annotations", async (req: Request, res: Response) => {
+    try {
+      const programmeId = parseInt(req.params.programmeId);
+      
+      if (isNaN(programmeId)) {
+        return res.status(400).json({ error: "Invalid programme ID" });
+      }
+      
+      // Add the programmeId to the request body
+      const annotationData = {
+        ...req.body,
+        programmeId
+      };
+      
+      const newAnnotation = await storage.createProgrammeAnnotation(annotationData);
+      res.status(201).json(newAnnotation);
+    } catch (error) {
+      console.error("Error creating programme annotation:", error);
+      res.status(500).json({ error: "Failed to create annotation" });
+    }
+  });
+  
+  app.patch("/api/programmes/:programmeId/annotations/:id", async (req: Request, res: Response) => {
+    try {
+      const annotationId = parseInt(req.params.id);
+      
+      if (isNaN(annotationId)) {
+        return res.status(400).json({ error: "Invalid annotation ID" });
+      }
+      
+      const updatedAnnotation = await storage.updateProgrammeAnnotation(annotationId, req.body);
+      res.json(updatedAnnotation);
+    } catch (error) {
+      console.error("Error updating programme annotation:", error);
+      res.status(500).json({ error: "Failed to update annotation" });
+    }
+  });
+  
+  app.delete("/api/programmes/:programmeId/annotations/:id", async (req: Request, res: Response) => {
+    try {
+      const annotationId = parseInt(req.params.id);
+      
+      if (isNaN(annotationId)) {
+        return res.status(400).json({ error: "Invalid annotation ID" });
+      }
+      
+      await storage.deleteProgrammeAnnotation(annotationId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting programme annotation:", error);
+      res.status(500).json({ error: "Failed to delete annotation" });
+    }
+  });
+
   // Document Analysis route
   app.post("/api/document/analyze", async (req: Request, res: Response) => {
     try {
