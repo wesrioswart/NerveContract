@@ -12,6 +12,10 @@ portfolioRouter.get("/programmes", async (req: Request, res: Response) => {
     }
     
     // Check if the user has executive access
+    if (!req.user) {
+      return res.status(401).json({ error: "User not found in session" });
+    }
+    
     const hasAccess = await hasExecutiveAccess(req.user.id);
     
     if (!hasAccess) {
@@ -60,6 +64,10 @@ portfolioRouter.get("/dashboard", async (req: Request, res: Response) => {
     }
     
     // Check if the user has executive access
+    if (!req.user) {
+      return res.status(401).json({ error: "User not found in session" });
+    }
+    
     const hasAccess = await hasExecutiveAccess(req.user.id);
     
     if (!hasAccess) {
