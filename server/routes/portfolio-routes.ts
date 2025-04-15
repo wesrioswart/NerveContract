@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { storage } from "../storage";
 import { hasExecutiveAccess } from "../middleware/auth-middleware";
+import { User } from "../types/express";
 
 export const portfolioRouter = Router();
 

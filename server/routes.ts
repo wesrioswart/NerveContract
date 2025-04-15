@@ -11,6 +11,7 @@ import { parseProgrammeFile } from "./services/programme-parser";
 import { analyzeProgramme } from "./services/programme-analysis";
 import { EmailController } from "./controllers/email-controller";
 import { portfolioRouter } from "./routes/portfolio-routes";
+import { requireAuth, requireProjectAccess } from "./middleware/auth-middleware";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
@@ -82,6 +83,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(200).json(responseUser);
       });
     })(req, res, next);
+  });
+
+  // Logout endpoint
+  app.post("/api/auth/logout", (req: Request, res: Response) => {
+    req.logout((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ message: "Error during logout" });
+      }
+      return res.status(200).json({ message: "Successfully logged out" });
+    });
+  });
+  
+  // Get current user information
+  app.get("/api/auth/me", (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    const { password: _, ...userWithoutPassword } = req.user as any;
+    return res.status(200).json(userWithoutPassword);
   });
 
   // Project routes
