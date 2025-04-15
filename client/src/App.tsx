@@ -17,6 +17,9 @@ import EmailProcessor from "@/pages/email-processor";
 import Login from "@/pages/login";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { ProjectProvider } from "./contexts/project-context";
+import { UserProvider } from "./contexts/user-context";
+import FloatingAssistant from "./components/ai-assistant/floating-assistant";
 
 function App() {
   const [location, setLocation] = useLocation();
