@@ -14,7 +14,8 @@ import {
   Settings, 
   LogOut, 
   User,
-  GanttChart
+  GanttChart,
+  Mail
 } from 'lucide-react';
 
 type SidebarProps = {
@@ -37,6 +38,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/programme-management", label: "Programme Management", icon: GanttChart },
     { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
     { path: "/templates", label: "NEC4 Templates", icon: FileText },
+    { path: "/email-processor", label: "Email Processor", icon: Mail },
     { path: "/reports", label: "Reports", icon: BarChart },
   ];
 
