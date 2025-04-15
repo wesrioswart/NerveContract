@@ -5,10 +5,12 @@ import {
   PaymentCertificate, InsertPaymentCertificate, ChatMessage, InsertChatMessage,
   Programme, InsertProgramme, ProgrammeActivity, InsertProgrammeActivity,
   ActivityRelationship, InsertActivityRelationship, ProgrammeAnalysis, InsertProgrammeAnalysis,
-  ProgrammeAnnotation, InsertProgrammeAnnotation,
+  ProgrammeAnnotation, InsertProgrammeAnnotation, Nec4Team, InsertNec4Team, 
+  Nec4TeamMember, InsertNec4TeamMember, UserToProject, InsertUserToProject,
   users, projects, compensationEvents, earlyWarnings, nonConformanceReports,
   technicalQueries, programmeMilestones, paymentCertificates, chatMessages,
-  programmes, programmeActivities, activityRelationships, programmeAnalyses, programmeAnnotations
+  programmes, programmeActivities, activityRelationships, programmeAnalyses, programmeAnnotations,
+  nec4Teams, nec4TeamMembers, usersToProjects
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -92,6 +94,27 @@ export interface IStorage {
   createProgrammeAnnotation(annotation: InsertProgrammeAnnotation): Promise<ProgrammeAnnotation>;
   updateProgrammeAnnotation(id: number, annotation: Partial<ProgrammeAnnotation>): Promise<ProgrammeAnnotation>;
   deleteProgrammeAnnotation(id: number): Promise<void>;
+  
+  // NEC4 Teams
+  getNec4Team(id: number): Promise<Nec4Team | undefined>;
+  getNec4TeamsByProject(projectId: number): Promise<Nec4Team[]>;
+  createNec4Team(team: InsertNec4Team): Promise<Nec4Team>;
+  updateNec4Team(id: number, team: Partial<Nec4Team>): Promise<Nec4Team>;
+  deleteNec4Team(id: number): Promise<void>;
+  
+  // NEC4 Team Members
+  getNec4TeamMember(id: number): Promise<Nec4TeamMember | undefined>;
+  getNec4TeamMembersByTeam(teamId: number): Promise<Nec4TeamMember[]>;
+  getNec4TeamMembersByUser(userId: number): Promise<Nec4TeamMember[]>;
+  createNec4TeamMember(member: InsertNec4TeamMember): Promise<Nec4TeamMember>;
+  updateNec4TeamMember(id: number, member: Partial<Nec4TeamMember>): Promise<Nec4TeamMember>;
+  deleteNec4TeamMember(id: number): Promise<void>;
+  
+  // User Project Assignments
+  getUserProjectAssignments(userId: number): Promise<UserToProject[]>;
+  getProjectUserAssignments(projectId: number): Promise<UserToProject[]>;
+  createUserProjectAssignment(assignment: InsertUserToProject): Promise<UserToProject>;
+  deleteUserProjectAssignment(id: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {

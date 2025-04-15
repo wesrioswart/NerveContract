@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, timestamp, boolean, jsonb, varchar, date, json, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // Users and authentication
 export const users = pgTable("users", {
@@ -326,3 +327,100 @@ export type InsertActivityRelationship = z.infer<typeof insertActivityRelationsh
 
 export type ProgrammeAnalysis = typeof programmeAnalyses.$inferSelect;
 export type InsertProgrammeAnalysis = z.infer<typeof insertProgrammeAnalysisSchema>;
+
+// NEC4 Teams
+export const nec4Teams = pgTable("nec4_teams", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => projects.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  type: text("type", { 
+    enum: [
+      "client", 
+      "contractor", 
+      "project_manager", 
+      "supervisor", 
+      "adjudicator", 
+      "senior_representatives"
+    ] 
+  }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const nec4TeamMembers = pgTable("nec4_team_members", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").notNull().references(() => nec4Teams.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  role: text("role").notNull(), // e.g., "Lead", "Member", "Manager"
+  responsibilities: text("responsibilities"),
+  isKeyPerson: boolean("is_key_person").default(false),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  leftAt: timestamp("left_at"),
+  isActive: boolean("is_active").default(true),
+});
+
+export const usersToProjects = pgTable("users_to_projects", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  projectId: integer("project_id").notNull().references(() => projects.id),
+  role: text("role").notNull(), // Role in the specific project
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+// Define relations
+export const nec4TeamsRelations = relations(nec4Teams, ({ many, one }) => ({
+  members: many(nec4TeamMembers),
+  project: one(projects, {
+    fields: [nec4Teams.projectId],
+    references: [projects.id]
+  })
+}));
+
+export const nec4TeamMembersRelations = relations(nec4TeamMembers, ({ one }) => ({
+  team: one(nec4Teams, {
+    fields: [nec4TeamMembers.teamId],
+    references: [nec4Teams.id]
+  }),
+  user: one(users, {
+    fields: [nec4TeamMembers.userId],
+    references: [users.id]
+  })
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+  teamMemberships: many(nec4TeamMembers),
+  projectAssignments: many(usersToProjects)
+}));
+
+export const projectsRelations = relations(projects, ({ many }) => ({
+  teams: many(nec4Teams),
+  userAssignments: many(usersToProjects)
+}));
+
+// Create insert schemas
+export const insertNec4TeamSchema = createInsertSchema(nec4Teams).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertNec4TeamMemberSchema = createInsertSchema(nec4TeamMembers).omit({
+  id: true,
+  joinedAt: true
+});
+
+export const insertUserToProjectSchema = createInsertSchema(usersToProjects).omit({
+  id: true,
+  joinedAt: true
+});
+
+// Define types
+export type Nec4Team = typeof nec4Teams.$inferSelect;
+export type InsertNec4Team = z.infer<typeof insertNec4TeamSchema>;
+
+export type Nec4TeamMember = typeof nec4TeamMembers.$inferSelect;
+export type InsertNec4TeamMember = z.infer<typeof insertNec4TeamMemberSchema>;
+
+export type UserToProject = typeof usersToProjects.$inferSelect;
+export type InsertUserToProject = z.infer<typeof insertUserToProjectSchema>;
