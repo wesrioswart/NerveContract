@@ -39,7 +39,6 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
     { path: "/templates", label: "NEC4 Templates", icon: FileText },
     { path: "/email-processor", label: "Email Processor", icon: Mail },
-    { path: "/reports", label: "Reports", icon: BarChart },
   ];
 
   return (
@@ -104,6 +103,19 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
           <Settings className="w-5 h-5 text-gray-500" />
           {!collapsed && <span className="text-sm font-medium">Settings</span>}
         </Link>
+        
+        <Link 
+          href="/reports" 
+          title={collapsed ? "Reports" : undefined}
+          className={cn(
+            "flex items-center rounded text-gray-800 hover:bg-blue-50 transition duration-200 ease-in-out mb-2",
+            collapsed ? "justify-center p-2" : "gap-3 p-3"
+          )}
+        >
+          <BarChart className="w-5 h-5 text-gray-500" />
+          {!collapsed && <span className="text-sm font-medium">Reports</span>}
+        </Link>
+        
         <button 
           onClick={onLogout}
           title={collapsed ? "Logout" : undefined}
