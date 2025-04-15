@@ -13,7 +13,7 @@ import {
   nec4Teams, nec4TeamMembers, usersToProjects
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -69,6 +69,16 @@ export interface IStorage {
   // Programme Management
   getProgramme(id: number): Promise<Programme | undefined>;
   getProgrammesByProject(projectId: number): Promise<Programme[]>;
+  getAllProgrammes(filters?: {
+    status?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<Programme[]>;
+  getProgrammesByProjects(projectIds: number[], filters?: {
+    status?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<Programme[]>;
   createProgramme(programme: InsertProgramme): Promise<Programme>;
   updateProgramme(id: number, programme: Partial<Programme>): Promise<Programme>;
   
@@ -843,6 +853,76 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(programmes)
       .where(eq(programmes.projectId, projectId));
+  }
+  
+  async getAllProgrammes(filters?: {
+    status?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<Programme[]> {
+    let query = db.select().from(programmes);
+    
+    if (filters) {
+      if (filters.status) {
+        query = query.where(eq(programmes.status, filters.status));
+      }
+      
+      if (filters.startDate) {
+        query = query.where(
+          // Programmes with submission date after the filter start date
+          programmes.submissionDate >= filters.startDate
+        );
+      }
+      
+      if (filters.endDate) {
+        query = query.where(
+          // Programmes with planned completion date before the filter end date
+          programmes.plannedCompletionDate <= filters.endDate
+        );
+      }
+    }
+    
+    return query;
+  }
+  
+  async getProgrammesByProjects(projectIds: number[], filters?: {
+    status?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<Programme[]> {
+    if (!projectIds.length) {
+      return [];
+    }
+    
+    let query = db
+      .select()
+      .from(programmes)
+      .where(
+        // Use in operator to check if projectId is in the provided projectIds array
+        inArray(programmes.projectId, projectIds)
+      );
+    
+    if (filters) {
+      if (filters.status) {
+        query = query.where(eq(programmes.status, filters.status));
+      }
+      
+      if (filters.startDate) {
+        query = query.where(
+          // Programmes with submission date after the filter start date
+          programmes.submissionDate >= filters.startDate
+        );
+      }
+      
+      if (filters.endDate) {
+        query = query.where(
+          // Programmes with planned completion date before the filter end date
+          programmes.plannedCompletionDate <= filters.endDate
+        );
+      }
+    }
+    
+    return query;
   }
 
   async createProgramme(programme: InsertProgramme): Promise<Programme> {
