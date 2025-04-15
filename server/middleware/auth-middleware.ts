@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { db } from "../db";
 import { users, usersToProjects } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { User } from "../types/express";
 
 // Executive role types that have cross-project access
 export const EXECUTIVE_ROLES = ["CEO", "Operations Manager", "Executive", "Director"];
