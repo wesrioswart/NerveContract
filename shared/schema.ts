@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, boolean, jsonb, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean, jsonb, varchar, date, json, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -203,5 +203,101 @@ export type InsertProgrammeMilestone = z.infer<typeof insertProgrammeMilestoneSc
 export type PaymentCertificate = typeof paymentCertificates.$inferSelect;
 export type InsertPaymentCertificate = z.infer<typeof insertPaymentCertificateSchema>;
 
+// Programme Management
+export const programmes = pgTable("programmes", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => projects.id),
+  name: text("name").notNull(),
+  version: text("version").notNull(),
+  submissionDate: timestamp("submission_date").notNull(),
+  status: text("status", { enum: ["draft", "submitted", "accepted", "rejected"] }).notNull(),
+  acceptanceDate: timestamp("acceptance_date"),
+  plannedCompletionDate: timestamp("planned_completion_date").notNull(),
+  baselineId: integer("baseline_id").references(() => programmes.id),
+  fileUrl: text("file_url").notNull(),
+  fileType: text("file_type", { enum: ["msp", "xer", "xml"] }).notNull(),
+  submittedBy: integer("submitted_by").references(() => users.id),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewNotes: text("review_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertProgrammeSchema = createInsertSchema(programmes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const programmeActivities = pgTable("programme_activities", {
+  id: serial("id").primaryKey(),
+  programmeId: integer("programme_id").notNull().references(() => programmes.id),
+  externalId: text("external_id").notNull(), // ID from MS Project or Primavera
+  name: text("name").notNull(),
+  description: text("description"),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  duration: integer("duration").notNull(),
+  percentComplete: integer("percent_complete").notNull().default(0),
+  isCritical: boolean("is_critical").notNull().default(false),
+  totalFloat: integer("total_float"),
+  parentId: integer("parent_id").references(() => programmeActivities.id),
+  wbsCode: text("wbs_code"),
+  milestone: boolean("milestone").notNull().default(false),
+});
+
+export const insertProgrammeActivitySchema = createInsertSchema(programmeActivities).omit({
+  id: true,
+});
+
+export const activityRelationships = pgTable("activity_relationships", {
+  id: serial("id").primaryKey(),
+  predecessorId: integer("predecessor_id").notNull().references(() => programmeActivities.id),
+  successorId: integer("successor_id").notNull().references(() => programmeActivities.id),
+  type: text("type", { enum: ["FS", "FF", "SS", "SF"] }).notNull().default("FS"),
+  lag: integer("lag").notNull().default(0),
+});
+
+export const insertActivityRelationshipSchema = createInsertSchema(activityRelationships).omit({
+  id: true,
+});
+
+export const programmeAnalyses = pgTable("programme_analyses", {
+  id: serial("id").primaryKey(),
+  programmeId: integer("programme_id").notNull().references(() => programmes.id),
+  analysisDate: timestamp("analysis_date").defaultNow(),
+  qualityScore: integer("quality_score"),
+  criticalPathLength: integer("critical_path_length"),
+  scheduleRisk: text("schedule_risk", { enum: ["low", "medium", "high"] }),
+  issuesFound: json("issues_found").$type<Array<{
+    severity: "low" | "medium" | "high",
+    category: string,
+    description: string,
+    activities: number[]
+  }>>(),
+  nec4Compliance: json("nec4_compliance").$type<{
+    clause31: boolean,
+    clause32: boolean,
+    overallCompliant: boolean,
+    issues: string[]
+  }>(),
+  recommendations: json("recommendations").$type<string[]>(),
+});
+
+export const insertProgrammeAnalysisSchema = createInsertSchema(programmeAnalyses).omit({
+  id: true,
+  analysisDate: true,
+});
+
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+
+export type Programme = typeof programmes.$inferSelect;
+export type InsertProgramme = z.infer<typeof insertProgrammeSchema>;
+
+export type ProgrammeActivity = typeof programmeActivities.$inferSelect;
+export type InsertProgrammeActivity = z.infer<typeof insertProgrammeActivitySchema>;
+
+export type ActivityRelationship = typeof activityRelationships.$inferSelect;
+export type InsertActivityRelationship = z.infer<typeof insertActivityRelationshipSchema>;
+
+export type ProgrammeAnalysis = typeof programmeAnalyses.$inferSelect;
+export type InsertProgrammeAnalysis = z.infer<typeof insertProgrammeAnalysisSchema>;
