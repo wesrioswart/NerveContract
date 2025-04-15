@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { AnimatedButton } from "@/components/ui/animated-button";
+import { AnimationWrapper } from "@/components/ui/animation-wrapper";
 import { AlertCircle, Download, Printer, Save } from "lucide-react";
 
 // Form schema for Early Warning
@@ -71,10 +73,12 @@ export default function EarlyWarningTemplate() {
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="p-6 border-b border-gray-200">
-        <h2 className="text-xl font-bold mb-2">Early Warning Notice</h2>
-        <p className="text-sm text-gray-500">
+        <AnimationWrapper as="h2" type="slideIn" className="text-xl font-bold mb-2">
+          Early Warning Notice
+        </AnimationWrapper>
+        <AnimationWrapper as="p" type="fadeIn" delay={0.2} className="text-sm text-gray-500">
           Template for issuing Early Warnings under NEC4 Clause 15.1
-        </p>
+        </AnimationWrapper>
       </div>
       
       {!showPreview ? (
@@ -267,44 +271,47 @@ export default function EarlyWarningTemplate() {
             )}
           </div>
           
-          <div className="flex justify-end mt-8 space-x-3">
-            <Button type="button" variant="outline" className="gap-1">
+          <AnimationWrapper type="fadeIn" delay={0.3} className="flex justify-end mt-8 space-x-3">
+            <AnimatedButton type="button" variant="outline" className="gap-1" animation="subtle">
               <Save className="w-4 h-4" />
               Save Draft
-            </Button>
-            <Button type="submit" className="bg-amber-500 hover:bg-amber-600 text-white gap-1">
+            </AnimatedButton>
+            <AnimatedButton type="submit" className="bg-amber-500 hover:bg-amber-600 text-white gap-1" animation="bounce">
               <AlertCircle className="w-4 h-4" />
               Generate Notice
-            </Button>
-          </div>
+            </AnimatedButton>
+          </AnimationWrapper>
         </form>
       ) : (
         <div>
-          <div className="p-6 border-b border-gray-200 text-right space-x-2 print:hidden">
-            <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1">
+          <AnimationWrapper type="fadeIn" delay={0.2} className="p-6 border-b border-gray-200 text-right space-x-2 print:hidden">
+            <AnimatedButton variant="outline" size="sm" onClick={handlePrint} className="gap-1" animation="subtle">
               <Printer className="w-4 h-4" />
               Print
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleDownload} className="gap-1">
+            </AnimatedButton>
+            <AnimatedButton variant="outline" size="sm" onClick={handleDownload} className="gap-1" animation="subtle">
               <Download className="w-4 h-4" />
               Download PDF
-            </Button>
-            <Button
+            </AnimatedButton>
+            <AnimatedButton
               variant="outline"
               size="sm"
               onClick={() => setShowPreview(false)}
+              animation="subtle"
             >
               Edit
-            </Button>
-          </div>
+            </AnimatedButton>
+          </AnimationWrapper>
           
           <div className="p-8 max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold">EARLY WARNING NOTICE</h1>
-              <p className="text-sm text-gray-500 mt-1">
+            <AnimationWrapper type="fadeIn" delay={0.3} className="text-center mb-8">
+              <AnimationWrapper as="h1" type="scale" delay={0.4} className="text-2xl font-bold">
+                EARLY WARNING NOTICE
+              </AnimationWrapper>
+              <AnimationWrapper as="p" type="fadeIn" delay={0.5} className="text-sm text-gray-500 mt-1">
                 In accordance with Clause 15.1 of the NEC4 Contract
-              </p>
-            </div>
+              </AnimationWrapper>
+            </AnimationWrapper>
             
             <div className="grid grid-cols-2 gap-6 mb-8">
               <div>
@@ -334,34 +341,34 @@ export default function EarlyWarningTemplate() {
               </div>
             </div>
             
-            <div className="mb-6">
+            <AnimationWrapper type="fadeIn" delay={0.6} className="mb-6">
               <h2 className="text-lg font-bold mb-2">{watch("subjectMatter")}</h2>
               <div className="border-l-4 border-amber-500 pl-4 py-1">
                 <p className="text-sm text-gray-700 whitespace-pre-wrap">{watch("description")}</p>
               </div>
-            </div>
+            </AnimationWrapper>
             
-            <div className="mb-6">
+            <AnimationWrapper type="fadeIn" delay={0.7} className="mb-6">
               <h3 className="text-md font-bold mb-2">Potential Impact on Project</h3>
               <p className="text-sm whitespace-pre-wrap">{watch("potentialImpact")}</p>
-            </div>
+            </AnimationWrapper>
             
-            <div className="mb-6">
+            <AnimationWrapper type="fadeIn" delay={0.8} className="mb-6">
               <h3 className="text-md font-bold mb-2">Proposed Mitigation Actions</h3>
               <p className="text-sm whitespace-pre-wrap">{watch("proposedMitigation")}</p>
-            </div>
+            </AnimationWrapper>
             
             {watch("meetingRequested") && (
-              <div className="mb-6 p-4 bg-amber-50 rounded-md">
+              <AnimationWrapper type="fadeIn" delay={0.9} className="mb-6 p-4 bg-amber-50 rounded-md">
                 <h3 className="text-md font-bold mb-2">Risk Reduction Meeting (Clause 15.2)</h3>
                 <p className="text-sm">
                   A risk reduction meeting is requested {watch("proposedMeetingDate") && `on ${watch("proposedMeetingDate")}`}
                   {!watch("proposedMeetingDate") && " at a date to be agreed"}
                 </p>
-              </div>
+              </AnimationWrapper>
             )}
             
-            <div className="mt-12 pt-8 border-t border-gray-200">
+            <AnimationWrapper type="fadeIn" delay={1.0} className="mt-12 pt-8 border-t border-gray-200">
               <div className="grid grid-cols-2 gap-12">
                 <div>
                   <p className="text-sm font-medium mb-8">Issued by:</p>
@@ -376,14 +383,14 @@ export default function EarlyWarningTemplate() {
                   <p className="text-sm">{watch("raisedTo")}</p>
                 </div>
               </div>
-            </div>
+            </AnimationWrapper>
             
-            <div className="mt-12 text-xs text-gray-500">
+            <AnimationWrapper type="fadeIn" delay={1.1} className="mt-12 text-xs text-gray-500">
               <p>
                 Note: This Early Warning is issued in accordance with Clause 15.1 of the NEC4 Contract, 
                 which requires notification of any matter that could affect time, cost, or quality.
               </p>
-            </div>
+            </AnimationWrapper>
           </div>
         </div>
       )}
