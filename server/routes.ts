@@ -14,6 +14,8 @@ import { portfolioRouter } from "./routes/portfolio-routes";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
+import passport from './auth/passport-config';
+import session from 'express-session';
 
 // Configure multer for file uploads
 const upload = multer({
@@ -32,36 +34,54 @@ const documentAnalysisSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Configure express-session
+  app.use(
+    session({
+      secret: 'nec4-contract-manager-secret',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      }
+    })
+  );
+
+  // Initialize Passport and restore authentication state from session
+  app.use(passport.initialize());
+  app.use(passport.session());
   // Authentication routes
-  app.post("/api/auth/login", async (req: Request, res: Response) => {
-    const { username, password } = req.body;
-    
-    if (!username || !password) {
-      return res.status(400).json({ message: "Username and password are required" });
-    }
-    
-    try {
-      const user = await storage.getUserByUsername(username);
-      
-      if (!user || user.password !== password) {
-        return res.status(401).json({ message: "Invalid credentials" });
+  app.post("/api/auth/login", (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate('local', (err, user, info) => {
+      if (err) {
+        console.error("Login error:", err);
+        return res.status(500).json({ message: "Server error during login" });
       }
       
-      // Exclude password from the response
-      const { password: _, ...userWithoutPassword } = user;
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid credentials" });
+      }
       
-      // For client compatibility, ensure fields use camelCase
-      const responseUser = {
-        ...userWithoutPassword,
-        fullName: user.fullName,
-        avatarInitials: user.avatarInitials
-      };
-      
-      return res.status(200).json(responseUser);
-    } catch (error) {
-      console.error("Login error:", error);
-      return res.status(500).json({ message: "Server error during login" });
-    }
+      // Log in the user
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          console.error("Session login error:", loginErr);
+          return res.status(500).json({ message: "Error establishing session" });
+        }
+        
+        // Exclude password from the response
+        const { password: _, ...userWithoutPassword } = user;
+        
+        // For client compatibility, ensure fields use camelCase
+        const responseUser = {
+          ...userWithoutPassword,
+          fullName: user.fullName,
+          avatarInitials: user.avatarInitials
+        };
+        
+        return res.status(200).json(responseUser);
+      });
+    })(req, res, next);
   });
 
   // Project routes
