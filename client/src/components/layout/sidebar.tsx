@@ -38,7 +38,6 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/programme-management", label: "Programme Management", icon: GanttChart },
     { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
     { path: "/templates", label: "NEC4 Templates", icon: FileText },
-    { path: "/email-processor", label: "Email Processor", icon: Mail },
   ];
 
   return (
@@ -97,7 +96,8 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
           title={collapsed ? "Settings" : undefined}
           className={cn(
             "flex items-center rounded text-gray-800 hover:bg-blue-50 transition duration-200 ease-in-out mb-2",
-            collapsed ? "justify-center p-2" : "gap-3 p-3"
+            collapsed ? "justify-center p-2" : "gap-3 p-3",
+            location === "/settings" ? "bg-blue-100" : ""
           )}
         >
           <Settings className="w-5 h-5 text-gray-500" />
@@ -105,11 +105,25 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
         </Link>
         
         <Link 
+          href="/email-processor" 
+          title={collapsed ? "Email Processor" : undefined}
+          className={cn(
+            "flex items-center rounded transition duration-200 ease-in-out mb-2",
+            collapsed ? "justify-center p-2" : "gap-3 p-3",
+            "bg-blue-100 text-blue-700"
+          )}
+        >
+          <Mail className={cn("w-5 h-5", "text-blue-500")} />
+          {!collapsed && <span className="text-sm font-medium">Email Processor</span>}
+        </Link>
+        
+        <Link 
           href="/reports" 
           title={collapsed ? "Reports" : undefined}
           className={cn(
             "flex items-center rounded text-gray-800 hover:bg-blue-50 transition duration-200 ease-in-out mb-2",
-            collapsed ? "justify-center p-2" : "gap-3 p-3"
+            collapsed ? "justify-center p-2" : "gap-3 p-3",
+            location === "/reports" ? "bg-blue-100" : ""
           )}
         >
           <BarChart className="w-5 h-5 text-gray-500" />
