@@ -5,6 +5,7 @@ import { z } from "zod";
 import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarningSchema } from "@shared/schema";
 import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured } from "./utils/openai";
 import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
+import { EmailController } from "./controllers/email-controller";
 import path from "path";
 import fs from "fs";
 
@@ -772,6 +773,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Email Service routes
+  app.post("/api/email/initialize", EmailController.initializeEmailService);
+  app.get("/api/email/test-connection", EmailController.testConnection);
+  app.post("/api/email/process", EmailController.processEmails);
 
   const httpServer = createServer(app);
   return httpServer;
