@@ -1,7 +1,7 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { storage } from '../storage';
-import { User } from '@shared/schema';
+import { User } from '../types/express';
 
 // Configure Passport.js local strategy
 passport.use(
