@@ -219,8 +219,14 @@ export default function AnnotationInterface({
   // Delete annotation mutation
   const deleteAnnotationMutation = useMutation({
     mutationFn: async (id: string) => {
-      // This would be a real API call in production
-      // await apiRequest('DELETE', `/api/programmes/${programmeId}/annotations/${id}`);
+      const response = await apiRequest(
+        'DELETE', 
+        `/api/programmes/${programmeId}/annotations/${id}`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete annotation');
+      }
       
       // Update local state
       setAnnotations(prev => prev.filter(ann => ann.id !== id));
@@ -341,10 +347,48 @@ export default function AnnotationInterface({
 
   // Handle annotation drag end
   const handleAnnotationDragEnd = () => {
+    // If nothing is being dragged, just return
+    if (!draggingAnnotation) {
+      return;
+    }
+    
+    // Find the annotation that was being dragged
+    const draggedAnnotation = annotations.find(ann => ann.id === draggingAnnotation);
+    
+    // If annotation was found, update its position on the server
+    if (draggedAnnotation) {
+      // Create a server-formatted annotation object with just the position data
+      const serverAnnotation = {
+        xPosition: draggedAnnotation.x,
+        yPosition: draggedAnnotation.y
+      };
+      
+      // Update the annotation on the server
+      apiRequest(
+        'PATCH', 
+        `/api/programmes/${programmeId}/annotations/${draggingAnnotation}`, 
+        serverAnnotation
+      ).then(response => {
+        if (!response.ok) {
+          console.error('Failed to update annotation position');
+          toast({
+            title: "Failed to save position",
+            description: "The annotation position could not be saved.",
+            variant: "destructive"
+          });
+        }
+      }).catch(error => {
+        console.error('Error updating annotation position:', error);
+        toast({
+          title: "Error",
+          description: "Could not save the new position.",
+          variant: "destructive"
+        });
+      });
+    }
+    
     // Reset dragging state
     setDraggingAnnotation(null);
-    
-    // In a real implementation, we'd save the new positions to the server here
   };
 
   // Get color for annotation type
