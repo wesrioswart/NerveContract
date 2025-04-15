@@ -2,12 +2,24 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarningSchema } from "@shared/schema";
+import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarningSchema, 
+  insertProgrammeSchema, insertProgrammeActivitySchema, insertActivityRelationshipSchema } from "@shared/schema";
 import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured } from "./utils/openai";
 import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
+import { parseProgrammeFile } from "./services/programme-parser";
+import { analyzeProgramme } from "./services/programme-analysis";
 import { EmailController } from "./controllers/email-controller";
 import path from "path";
 import fs from "fs";
+import multer from "multer";
+
+// Configure multer for file uploads
+const upload = multer({
+  dest: "uploads/programme/",
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB max file size
+  }
+});
 
 const parseXMLSchema = z.object({
   xmlContent: z.string(),
