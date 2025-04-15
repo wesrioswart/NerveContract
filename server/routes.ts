@@ -11,7 +11,7 @@ import { parseProgrammeFile } from "./services/programme-parser";
 import { analyzeProgramme } from "./services/programme-analysis";
 import { EmailController } from "./controllers/email-controller";
 import { portfolioRouter } from "./routes/portfolio-routes";
-import { requireAuth, requireProjectAccess } from "./middleware/auth-middleware";
+import { requireAuth, requireProjectAccess, hasProjectAccess } from "./middleware/auth-middleware";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
@@ -782,7 +782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // NEC4 Teams routes
-  app.get("/api/projects/:projectId/nec4-teams", async (req: Request, res: Response) => {
+  app.get("/api/projects/:projectId/nec4-teams", requireAuth, requireProjectAccess, async (req: Request, res: Response) => {
     try {
       const projectId = parseInt(req.params.projectId);
       
@@ -798,9 +798,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/nec4-teams", async (req: Request, res: Response) => {
+  app.post("/api/nec4-teams", requireAuth, async (req: Request, res: Response) => {
     try {
       const teamData = insertNec4TeamSchema.parse(req.body);
+      
+      // Check if user has access to the project
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      const hasAccess = await hasProjectAccess(req.user.id, teamData.projectId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "You don't have access to this project" });
+      }
+      
       const newTeam = await storage.createNec4Team(teamData);
       res.status(201).json(newTeam);
     } catch (error) {
@@ -810,7 +821,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/nec4-teams/:id", async (req: Request, res: Response) => {
+  app.get("/api/nec4-teams/:id", requireAuth, async (req: Request, res: Response) => {
     try {
       const teamId = parseInt(req.params.id);
       
@@ -824,6 +835,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "NEC4 team not found" });
       }
       
+      // Check if user has access to the project this team belongs to
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      const hasAccess = await hasProjectAccess(req.user.id, team.projectId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "You don't have access to this project" });
+      }
+      
       res.json(team);
     } catch (error) {
       console.error("Error fetching NEC4 team:", error);
@@ -831,12 +852,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/nec4-teams/:id", async (req: Request, res: Response) => {
+  app.patch("/api/nec4-teams/:id", requireAuth, async (req: Request, res: Response) => {
     try {
       const teamId = parseInt(req.params.id);
       
       if (isNaN(teamId)) {
         return res.status(400).json({ error: "Invalid team ID" });
+      }
+      
+      // Get the team to check project access
+      const team = await storage.getNec4Team(teamId);
+      if (!team) {
+        return res.status(404).json({ error: "NEC4 team not found" });
+      }
+      
+      // Check if user has access to the project this team belongs to
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      const hasAccess = await hasProjectAccess(req.user.id, team.projectId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "You don't have access to this project" });
       }
       
       const updatedTeam = await storage.updateNec4Team(teamId, req.body);
@@ -847,12 +884,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.delete("/api/nec4-teams/:id", async (req: Request, res: Response) => {
+  app.delete("/api/nec4-teams/:id", requireAuth, async (req: Request, res: Response) => {
     try {
       const teamId = parseInt(req.params.id);
       
       if (isNaN(teamId)) {
         return res.status(400).json({ error: "Invalid team ID" });
+      }
+      
+      // Get the team to check project access
+      const team = await storage.getNec4Team(teamId);
+      if (!team) {
+        return res.status(404).json({ error: "NEC4 team not found" });
+      }
+      
+      // Check if user has access to the project this team belongs to
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      const hasAccess = await hasProjectAccess(req.user.id, team.projectId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "You don't have access to this project" });
       }
       
       await storage.deleteNec4Team(teamId);
@@ -864,12 +917,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // NEC4 Team Members routes
-  app.get("/api/nec4-teams/:teamId/members", async (req: Request, res: Response) => {
+  app.get("/api/nec4-teams/:teamId/members", requireAuth, async (req: Request, res: Response) => {
     try {
       const teamId = parseInt(req.params.teamId);
       
       if (isNaN(teamId)) {
         return res.status(400).json({ error: "Invalid team ID" });
+      }
+      
+      // Get the team to check project access
+      const team = await storage.getNec4Team(teamId);
+      if (!team) {
+        return res.status(404).json({ error: "NEC4 team not found" });
+      }
+      
+      // Check if user has access to the project this team belongs to
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      const hasAccess = await hasProjectAccess(req.user.id, team.projectId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "You don't have access to this project" });
       }
       
       const members = await storage.getNec4TeamMembersByTeam(teamId);
@@ -880,9 +949,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/nec4-team-members", async (req: Request, res: Response) => {
+  app.post("/api/nec4-team-members", requireAuth, async (req: Request, res: Response) => {
     try {
       const memberData = insertNec4TeamMemberSchema.parse(req.body);
+      
+      // Get the team to check project access
+      const team = await storage.getNec4Team(memberData.teamId);
+      if (!team) {
+        return res.status(404).json({ error: "NEC4 team not found" });
+      }
+      
+      // Check if user has access to the project this team belongs to
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      const hasAccess = await hasProjectAccess(req.user.id, team.projectId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "You don't have access to this project" });
+      }
+      
       const newMember = await storage.createNec4TeamMember(memberData);
       res.status(201).json(newMember);
     } catch (error) {
