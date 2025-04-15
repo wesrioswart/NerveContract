@@ -4,32 +4,61 @@ import CETable from "@/components/compensation-events/ce-table";
 import EWTable from "@/components/early-warnings/ew-table";
 import ChatInterface from "@/components/ai-assistant/chat-interface";
 import Timeline from "@/components/dashboard/timeline";
-import { CompensationEvent, EarlyWarning, NonConformanceReport, PaymentCertificate, ProgrammeMilestone } from "@shared/schema";
+import { CompensationEvent, EarlyWarning, NonConformanceReport, PaymentCertificate, ProgrammeMilestone, Project } from "@shared/schema";
+import { useState, useEffect } from "react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { BuildingIcon, Loader2 } from "lucide-react";
 
 export default function Dashboard() {
-  // For MVP, we'll assume project ID 1
-  const projectId = 1;
+  const [projectId, setProjectId] = useState(1);
   const userId = 1;
 
-  // Fetch project data, CE counts, EW counts, etc.
-  const { data: compensationEvents = [] } = useQuery<CompensationEvent[]>({
+  // Fetch available projects
+  const { 
+    data: projects = [], 
+    isLoading: projectsLoading 
+  } = useQuery<Project[]>({
+    queryKey: ['/api/projects'],
+    refetchOnWindowFocus: false,
+  });
+
+  // Set default project if not already set
+  useEffect(() => {
+    if (projects.length > 0 && projectId === 1) {
+      setProjectId(projects[0].id);
+    }
+  }, [projects, projectId]);
+
+  // Fetch project data
+  const { data: compensationEvents = [], isLoading: ceLoading } = useQuery<CompensationEvent[]>({
     queryKey: [`/api/projects/${projectId}/compensation-events`],
+    enabled: projectId > 0,
   });
 
-  const { data: earlyWarnings = [] } = useQuery<EarlyWarning[]>({
+  const { data: earlyWarnings = [], isLoading: ewLoading } = useQuery<EarlyWarning[]>({
     queryKey: [`/api/projects/${projectId}/early-warnings`],
+    enabled: projectId > 0,
   });
 
-  const { data: nonConformanceReports = [] } = useQuery<NonConformanceReport[]>({
+  const { data: nonConformanceReports = [], isLoading: ncrLoading } = useQuery<NonConformanceReport[]>({
     queryKey: [`/api/projects/${projectId}/non-conformance-reports`],
+    enabled: projectId > 0,
   });
 
-  const { data: paymentCertificates = [] } = useQuery<PaymentCertificate[]>({
+  const { data: paymentCertificates = [], isLoading: pcLoading } = useQuery<PaymentCertificate[]>({
     queryKey: [`/api/projects/${projectId}/payment-certificates`],
+    enabled: projectId > 0,
   });
 
-  const { data: programmeMilestones = [] } = useQuery<ProgrammeMilestone[]>({
+  const { data: programmeMilestones = [], isLoading: milestoneLoading } = useQuery<ProgrammeMilestone[]>({
     queryKey: [`/api/projects/${projectId}/programme-milestones`],
+    enabled: projectId > 0,
   });
 
   // Calculate stats for summary cards
@@ -56,14 +85,28 @@ export default function Dashboard() {
   const daysUntilPayment = nextPayment ? 
     Math.ceil((new Date(nextPayment.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
-  return (
-    <div className="space-y-8">
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Project Dashboard</h1>
-        <p className="text-gray-500">Overview of your NEC4 contract activity</p>
-      </div>
-      
-      {/* Dashboard Summary Cards */}
+  // Loading state
+  const isLoading = projectsLoading || ceLoading || ewLoading || ncrLoading || pcLoading || milestoneLoading;
+
+  // Project selection handler
+  const handleProjectChange = (value: string) => {
+    setProjectId(parseInt(value));
+  };
+
+  // Get current project name
+  const currentProject = projects.find(p => p.id === projectId);
+
+  // Loading view
+  const loadingView = (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 className="h-8 w-8 animate-spin text-blue-600 mr-2" />
+      <p>Loading project data...</p>
+    </div>
+  );
+
+  // Dashboard content view
+  const dashboardContent = (
+    <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryCard
           title="Compensation Events"
@@ -102,7 +145,6 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Contract Registers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-5 rounded-lg shadow">
           <h2 className="text-lg font-bold mb-4">Recent Compensation Events</h2>
@@ -111,19 +153,69 @@ export default function Dashboard() {
         
         <div className="bg-white p-5 rounded-lg shadow">
           <h2 className="text-lg font-bold mb-4">Active Early Warnings</h2>
-          <EWTable projectId={projectId} limit={3} showViewAll={true} />
+          <EWTable
+            projectId={projectId} 
+            earlyWarnings={earlyWarnings}
+            isLoading={ewLoading}
+            limit={3} 
+            showViewAll={true} 
+          />
         </div>
       </div>
       
-      {/* Project Timeline */}
       <Timeline milestones={programmeMilestones as any} />
       
-      {/* AI Assistant Chat Interface */}
       <div className="bg-white p-5 rounded-lg shadow">
         <h2 className="text-lg font-bold mb-4">NEC4 Contract Assistant</h2>
         <p className="text-gray-500 mb-4">Ask questions about your contract or get help with clause interpretations</p>
         <ChatInterface projectId={projectId} userId={userId} />
       </div>
+    </>
+  );
+
+  return (
+    <div className="space-y-8">
+      <div className="mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
+          <h1 className="text-2xl font-bold text-gray-900">Project Dashboard</h1>
+          
+          <div className="mt-3 md:mt-0 w-full md:w-72">
+            <Select 
+              value={projectId?.toString()} 
+              onValueChange={handleProjectChange}
+              disabled={projectsLoading}
+            >
+              <SelectTrigger className="w-full bg-white">
+                <div className="flex items-center gap-2">
+                  <BuildingIcon className="h-4 w-4 text-blue-600" />
+                  {projectsLoading ? (
+                    <div className="flex items-center">
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <span>Loading projects...</span>
+                    </div>
+                  ) : (
+                    <SelectValue placeholder="Select project" />
+                  )}
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id.toString()}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <p className="text-gray-500">
+          {currentProject 
+            ? `Overview of ${currentProject.name} contract activity` 
+            : "Overview of your NEC4 contract activity"}
+        </p>
+      </div>
+      
+      {isLoading ? loadingView : dashboardContent}
     </div>
   );
 }
