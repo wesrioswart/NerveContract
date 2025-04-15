@@ -3,8 +3,11 @@ import {
   EarlyWarning, InsertEarlyWarning, NonConformanceReport, InsertNonConformanceReport,
   TechnicalQuery, InsertTechnicalQuery, ProgrammeMilestone, InsertProgrammeMilestone,
   PaymentCertificate, InsertPaymentCertificate, ChatMessage, InsertChatMessage,
+  Programme, InsertProgramme, ProgrammeActivity, InsertProgrammeActivity,
+  ActivityRelationship, InsertActivityRelationship, ProgrammeAnalysis, InsertProgrammeAnalysis,
   users, projects, compensationEvents, earlyWarnings, nonConformanceReports,
-  technicalQueries, programmeMilestones, paymentCertificates, chatMessages
+  technicalQueries, programmeMilestones, paymentCertificates, chatMessages,
+  programmes, programmeActivities, activityRelationships, programmeAnalyses
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -59,6 +62,28 @@ export interface IStorage {
   // Chat Messages
   getChatMessagesByProject(projectId: number): Promise<ChatMessage[]>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  
+  // Programme Management
+  getProgramme(id: number): Promise<Programme | undefined>;
+  getProgrammesByProject(projectId: number): Promise<Programme[]>;
+  createProgramme(programme: InsertProgramme): Promise<Programme>;
+  updateProgramme(id: number, programme: Partial<Programme>): Promise<Programme>;
+  
+  // Programme Activities
+  getProgrammeActivity(id: number): Promise<ProgrammeActivity | undefined>;
+  getProgrammeActivitiesByProgramme(programmeId: number): Promise<ProgrammeActivity[]>;
+  createProgrammeActivity(activity: InsertProgrammeActivity): Promise<ProgrammeActivity>;
+  updateProgrammeActivity(id: number, activity: Partial<ProgrammeActivity>): Promise<ProgrammeActivity>;
+  
+  // Activity Relationships
+  getActivityRelationship(id: number): Promise<ActivityRelationship | undefined>;
+  getActivityRelationshipsByProgramme(programmeId: number): Promise<ActivityRelationship[]>;
+  createActivityRelationship(relationship: InsertActivityRelationship): Promise<ActivityRelationship>;
+  
+  // Programme Analyses
+  getProgrammeAnalysis(id: number): Promise<ProgrammeAnalysis | undefined>;
+  getProgrammeAnalysesByProgramme(programmeId: number): Promise<ProgrammeAnalysis[]>;
+  createProgrammeAnalysis(analysis: InsertProgrammeAnalysis): Promise<ProgrammeAnalysis>;
 }
 
 export class MemStorage implements IStorage {
@@ -771,6 +796,144 @@ export class DatabaseStorage implements IStorage {
       .values(message)
       .returning();
     return msg;
+  }
+
+  // Programme Management methods
+  async getProgramme(id: number): Promise<Programme | undefined> {
+    const [programme] = await db
+      .select()
+      .from(programmes)
+      .where(eq(programmes.id, id));
+    return programme;
+  }
+
+  async getProgrammesByProject(projectId: number): Promise<Programme[]> {
+    return db
+      .select()
+      .from(programmes)
+      .where(eq(programmes.projectId, projectId));
+  }
+
+  async createProgramme(programme: InsertProgramme): Promise<Programme> {
+    const [newProgramme] = await db
+      .insert(programmes)
+      .values(programme)
+      .returning();
+    return newProgramme;
+  }
+
+  async updateProgramme(id: number, programme: Partial<Programme>): Promise<Programme> {
+    const [updatedProgramme] = await db
+      .update(programmes)
+      .set(programme)
+      .where(eq(programmes.id, id))
+      .returning();
+    
+    if (!updatedProgramme) {
+      throw new Error(`Programme with ID ${id} not found`);
+    }
+    
+    return updatedProgramme;
+  }
+
+  // Programme Activities methods
+  async getProgrammeActivity(id: number): Promise<ProgrammeActivity | undefined> {
+    const [activity] = await db
+      .select()
+      .from(programmeActivities)
+      .where(eq(programmeActivities.id, id));
+    return activity;
+  }
+
+  async getProgrammeActivitiesByProgramme(programmeId: number): Promise<ProgrammeActivity[]> {
+    return db
+      .select()
+      .from(programmeActivities)
+      .where(eq(programmeActivities.programmeId, programmeId));
+  }
+
+  async createProgrammeActivity(activity: InsertProgrammeActivity): Promise<ProgrammeActivity> {
+    const [newActivity] = await db
+      .insert(programmeActivities)
+      .values(activity)
+      .returning();
+    return newActivity;
+  }
+
+  async updateProgrammeActivity(id: number, activity: Partial<ProgrammeActivity>): Promise<ProgrammeActivity> {
+    const [updatedActivity] = await db
+      .update(programmeActivities)
+      .set(activity)
+      .where(eq(programmeActivities.id, id))
+      .returning();
+    
+    if (!updatedActivity) {
+      throw new Error(`Programme Activity with ID ${id} not found`);
+    }
+    
+    return updatedActivity;
+  }
+
+  // Activity Relationships methods
+  async getActivityRelationship(id: number): Promise<ActivityRelationship | undefined> {
+    const [relationship] = await db
+      .select()
+      .from(activityRelationships)
+      .where(eq(activityRelationships.id, id));
+    return relationship;
+  }
+
+  async getActivityRelationshipsByProgramme(programmeId: number): Promise<ActivityRelationship[]> {
+    // First, we get all activity IDs from the programme
+    const activities = await this.getProgrammeActivitiesByProgramme(programmeId);
+    const activityIds = activities.map(activity => activity.id);
+    
+    // Then, we find all relationships where either predecessor or successor is in our activity list
+    if (activityIds.length === 0) {
+      return [];
+    }
+    
+    return db
+      .select()
+      .from(activityRelationships)
+      .where(
+        db.or(
+          db.inArray(activityRelationships.predecessorId, activityIds),
+          db.inArray(activityRelationships.successorId, activityIds)
+        )
+      );
+  }
+
+  async createActivityRelationship(relationship: InsertActivityRelationship): Promise<ActivityRelationship> {
+    const [newRelationship] = await db
+      .insert(activityRelationships)
+      .values(relationship)
+      .returning();
+    return newRelationship;
+  }
+
+  // Programme Analyses methods
+  async getProgrammeAnalysis(id: number): Promise<ProgrammeAnalysis | undefined> {
+    const [analysis] = await db
+      .select()
+      .from(programmeAnalyses)
+      .where(eq(programmeAnalyses.id, id));
+    return analysis;
+  }
+
+  async getProgrammeAnalysesByProgramme(programmeId: number): Promise<ProgrammeAnalysis[]> {
+    return db
+      .select()
+      .from(programmeAnalyses)
+      .where(eq(programmeAnalyses.programmeId, programmeId));
+  }
+
+  async createProgrammeAnalysis(analysis: InsertProgrammeAnalysis): Promise<ProgrammeAnalysis> {
+    const [newAnalysis] = await db
+      .insert(programmeAnalyses)
+      .values(analysis)
+      .returning();
+    return newAnalysis;
   }
 }
 
