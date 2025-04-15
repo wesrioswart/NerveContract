@@ -3,7 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarningSchema, 
-  insertProgrammeSchema, insertProgrammeActivitySchema, insertActivityRelationshipSchema } from "@shared/schema";
+  insertProgrammeSchema, insertProgrammeActivitySchema, insertActivityRelationshipSchema,
+  insertNec4TeamSchema, insertNec4TeamMemberSchema, insertUserToProjectSchema } from "@shared/schema";
 import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured } from "./utils/openai";
 import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
 import { parseProgrammeFile } from "./services/programme-parser";
@@ -734,6 +735,231 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting programme annotation:", error);
       res.status(500).json({ error: "Failed to delete annotation" });
+    }
+  });
+
+  // NEC4 Teams routes
+  app.get("/api/projects/:projectId/nec4-teams", async (req: Request, res: Response) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      
+      if (isNaN(projectId)) {
+        return res.status(400).json({ error: "Invalid project ID" });
+      }
+      
+      const teams = await storage.getNec4TeamsByProject(projectId);
+      res.json(teams);
+    } catch (error) {
+      console.error("Error fetching NEC4 teams:", error);
+      res.status(500).json({ error: "Failed to fetch NEC4 teams" });
+    }
+  });
+  
+  app.post("/api/nec4-teams", async (req: Request, res: Response) => {
+    try {
+      const teamData = insertNec4TeamSchema.parse(req.body);
+      const newTeam = await storage.createNec4Team(teamData);
+      res.status(201).json(newTeam);
+    } catch (error) {
+      console.error("Error creating NEC4 team:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      res.status(400).json({ error: `Failed to create NEC4 team: ${errorMessage}` });
+    }
+  });
+  
+  app.get("/api/nec4-teams/:id", async (req: Request, res: Response) => {
+    try {
+      const teamId = parseInt(req.params.id);
+      
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: "Invalid team ID" });
+      }
+      
+      const team = await storage.getNec4Team(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ error: "NEC4 team not found" });
+      }
+      
+      res.json(team);
+    } catch (error) {
+      console.error("Error fetching NEC4 team:", error);
+      res.status(500).json({ error: "Failed to fetch NEC4 team" });
+    }
+  });
+  
+  app.patch("/api/nec4-teams/:id", async (req: Request, res: Response) => {
+    try {
+      const teamId = parseInt(req.params.id);
+      
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: "Invalid team ID" });
+      }
+      
+      const updatedTeam = await storage.updateNec4Team(teamId, req.body);
+      res.json(updatedTeam);
+    } catch (error) {
+      console.error("Error updating NEC4 team:", error);
+      res.status(500).json({ error: "Failed to update NEC4 team" });
+    }
+  });
+  
+  app.delete("/api/nec4-teams/:id", async (req: Request, res: Response) => {
+    try {
+      const teamId = parseInt(req.params.id);
+      
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: "Invalid team ID" });
+      }
+      
+      await storage.deleteNec4Team(teamId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting NEC4 team:", error);
+      res.status(500).json({ error: "Failed to delete NEC4 team" });
+    }
+  });
+  
+  // NEC4 Team Members routes
+  app.get("/api/nec4-teams/:teamId/members", async (req: Request, res: Response) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: "Invalid team ID" });
+      }
+      
+      const members = await storage.getNec4TeamMembersByTeam(teamId);
+      res.json(members);
+    } catch (error) {
+      console.error("Error fetching NEC4 team members:", error);
+      res.status(500).json({ error: "Failed to fetch NEC4 team members" });
+    }
+  });
+  
+  app.post("/api/nec4-team-members", async (req: Request, res: Response) => {
+    try {
+      const memberData = insertNec4TeamMemberSchema.parse(req.body);
+      const newMember = await storage.createNec4TeamMember(memberData);
+      res.status(201).json(newMember);
+    } catch (error) {
+      console.error("Error creating NEC4 team member:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      res.status(400).json({ error: `Failed to create NEC4 team member: ${errorMessage}` });
+    }
+  });
+  
+  app.get("/api/nec4-team-members/:id", async (req: Request, res: Response) => {
+    try {
+      const memberId = parseInt(req.params.id);
+      
+      if (isNaN(memberId)) {
+        return res.status(400).json({ error: "Invalid member ID" });
+      }
+      
+      const member = await storage.getNec4TeamMember(memberId);
+      
+      if (!member) {
+        return res.status(404).json({ error: "NEC4 team member not found" });
+      }
+      
+      res.json(member);
+    } catch (error) {
+      console.error("Error fetching NEC4 team member:", error);
+      res.status(500).json({ error: "Failed to fetch NEC4 team member" });
+    }
+  });
+  
+  app.patch("/api/nec4-team-members/:id", async (req: Request, res: Response) => {
+    try {
+      const memberId = parseInt(req.params.id);
+      
+      if (isNaN(memberId)) {
+        return res.status(400).json({ error: "Invalid member ID" });
+      }
+      
+      const updatedMember = await storage.updateNec4TeamMember(memberId, req.body);
+      res.json(updatedMember);
+    } catch (error) {
+      console.error("Error updating NEC4 team member:", error);
+      res.status(500).json({ error: "Failed to update NEC4 team member" });
+    }
+  });
+  
+  app.delete("/api/nec4-team-members/:id", async (req: Request, res: Response) => {
+    try {
+      const memberId = parseInt(req.params.id);
+      
+      if (isNaN(memberId)) {
+        return res.status(400).json({ error: "Invalid member ID" });
+      }
+      
+      await storage.deleteNec4TeamMember(memberId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting NEC4 team member:", error);
+      res.status(500).json({ error: "Failed to delete NEC4 team member" });
+    }
+  });
+  
+  // User Project Assignments routes
+  app.get("/api/users/:userId/project-assignments", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+      
+      const assignments = await storage.getUserProjectAssignments(userId);
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching user project assignments:", error);
+      res.status(500).json({ error: "Failed to fetch user project assignments" });
+    }
+  });
+  
+  app.get("/api/projects/:projectId/user-assignments", async (req: Request, res: Response) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      
+      if (isNaN(projectId)) {
+        return res.status(400).json({ error: "Invalid project ID" });
+      }
+      
+      const assignments = await storage.getProjectUserAssignments(projectId);
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching project user assignments:", error);
+      res.status(500).json({ error: "Failed to fetch project user assignments" });
+    }
+  });
+  
+  app.post("/api/user-project-assignments", async (req: Request, res: Response) => {
+    try {
+      const assignmentData = insertUserToProjectSchema.parse(req.body);
+      const newAssignment = await storage.createUserProjectAssignment(assignmentData);
+      res.status(201).json(newAssignment);
+    } catch (error) {
+      console.error("Error creating user project assignment:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      res.status(400).json({ error: `Failed to create user project assignment: ${errorMessage}` });
+    }
+  });
+  
+  app.delete("/api/user-project-assignments/:id", async (req: Request, res: Response) => {
+    try {
+      const assignmentId = parseInt(req.params.id);
+      
+      if (isNaN(assignmentId)) {
+        return res.status(400).json({ error: "Invalid assignment ID" });
+      }
+      
+      await storage.deleteUserProjectAssignment(assignmentId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting user project assignment:", error);
+      res.status(500).json({ error: "Failed to delete user project assignment" });
     }
   });
 

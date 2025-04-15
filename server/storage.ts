@@ -1013,6 +1013,149 @@ export class DatabaseStorage implements IStorage {
       .delete(programmeAnnotations)
       .where(eq(programmeAnnotations.id, id));
   }
+  
+  // NEC4 Teams methods
+  async getNec4Team(id: number): Promise<Nec4Team | undefined> {
+    const [team] = await db
+      .select()
+      .from(nec4Teams)
+      .where(eq(nec4Teams.id, id));
+    return team;
+  }
+
+  async getNec4TeamsByProject(projectId: number): Promise<Nec4Team[]> {
+    return db
+      .select()
+      .from(nec4Teams)
+      .where(eq(nec4Teams.projectId, projectId));
+  }
+
+  async createNec4Team(team: InsertNec4Team): Promise<Nec4Team> {
+    const [newTeam] = await db
+      .insert(nec4Teams)
+      .values({
+        ...team,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return newTeam;
+  }
+
+  async updateNec4Team(id: number, team: Partial<Nec4Team>): Promise<Nec4Team> {
+    const [updatedTeam] = await db
+      .update(nec4Teams)
+      .set({
+        ...team,
+        updatedAt: new Date()
+      })
+      .where(eq(nec4Teams.id, id))
+      .returning();
+    
+    if (!updatedTeam) {
+      throw new Error(`NEC4 Team with ID ${id} not found`);
+    }
+    
+    return updatedTeam;
+  }
+
+  async deleteNec4Team(id: number): Promise<void> {
+    // First delete all team members
+    await db
+      .delete(nec4TeamMembers)
+      .where(eq(nec4TeamMembers.teamId, id));
+    
+    // Then delete the team
+    await db
+      .delete(nec4Teams)
+      .where(eq(nec4Teams.id, id));
+  }
+  
+  // NEC4 Team Members methods
+  async getNec4TeamMember(id: number): Promise<Nec4TeamMember | undefined> {
+    const [member] = await db
+      .select()
+      .from(nec4TeamMembers)
+      .where(eq(nec4TeamMembers.id, id));
+    return member;
+  }
+
+  async getNec4TeamMembersByTeam(teamId: number): Promise<Nec4TeamMember[]> {
+    return db
+      .select()
+      .from(nec4TeamMembers)
+      .where(eq(nec4TeamMembers.teamId, teamId));
+  }
+  
+  async getNec4TeamMembersByUser(userId: number): Promise<Nec4TeamMember[]> {
+    return db
+      .select()
+      .from(nec4TeamMembers)
+      .where(eq(nec4TeamMembers.userId, userId));
+  }
+
+  async createNec4TeamMember(member: InsertNec4TeamMember): Promise<Nec4TeamMember> {
+    const [newMember] = await db
+      .insert(nec4TeamMembers)
+      .values({
+        ...member,
+        joinedAt: new Date()
+      })
+      .returning();
+    return newMember;
+  }
+
+  async updateNec4TeamMember(id: number, member: Partial<Nec4TeamMember>): Promise<Nec4TeamMember> {
+    const [updatedMember] = await db
+      .update(nec4TeamMembers)
+      .set(member)
+      .where(eq(nec4TeamMembers.id, id))
+      .returning();
+    
+    if (!updatedMember) {
+      throw new Error(`NEC4 Team Member with ID ${id} not found`);
+    }
+    
+    return updatedMember;
+  }
+
+  async deleteNec4TeamMember(id: number): Promise<void> {
+    await db
+      .delete(nec4TeamMembers)
+      .where(eq(nec4TeamMembers.id, id));
+  }
+  
+  // User Project Assignments methods
+  async getUserProjectAssignments(userId: number): Promise<UserToProject[]> {
+    return db
+      .select()
+      .from(usersToProjects)
+      .where(eq(usersToProjects.userId, userId));
+  }
+  
+  async getProjectUserAssignments(projectId: number): Promise<UserToProject[]> {
+    return db
+      .select()
+      .from(usersToProjects)
+      .where(eq(usersToProjects.projectId, projectId));
+  }
+  
+  async createUserProjectAssignment(assignment: InsertUserToProject): Promise<UserToProject> {
+    const [newAssignment] = await db
+      .insert(usersToProjects)
+      .values({
+        ...assignment,
+        joinedAt: new Date()
+      })
+      .returning();
+    return newAssignment;
+  }
+  
+  async deleteUserProjectAssignment(id: number): Promise<void> {
+    await db
+      .delete(usersToProjects)
+      .where(eq(usersToProjects.id, id));
+  }
 }
 
 // Create an instance of the database storage
