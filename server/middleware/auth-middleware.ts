@@ -71,6 +71,10 @@ export function requireProjectAccess(req: Request, res: Response, next: NextFunc
     return res.status(401).json({ error: "Not authenticated" });
   }
   
+  if (!req.user) {
+    return res.status(401).json({ error: "User not found in session" });
+  }
+  
   const projectId = parseInt(req.params.projectId || req.params.id);
   if (isNaN(projectId)) {
     return res.status(400).json({ error: "Invalid project ID" });

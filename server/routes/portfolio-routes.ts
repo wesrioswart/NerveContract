@@ -131,6 +131,11 @@ portfolioRouter.get("/my-projects", async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Not authenticated" });
     }
     
+    // Check if user exists in session
+    if (!req.user) {
+      return res.status(401).json({ error: "User not found in session" });
+    }
+    
     // Get the user's project assignments
     const assignments = await storage.getUserProjectAssignments(req.user.id);
     
