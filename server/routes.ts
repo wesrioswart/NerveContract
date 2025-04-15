@@ -13,6 +13,7 @@ import { analyzeProgramme } from "./services/programme-analysis";
 import { EmailController } from "./controllers/email-controller";
 import { portfolioRouter } from "./routes/portfolio-routes";
 import { requireAuth, requireProjectAccess, hasProjectAccess } from "./middleware/auth-middleware";
+import { populateForm, compareProgrammes } from "./controllers/ai-assistant-controller";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
@@ -1342,6 +1343,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register portfolio routes for executives
   app.use("/api/portfolio", portfolioRouter);
+
+  // AI Assistant endpoints
+  app.post("/api/ai-assistant/populate-form", async (req: Request, res: Response) => {
+    try {
+      await populateForm(req, res);
+    } catch (error) {
+      console.error("Error in form population endpoint:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  app.post("/api/ai-assistant/compare-programmes", async (req: Request, res: Response) => {
+    try {
+      await compareProgrammes(req, res);
+    } catch (error) {
+      console.error("Error in programme comparison endpoint:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
