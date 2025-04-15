@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarningSchema, 
   insertProgrammeSchema, insertProgrammeActivitySchema, insertActivityRelationshipSchema,
-  insertNec4TeamSchema, insertNec4TeamMemberSchema, insertUserToProjectSchema } from "@shared/schema";
+  insertNec4TeamSchema, insertNec4TeamMemberSchema, insertUserToProjectSchema, 
+  insertProjectSchema } from "@shared/schema";
 import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured } from "./utils/openai";
 import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
 import { parseProgrammeFile } from "./services/programme-parser";
@@ -110,6 +111,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects", async (_req: Request, res: Response) => {
     const projects = await storage.getAllProjects();
     return res.status(200).json(projects);
+  });
+
+  app.post("/api/projects", requireAuth, async (req: Request, res: Response) => {
+    try {
+      // Process the request body
+      const processedData = {
+        ...req.body,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+        endDate: req.body.endDate ? new Date(req.body.endDate) : undefined
+      };
+      
+      // Validate the data
+      const validatedData = insertProjectSchema.parse(processedData);
+      
+      // Create the project
+      const project = await storage.createProject(validatedData);
+      
+      // Return the created project
+      return res.status(201).json(project);
+    } catch (error) {
+      console.error("Error creating project:", error);
+      if (error instanceof Error) {
+        return res.status(400).json({ 
+          message: "Invalid project data", 
+          error: error.message 
+        });
+      }
+      return res.status(400).json({ message: "Invalid project data" });
+    }
   });
 
   app.get("/api/projects/:id", async (req: Request, res: Response) => {
