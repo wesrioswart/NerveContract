@@ -978,7 +978,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/nec4-team-members/:id", async (req: Request, res: Response) => {
+  app.get("/api/nec4-team-members/:id", requireAuth, async (req: Request, res: Response) => {
     try {
       const memberId = parseInt(req.params.id);
       
@@ -992,6 +992,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "NEC4 team member not found" });
       }
       
+      // Get the team to check project access
+      const team = await storage.getNec4Team(member.teamId);
+      if (!team) {
+        return res.status(404).json({ error: "NEC4 team not found" });
+      }
+      
+      // Check if user has access to the project this team belongs to
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      const hasAccess = await hasProjectAccess(req.user.id, team.projectId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "You don't have access to this project" });
+      }
+      
       res.json(member);
     } catch (error) {
       console.error("Error fetching NEC4 team member:", error);
@@ -999,12 +1015,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/nec4-team-members/:id", async (req: Request, res: Response) => {
+  app.patch("/api/nec4-team-members/:id", requireAuth, async (req: Request, res: Response) => {
     try {
       const memberId = parseInt(req.params.id);
       
       if (isNaN(memberId)) {
         return res.status(400).json({ error: "Invalid member ID" });
+      }
+      
+      // Get the member to check their team
+      const member = await storage.getNec4TeamMember(memberId);
+      if (!member) {
+        return res.status(404).json({ error: "NEC4 team member not found" });
+      }
+      
+      // Get the team to check project access
+      const team = await storage.getNec4Team(member.teamId);
+      if (!team) {
+        return res.status(404).json({ error: "NEC4 team not found" });
+      }
+      
+      // Check if user has access to the project this team belongs to
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      const hasAccess = await hasProjectAccess(req.user.id, team.projectId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "You don't have access to this project" });
       }
       
       const updatedMember = await storage.updateNec4TeamMember(memberId, req.body);
@@ -1015,12 +1053,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.delete("/api/nec4-team-members/:id", async (req: Request, res: Response) => {
+  app.delete("/api/nec4-team-members/:id", requireAuth, async (req: Request, res: Response) => {
     try {
       const memberId = parseInt(req.params.id);
       
       if (isNaN(memberId)) {
         return res.status(400).json({ error: "Invalid member ID" });
+      }
+      
+      // Get the member to check their team
+      const member = await storage.getNec4TeamMember(memberId);
+      if (!member) {
+        return res.status(404).json({ error: "NEC4 team member not found" });
+      }
+      
+      // Get the team to check project access
+      const team = await storage.getNec4Team(member.teamId);
+      if (!team) {
+        return res.status(404).json({ error: "NEC4 team not found" });
+      }
+      
+      // Check if user has access to the project this team belongs to
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      const hasAccess = await hasProjectAccess(req.user.id, team.projectId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "You don't have access to this project" });
       }
       
       await storage.deleteNec4TeamMember(memberId);
@@ -1032,12 +1092,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // User Project Assignments routes
-  app.get("/api/users/:userId/project-assignments", async (req: Request, res: Response) => {
+  app.get("/api/users/:userId/project-assignments", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.params.userId);
       
       if (isNaN(userId)) {
         return res.status(400).json({ error: "Invalid user ID" });
+      }
+      
+      // Check if user is requesting their own assignments or has executive role
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      // Only allow users to see their own assignments unless they are executives
+      if (req.user.id !== userId && req.user.role !== 'Executive') {
+        return res.status(403).json({ error: "You don't have permission to view these assignments" });
       }
       
       const assignments = await storage.getUserProjectAssignments(userId);
@@ -1048,12 +1118,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/projects/:projectId/user-assignments", async (req: Request, res: Response) => {
+  app.get("/api/projects/:projectId/user-assignments", requireAuth, async (req: Request, res: Response) => {
     try {
       const projectId = parseInt(req.params.projectId);
       
       if (isNaN(projectId)) {
         return res.status(400).json({ error: "Invalid project ID" });
+      }
+      
+      // Check if user has access to the project
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      // Allow access if user has project access or is an executive
+      const hasAccess = await hasProjectAccess(req.user.id, projectId);
+      if (!hasAccess && req.user.role !== 'Executive') {
+        return res.status(403).json({ error: "You don't have access to this project" });
       }
       
       const assignments = await storage.getProjectUserAssignments(projectId);
@@ -1064,9 +1145,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/user-project-assignments", async (req: Request, res: Response) => {
+  app.post("/api/user-project-assignments", requireAuth, async (req: Request, res: Response) => {
     try {
+      // Only executives or project managers should be able to create assignments
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      if (req.user.role !== 'Executive' && req.user.role !== 'Project Manager') {
+        return res.status(403).json({ error: "You don't have permission to create user project assignments" });
+      }
+      
       const assignmentData = insertUserToProjectSchema.parse(req.body);
+      
+      // If the user is a Project Manager (not an Executive), they should only be able to add users to projects they manage
+      if (req.user.role === 'Project Manager') {
+        const hasAccess = await hasProjectAccess(req.user.id, assignmentData.projectId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "You don't have access to this project" });
+        }
+      }
+      
       const newAssignment = await storage.createUserProjectAssignment(assignmentData);
       res.status(201).json(newAssignment);
     } catch (error) {
@@ -1076,12 +1175,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.delete("/api/user-project-assignments/:id", async (req: Request, res: Response) => {
+  app.delete("/api/user-project-assignments/:id", requireAuth, async (req: Request, res: Response) => {
     try {
       const assignmentId = parseInt(req.params.id);
       
       if (isNaN(assignmentId)) {
         return res.status(400).json({ error: "Invalid assignment ID" });
+      }
+      
+      // Only executives or project managers should be able to delete assignments
+      if (!req.user) {
+        return res.status(401).json({ error: "User not found in session" });
+      }
+      
+      // Get the assignment to check the project access
+      const assignment = await storage.getUserProjectAssignment(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ error: "Assignment not found" });
+      }
+      
+      // Check if the user has the right permissions
+      if (req.user.role !== 'Executive') {
+        // If not an executive, they must have project access to delete assignments for that project
+        const hasAccess = await hasProjectAccess(req.user.id, assignment.projectId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "You don't have access to this project" });
+        }
       }
       
       await storage.deleteUserProjectAssignment(assignmentId);
