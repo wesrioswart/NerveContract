@@ -18,7 +18,9 @@ import {
   BarChart,
   Upload,
   RefreshCw,
-  GanttChart
+  GanttChart,
+  Pencil,
+  MessageSquare
 } from 'lucide-react';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { formatDate } from '@/lib/utils';
@@ -27,6 +29,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import GanttChartComponent from '@/components/programme/gantt-chart-component';
+import AnnotationInterface from '@/components/programme/annotation-interface';
 
 // Define interface for projects
 interface Project {
