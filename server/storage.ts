@@ -121,6 +121,7 @@ export interface IStorage {
   deleteNec4TeamMember(id: number): Promise<void>;
   
   // User Project Assignments
+  getUserProjectAssignment(id: number): Promise<UserToProject | undefined>;
   getUserProjectAssignments(userId: number): Promise<UserToProject[]>;
   getProjectUserAssignments(projectId: number): Promise<UserToProject[]>;
   createUserProjectAssignment(assignment: InsertUserToProject): Promise<UserToProject>;
@@ -1206,6 +1207,14 @@ export class DatabaseStorage implements IStorage {
   }
   
   // User Project Assignments methods
+  async getUserProjectAssignment(id: number): Promise<UserToProject | undefined> {
+    const [assignment] = await db
+      .select()
+      .from(usersToProjects)
+      .where(eq(usersToProjects.id, id));
+    return assignment || undefined;
+  }
+  
   async getUserProjectAssignments(userId: number): Promise<UserToProject[]> {
     return db
       .select()
