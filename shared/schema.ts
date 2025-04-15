@@ -290,6 +290,31 @@ export const insertProgrammeAnalysisSchema = createInsertSchema(programmeAnalyse
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 
+// Programme Annotations
+export const programmeAnnotations = pgTable("programme_annotations", {
+  id: serial("id").primaryKey(),
+  programmeId: integer("programme_id").notNull().references(() => programmes.id),
+  activityId: text("activity_id"), // Optional reference to a specific activity
+  x: integer("x").notNull(), // X position on the annotation canvas
+  y: integer("y").notNull(), // Y position on the annotation canvas
+  text: text("text").notNull(), // Annotation text content
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  type: text("type", { enum: ["issue", "comment", "instruction", "nec4-clause"] }).notNull(),
+  status: text("status", { enum: ["pending", "resolved"] }).default("pending"),
+  nec4Clause: text("nec4_clause"), // Optional NEC4 clause reference
+});
+
+export const insertProgrammeAnnotationSchema = createInsertSchema(programmeAnnotations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ProgrammeAnnotation = typeof programmeAnnotations.$inferSelect;
+export type InsertProgrammeAnnotation = z.infer<typeof insertProgrammeAnnotationSchema>;
+
 export type Programme = typeof programmes.$inferSelect;
 export type InsertProgramme = z.infer<typeof insertProgrammeSchema>;
 

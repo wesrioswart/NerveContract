@@ -274,6 +274,10 @@ const ProgrammeManagement = () => {
             <GanttChart className="w-4 h-4 mr-2" />
             Analysis
           </TabsTrigger>
+          <TabsTrigger value="annotations">
+            <Pencil className="w-4 h-4 mr-2" />
+            Annotations
+          </TabsTrigger>
         </TabsList>
         
         {/* Programme Overview */}
@@ -947,6 +951,46 @@ const ProgrammeManagement = () => {
                 )}
               </CardContent>
             </Card>
+          </div>
+        </TabsContent>
+        
+        {/* Programme Annotations Tab */}
+        <TabsContent value="annotations">
+          <div className="space-y-6">
+            {/* Annotations Interface */}
+            {milestones.length === 0 ? (
+              <div className="text-center py-8 border border-dashed rounded-md border-gray-300">
+                <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <h3 className="text-lg font-medium text-gray-500">No Programme Data</h3>
+                <p className="text-gray-500 mt-1">
+                  Upload a programme file to start adding annotations
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => document.getElementById('programme-tab-upload')?.click()}
+                >
+                  Upload Programme
+                </Button>
+              </div>
+            ) : (
+              <AnnotationInterface 
+                programmeId={selectedProjectId} 
+                taskData={[
+                  // Sample task data (would be replaced with real data from GanttChart component)
+                  { id: "task-1", name: "Site Preparation" },
+                  { id: "task-2", name: "Foundation Works" },
+                  { id: "task-3", name: "Ground Floor Structure" },
+                  { id: "task-4", name: "Upper Floors Structure" },
+                  { id: "task-5", name: "Roof Structure" },
+                  { id: "task-6", name: "Building Envelope" },
+                  { id: "task-7", name: "MEP Installation" },
+                  { id: "task-8", name: "Internal Finishes" },
+                  { id: "task-9", name: "Testing & Commissioning" },
+                  { id: "task-10", name: "Project Completion" },
+                ]}
+              />
+            )}
           </div>
         </TabsContent>
       </Tabs>
