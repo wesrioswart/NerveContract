@@ -3,6 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle } from "lucide-react";
+import { AnimatedCard } from "@/components/ui/animated-card";
+import { AnimatedButton } from "@/components/ui/animated-button";
+import { animatedToast } from "@/components/ui/animated-toast";
+import { useToast } from "@/hooks/use-toast";
 import PMITemplate from '@/components/templates/pmi-template';
 import EarlyWarningTemplate from '@/components/document-templates/early-warning-template';
 
@@ -28,11 +32,13 @@ export default function TemplatesPage() {
   
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">NEC4 Document Templates</h1>
+      <AnimationWrapper as="h1" type="slideIn" className="text-3xl font-bold mb-6">
+        NEC4 Document Templates
+      </AnimationWrapper>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {/* Template Card - PMI */}
-        <Card className="hover:shadow-md transition-shadow">
+        <AnimatedCard animation="hover" index={0}>
           <CardHeader>
             <CardTitle>Project Manager's Instruction (PMI)</CardTitle>
             <CardDescription>
@@ -46,17 +52,18 @@ export default function TemplatesPage() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button 
+            <AnimatedButton 
               onClick={() => setActiveTemplate('pmi')}
               className="w-full"
+              animation="default"
             >
               View Template
-            </Button>
+            </AnimatedButton>
           </CardFooter>
-        </Card>
+        </AnimatedCard>
         
         {/* Template Card - Early Warning */}
-        <Card className="hover:shadow-md transition-shadow border-2 border-amber-500">
+        <AnimatedCard animation="hover" index={1} className="border-2 border-amber-500">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Early Warning Notice</CardTitle>
@@ -73,17 +80,18 @@ export default function TemplatesPage() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button 
+            <AnimatedButton 
               onClick={() => setActiveTemplate('early-warning')}
               className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+              animation="bounce"
             >
               Create Early Warning
-            </Button>
+            </AnimatedButton>
           </CardFooter>
-        </Card>
+        </AnimatedCard>
         
         {/* Template Card - Compensation Event */}
-        <Card className="hover:shadow-md transition-shadow">
+        <AnimatedCard animation="hover" index={2}>
           <CardHeader>
             <CardTitle>Compensation Event Notice</CardTitle>
             <CardDescription>
@@ -97,33 +105,46 @@ export default function TemplatesPage() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button 
-              onClick={() => alert("This template will be available soon")}
+            <AnimatedButton 
+              onClick={() => animatedToast.info({
+                title: "Coming Soon",
+                description: "This template is under development and will be available in a future update.",
+              })}
               className="w-full"
               variant="outline"
+              animation="subtle"
             >
               Coming Soon
-            </Button>
+            </AnimatedButton>
           </CardFooter>
-        </Card>
+        </AnimatedCard>
       </div>
       
       {/* Template Preview Area */}
-      <div className="bg-gray-50 rounded-lg p-6 border">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Template Preview</h2>
-          {activeTemplate && (
-            <Button 
-              variant="outline" 
-              onClick={() => setActiveTemplate(null)}
-            >
-              Back to Templates
-            </Button>
-          )}
+      <AnimationWrapper type="fadeIn" delay={0.3}>
+        <div className="bg-gray-50 rounded-lg p-6 border shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <AnimationWrapper as="h2" type="slideIn" delay={0.4} className="text-2xl font-bold">
+              Template Preview
+            </AnimationWrapper>
+            {activeTemplate && (
+              <AnimationWrapper type="fadeIn" delay={0.5}>
+                <AnimatedButton 
+                  variant="outline" 
+                  onClick={() => setActiveTemplate(null)}
+                  animation="subtle"
+                >
+                  Back to Templates
+                </AnimatedButton>
+              </AnimationWrapper>
+            )}
+          </div>
+          
+          <AnimationWrapper type="fadeIn" delay={0.6}>
+            {renderTemplate()}
+          </AnimationWrapper>
         </div>
-        
-        {renderTemplate()}
-      </div>
+      </AnimationWrapper>
     </div>
   );
 }
