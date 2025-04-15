@@ -15,7 +15,8 @@ import {
   LogOut, 
   User,
   GanttChart,
-  Mail
+  Mail,
+  SendHorizontal
 } from 'lucide-react';
 
 type SidebarProps = {
@@ -34,6 +35,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/compensation-events", label: "Compensation Events", icon: CheckCircle },
     { path: "/early-warnings", label: "Early Warnings", icon: AlertTriangle },
     { path: "/ncr-tqr", label: "NCRs & TQRs", icon: FileWarning },
+    { path: "/pmi", label: "PM Instructions", icon: SendHorizontal },
     { path: "/programme", label: "Programme", icon: CalendarDays },
     { path: "/programme-management", label: "Programme Management", icon: GanttChart },
     { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
