@@ -26,6 +26,8 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+  const [currentForm, setCurrentForm] = useState<string | undefined>(undefined);
+  const [currentFormData, setCurrentFormData] = useState<Record<string, any> | undefined>(undefined);
 
   useEffect(() => {
     // Check if user is logged in
@@ -37,6 +39,25 @@ function App() {
       setLocation("/login");
     }
   }, [location, setLocation]);
+
+  // Set current form based on route
+  useEffect(() => {
+    if (location.includes("/compensation-events")) {
+      setCurrentForm("compensation-event");
+    } else if (location.includes("/early-warnings")) {
+      setCurrentForm("early-warning");
+    } else if (location.includes("/ncr-tqr")) {
+      if (location.includes("/technical-query")) {
+        setCurrentForm("technical-query");
+      } else {
+        setCurrentForm("non-conformance");
+      }
+    } else {
+      setCurrentForm(undefined);
+    }
+    // Reset form data when navigating
+    setCurrentFormData(undefined);
+  }, [location]);
 
   const handleLogin = (user: any) => {
     setIsLoggedIn(true);
@@ -69,46 +90,59 @@ function App() {
   };
 
   return (
-    <div className="app-container flex h-screen overflow-hidden bg-gray-50">
-      <Sidebar 
-        user={currentUser} 
-        onLogout={handleLogout} 
-        collapsed={sidebarCollapsed}
-        onToggle={toggleSidebar}
-      />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden",
-        sidebarCollapsed ? "ml-16" : "ml-0"
-      )}>
-        <Header 
-          user={currentUser} 
-          onToggleSidebar={toggleSidebar}
-          sidebarCollapsed={sidebarCollapsed}
-        />
-        
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="container mx-auto max-w-7xl">
-            <Switch>
-              <Route path="/" component={Dashboard} />
-              <Route path="/ai-assistant" component={AIAssistant} />
-              <Route path="/compensation-events" component={CompensationEvents} />
-              <Route path="/early-warnings" component={EarlyWarnings} />
-              <Route path="/ncr-tqr" component={NCRTqr} />
-              <Route path="/programme" component={Programme} />
-              <Route path="/programme-management" component={ProgrammeManagement} />
-              <Route path="/payment-certificates" component={PaymentCertificates} />
-              <Route path="/reports" component={Reports} />
-              <Route path="/templates" component={Templates} />
-              <Route path="/email-processor" component={EmailProcessor} />
-              <Route component={NotFound} />
-            </Switch>
+    <UserProvider>
+      <ProjectProvider>
+        <div className="app-container flex h-screen overflow-hidden bg-gray-50">
+          <Sidebar 
+            user={currentUser} 
+            onLogout={handleLogout} 
+            collapsed={sidebarCollapsed}
+            onToggle={toggleSidebar}
+          />
+          
+          <div className={cn(
+            "flex-1 flex flex-col overflow-hidden",
+            sidebarCollapsed ? "ml-16" : "ml-0"
+          )}>
+            <Header 
+              user={currentUser} 
+              onToggleSidebar={toggleSidebar}
+              sidebarCollapsed={sidebarCollapsed}
+            />
+            
+            <main className="flex-1 overflow-y-auto p-6">
+              <div className="container mx-auto max-w-7xl">
+                <Switch>
+                  <Route path="/" component={Dashboard} />
+                  <Route path="/ai-assistant" component={AIAssistant} />
+                  <Route path="/compensation-events" component={CompensationEvents} />
+                  <Route path="/early-warnings" component={EarlyWarnings} />
+                  <Route path="/ncr-tqr" component={NCRTqr} />
+                  <Route path="/programme" component={Programme} />
+                  <Route path="/programme-management" component={ProgrammeManagement} />
+                  <Route path="/payment-certificates" component={PaymentCertificates} />
+                  <Route path="/reports" component={Reports} />
+                  <Route path="/templates" component={Templates} />
+                  <Route path="/email-processor" component={EmailProcessor} />
+                  <Route component={NotFound} />
+                </Switch>
+              </div>
+            </main>
           </div>
-        </main>
-      </div>
-      
-      <Toaster />
-    </div>
+          
+          {/* Floating AI Assistant */}
+          {isLoggedIn && currentUser && (
+            <FloatingAssistant
+              userId={currentUser.id}
+              currentForm={currentForm}
+              currentData={currentFormData}
+            />
+          )}
+          
+          <Toaster />
+        </div>
+      </ProjectProvider>
+    </UserProvider>
   );
 }
 

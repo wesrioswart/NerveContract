@@ -15,16 +15,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { useProject } from "@/contexts/project-context";
 
 interface FloatingAssistantProps {
-  projectId: number;
   userId: number;
   currentForm?: string; // Optional form context to give AI context about current page
   currentData?: Record<string, any>; // Optional current form data for context
 }
 
 export default function FloatingAssistant({ 
-  projectId, 
   userId,
   currentForm,
   currentData
@@ -33,6 +32,7 @@ export default function FloatingAssistant({
   const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState("");
   const { toast } = useToast();
+  const { projectId } = useProject();
 
   // Get chat history
   const { data: chatMessages = [], isLoading: messagesLoading } = useQuery<ChatMessage[]>({
