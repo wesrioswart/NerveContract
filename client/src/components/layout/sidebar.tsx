@@ -35,11 +35,10 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/compensation-events", label: "Compensation Events", icon: CheckCircle },
     { path: "/early-warnings", label: "Early Warnings", icon: AlertTriangle },
     { path: "/ncr-tqr", label: "NCRs & TQRs", icon: FileWarning },
-    { path: "/pmi", label: "PM Instructions", icon: SendHorizontal },
+    { path: "/templates", label: "NEC4 Templates", icon: FileText },
     { path: "/programme", label: "Programme", icon: CalendarDays },
     { path: "/programme-management", label: "Programme Management", icon: GanttChart },
     { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
-    { path: "/templates", label: "NEC4 Templates", icon: FileText },
   ];
 
   return (

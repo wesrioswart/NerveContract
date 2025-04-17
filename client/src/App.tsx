@@ -14,7 +14,6 @@ import PaymentCertificates from "@/pages/payment-certificates";
 import Reports from "@/pages/reports";
 import Templates from "@/pages/templates";
 import EmailProcessor from "@/pages/email-processor";
-import PMI from "@/pages/pmi";
 import Login from "@/pages/login";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -53,7 +52,7 @@ function App() {
       } else {
         setCurrentForm("non-conformance");
       }
-    } else if (location.includes("/pmi")) {
+    } else if (location.includes("/templates") && location.includes("pmi")) {
       setCurrentForm("instruction");
     } else {
       setCurrentForm(undefined);
@@ -121,7 +120,6 @@ function App() {
                   <Route path="/compensation-events" component={CompensationEvents} />
                   <Route path="/early-warnings" component={EarlyWarnings} />
                   <Route path="/ncr-tqr" component={NCRTqr} />
-                  <Route path="/pmi" component={PMI} />
                   <Route path="/programme" component={Programme} />
                   <Route path="/programme-management" component={ProgrammeManagement} />
                   <Route path="/payment-certificates" component={PaymentCertificates} />
