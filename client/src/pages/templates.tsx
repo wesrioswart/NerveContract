@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, DollarSign } from "lucide-react";
+import { AlertTriangle, DollarSign, AlertOctagon, HelpCircle } from "lucide-react";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import PMITemplate from '@/components/document-templates/pmi-template';
 import EarlyWarningTemplate from '@/components/document-templates/early-warning-template';
 import CompensationEventTemplate from '@/components/document-templates/compensation-event-template';
+import NCRTemplate from '@/components/document-templates/ncr-template';
+import TechnicalQueryTemplate from '@/components/document-templates/technical-query-template';
 
 export default function TemplatesPage() {
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
@@ -24,6 +26,10 @@ export default function TemplatesPage() {
         return <EarlyWarningTemplate />;
       case 'compensation-event':
         return <CompensationEventTemplate />;
+      case 'ncr':
+        return <NCRTemplate />;
+      case 'technical-query':
+        return <TechnicalQueryTemplate />;
       default:
         return (
           <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -118,6 +124,62 @@ export default function TemplatesPage() {
               animation="default"
             >
               Create CE Notice
+            </AnimatedButton>
+          </CardFooter>
+        </AnimatedCard>
+        
+        {/* Template Card - Non-Conformance Report */}
+        <AnimatedCard animation="hover" index={3} className="border-2 border-red-500">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Non-Conformance Report</CardTitle>
+              <AlertOctagon className="text-red-500 w-5 h-5" />
+            </div>
+            <CardDescription>
+              Template for documenting non-conformances under NEC4 Quality Management
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500">
+              Use this template to report work that does not conform to the requirements 
+              specified in the Works Information or contract.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <AnimatedButton 
+              onClick={() => setActiveTemplate('ncr')}
+              className="w-full bg-red-500 hover:bg-red-600 text-white"
+              animation="default"
+            >
+              Create NCR
+            </AnimatedButton>
+          </CardFooter>
+        </AnimatedCard>
+        
+        {/* Template Card - Technical Query */}
+        <AnimatedCard animation="hover" index={4} className="border-2 border-purple-500">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Technical Query</CardTitle>
+              <HelpCircle className="text-purple-500 w-5 h-5" />
+            </div>
+            <CardDescription>
+              Template for submitting technical queries on the NEC4 contract
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500">
+              Use this template to submit formal queries regarding technical aspects 
+              of the works, specifications, or design requirements.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <AnimatedButton 
+              onClick={() => setActiveTemplate('technical-query')}
+              className="w-full bg-purple-500 hover:bg-purple-600 text-white"
+              animation="default"
+            >
+              Create TQ
             </AnimatedButton>
           </CardFooter>
         </AnimatedCard>
