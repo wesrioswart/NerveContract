@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, DollarSign } from "lucide-react";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
@@ -10,6 +10,7 @@ import { animatedToast } from "@/components/ui/animated-toast";
 import { useToast } from "@/hooks/use-toast";
 import PMITemplate from '@/components/templates/pmi-template';
 import EarlyWarningTemplate from '@/components/document-templates/early-warning-template';
+import CompensationEventTemplate from '@/components/document-templates/compensation-event-template';
 
 export default function TemplatesPage() {
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
@@ -21,6 +22,8 @@ export default function TemplatesPage() {
         return <PMITemplate />;
       case 'early-warning':
         return <EarlyWarningTemplate />;
+      case 'compensation-event':
+        return <CompensationEventTemplate />;
       default:
         return (
           <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -92,9 +95,12 @@ export default function TemplatesPage() {
         </AnimatedCard>
         
         {/* Template Card - Compensation Event */}
-        <AnimatedCard animation="hover" index={2}>
+        <AnimatedCard animation="hover" index={2} className="border-2 border-blue-500">
           <CardHeader>
-            <CardTitle>Compensation Event Notice</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Compensation Event Notice</CardTitle>
+              <DollarSign className="text-blue-500 w-5 h-5" />
+            </div>
             <CardDescription>
               Template for notifying Compensation Events under NEC4 Clause 61.3
             </CardDescription>
@@ -107,15 +113,11 @@ export default function TemplatesPage() {
           </CardContent>
           <CardFooter>
             <AnimatedButton 
-              onClick={() => animatedToast.info({
-                title: "Coming Soon",
-                description: "This template is under development and will be available in a future update.",
-              })}
-              className="w-full"
-              variant="outline"
-              animation="subtle"
+              onClick={() => setActiveTemplate('compensation-event')}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+              animation="default"
             >
-              Coming Soon
+              Create CE Notice
             </AnimatedButton>
           </CardFooter>
         </AnimatedCard>
