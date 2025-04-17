@@ -496,9 +496,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userMessage = await storage.createChatMessage(validatedData);
       console.log("User message created:", userMessage);
       
-      // Get AI response
-      console.log("Getting AI response for:", validatedData.content);
-      const aiResponse = await askContractAssistant(validatedData.content);
+      // Get project context to enhance AI understanding
+      const project = await storage.getProject(validatedData.projectId);
+      
+      // Enhance the user query with NEC4 context for better AI comprehension
+      const enhancedQuery = `
+User query: "${validatedData.content}"
+
+Project context:
+- Project Name: ${project?.name || 'Unknown'}
+- Contract Type: NEC4 Engineering and Construction Contract
+- Current form or page the user is viewing: ${req.headers['x-current-form'] || 'Unknown'}
+
+Please understand the user's intent even if the query is not perfectly phrased. 
+Respond with relevant NEC4 contract information, referencing specific clauses.
+`;
+      
+      // Get AI response with enhanced context
+      console.log("Getting AI response with enhanced context");
+      const aiResponse = await askContractAssistant(enhancedQuery);
       console.log("AI response received");
       
       // Create the AI response message

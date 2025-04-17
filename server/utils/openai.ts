@@ -281,7 +281,10 @@ async function askContractAssistant(question: string): Promise<string> {
             "7. Be precise about notice periods, timeframes, and procedural requirements\n" +
             "8. For questions about compensation events, always reference relevant assessment provisions\n" +
             "9. Always conclude with practical implications and recommended next steps\n\n" +
-            "Your responses should be authoritative, technically accurate, and formatted for maximum clarity."
+            "10. Understand the user's intent even when their phrasing is imperfect or unclear\n" +
+            "11. Recognize implicit references to contract elements without requiring exact terminology\n" +
+            "12. Infer the relevant NEC4 context even from vague or incomplete queries\n\n" +
+            "Your responses should be authoritative, technically accurate, and formatted for maximum clarity. Remember that users may not use precise NEC4 terminology or perfect grammar - understand their intent and respond helpfully regardless of how the question is phrased."
         },
         {
           role: "user",
