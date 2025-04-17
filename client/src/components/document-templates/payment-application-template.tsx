@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useProject } from "@/contexts/project-context";
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
 import { AnimatedButton } from "@/components/ui/animated-button";
+import html2pdf from 'html2pdf.js';
 
 // Define the form schema
 const paymentItemSchema = z.object({
@@ -156,11 +157,34 @@ export default function PaymentApplicationTemplate() {
     window.print();
   };
   
+  const pdfContentRef = useRef<HTMLDivElement>(null);
+  
   const handleDownload = () => {
+    if (!pdfContentRef.current) return;
+    
+    const element = pdfContentRef.current;
+    const filename = `Payment_Application_${watch('applicationNumber') || 'Draft'}.pdf`;
+    
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
     toast({
-      title: "PDF Generated",
-      description: "Your payment application has been generated as a PDF.",
+      title: "Generating PDF",
+      description: "Your payment application is being prepared for download...",
       variant: "default"
+    });
+    
+    html2pdf().set(opt).from(element).save().then(() => {
+      toast({
+        title: "PDF Downloaded",
+        description: "Your payment application has been successfully downloaded.",
+        variant: "default"
+      });
     });
   };
 
@@ -584,7 +608,7 @@ export default function PaymentApplicationTemplate() {
                 </div>
               </AnimationWrapper>
               
-              <div className="p-8 max-w-4xl mx-auto">
+              <div ref={pdfContentRef} className="p-8 max-w-4xl mx-auto">
                 <AnimationWrapper type="fadeIn" delay={0.3} className="text-center mb-8">
                   <AnimationWrapper as="h1" type="scale" delay={0.4} className="text-2xl font-bold">
                     PAYMENT APPLICATION
