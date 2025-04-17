@@ -371,8 +371,8 @@ export const PMITemplate = () => {
           </CardContent>
           
           <CardFooter className="flex justify-between space-x-2 border-t pt-4">
-            <div className="w-full flex justify-between">
-              <div className="flex space-x-4">
+            <div className="w-full flex flex-col sm:flex-row justify-between gap-4">
+              <div className="flex flex-wrap gap-2 sm:gap-4">
                 <AnimationWrapper type="slideIn" delay={1.5}>
                   <AnimatedButton 
                     type="button" 
@@ -387,29 +387,6 @@ export const PMITemplate = () => {
                   </AnimatedButton>
                 </AnimationWrapper>
                 
-                <AnimationWrapper type="slideIn" delay={1.5}>
-                  <AnimatedButton 
-                    onClick={handleSubmit} 
-                    className="gap-1 bg-green-600 hover:bg-green-700 text-white"
-                    animation="bounce"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4" />
-                        Submit PMI
-                      </>
-                    )}
-                  </AnimatedButton>
-                </AnimationWrapper>
-              </div>
-              
-              <div className="flex space-x-4">
                 <AnimationWrapper type="fadeIn" delay={1.6}>
                   <AnimatedButton 
                     variant="outline" 
@@ -433,6 +410,27 @@ export const PMITemplate = () => {
                   </AnimatedButton>
                 </AnimationWrapper>
               </div>
+              
+              <AnimationWrapper type="slideIn" delay={1.5}>
+                <AnimatedButton 
+                  onClick={handleSubmit} 
+                  className="gap-1 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
+                  animation="bounce"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Submit PMI
+                    </>
+                  )}
+                </AnimatedButton>
+              </AnimationWrapper>
             </div>
           </CardFooter>
         </Card>

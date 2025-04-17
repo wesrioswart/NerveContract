@@ -40,7 +40,7 @@ export default function TemplatesPage() {
         NEC4 Document Templates
       </AnimationWrapper>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 w-full">
         {/* Template Card - PMI */}
         <AnimatedCard animation="hover" index={0}>
           <CardHeader>
