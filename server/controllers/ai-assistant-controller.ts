@@ -16,7 +16,8 @@ type FormType =
   | "compensation-event" 
   | "instruction" 
   | "technical-query"
-  | "non-conformance";
+  | "non-conformance"
+  | "payment-application";
 
 /**
  * Generate AI-populated form data for various NEC4 forms
@@ -56,6 +57,9 @@ export async function populateForm(req: Request, res: Response) {
         break;
       case "non-conformance":
         prompt = buildNonConformancePrompt(project, currentData);
+        break;
+      case "payment-application":
+        prompt = buildPaymentApplicationPrompt(project, currentData);
         break;
       default:
         return res.status(400).json({ message: "Unsupported form type" });
@@ -452,6 +456,59 @@ function calculateDateDifference(date1: Date | string, date2: Date | string): nu
   
   // Return positive if date2 is later than date1, negative otherwise
   return d2 > d1 ? diffDays : -diffDays;
+}
+
+/**
+ * Build prompt for payment application form
+ */
+function buildPaymentApplicationPrompt(
+  project: any,
+  currentData?: Record<string, any>
+): string {
+  return `You are an expert NEC4 contract assistant helping to populate a Payment Application form.
+  
+Project Context:
+- Project Name: ${project.name}
+- Contract Reference: ${project.contractReference}
+- Client: ${project.clientName}
+
+${currentData && Object.keys(currentData).length > 0 
+  ? `The user has already entered the following information:
+${Object.entries(currentData).map(([key, value]) => `- ${key}: ${value}`).join('\n')}` 
+  : 'The user has not entered any information yet.'
+}
+
+According to NEC4 clause 50, the contractor submits payment applications to the Project Manager at assessment intervals. 
+A payment application should include:
+- The amount due and how it was calculated
+- Details of how this payment relates to the Accepted Programme
+- Supporting documentation
+
+Based on this context, generate a complete Payment Application with the following fields:
+- projectName: The project name (use the provided context)
+- applicationNumber: A unique application number (e.g., "PA-001")
+- applicationDate: Today's date
+- contractReference: The contract reference (use the provided context)
+- contractorName: The name of the contractor submitting the application
+- paymentPeriod: The period this payment covers (e.g., "1 Mar 2025 - 31 Mar 2025")
+- paymentDueDate: When payment is due (typically 3 weeks from application date)
+- previouslyPaid: Amount previously paid on the project (in £)
+- paymentItems: An array of payment items with the following structure:
+  - description: Description of the work completed
+  - workSection: The section of work this item relates to
+  - amount: The amount claimed for this item (in £)
+- subTotal: The sum of all payment items
+- vat: VAT amount (20% of subtotal)
+- deductions: Any deductions to be applied
+- retentionPercentage: Retention percentage (typically 3% or 5%)
+- retentionAmount: Calculated retention amount
+- totalDue: Calculated total due (subTotal + vat - deductions - retention)
+- supportingDocuments: References to any supporting documentation
+- notes: Any additional notes
+- applicantName: Name of the person submitting the application
+- applicantRole: Role of the person submitting the application
+
+Respond with ONLY a JSON object containing these fields.`;
 }
 
 /**
