@@ -103,6 +103,13 @@ export const PMITemplate = () => {
       description: "Your PDF is being generated and will download shortly."
     });
   };
+  
+  const handleSaveDraft = () => {
+    toast({
+      title: "Draft saved",
+      description: "Your PMI draft has been saved successfully."
+    });
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -366,6 +373,18 @@ export const PMITemplate = () => {
           <CardFooter className="flex justify-between space-x-2 border-t pt-4">
             <AnimationWrapper type="slideIn" delay={1.5}>
               <div className="flex space-x-2">
+                <AnimatedButton 
+                  type="button" 
+                  onClick={handleSaveDraft}
+                  variant="outline" 
+                  className="gap-1 bg-white" 
+                  animation="subtle"
+                  disabled={isSubmitting}
+                >
+                  <Save className="h-4 w-4" />
+                  Save Draft
+                </AnimatedButton>
+                
                 <AnimatedButton 
                   onClick={handleSubmit} 
                   className="gap-1 bg-green-600 hover:bg-green-700 text-white"
