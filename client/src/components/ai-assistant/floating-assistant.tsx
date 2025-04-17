@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ChatMessage } from "@shared/schema";
@@ -39,6 +39,16 @@ export default function FloatingAssistant({
     queryKey: [`/api/projects/${projectId}/chat-messages`],
     enabled: isOpen && projectId > 0,
   });
+
+  // Auto-scroll to latest messages when chat is opened or messages are updated
+  useEffect(() => {
+    if (!isMinimized && chatMessages.length > 0) {
+      const container = document.getElementById('chat-messages-container');
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+  }, [chatMessages, isMinimized, isOpen]);
 
   // Create a new message
   const sendMessageMutation = useMutation({
@@ -206,7 +216,7 @@ export default function FloatingAssistant({
             {!isMinimized && (
               <>
                 {/* Messages container */}
-                <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+                <div className="flex-1 overflow-y-auto p-4 bg-gray-50" id="chat-messages-container">
                   {messagesLoading ? (
                     <div className="flex justify-center items-center h-full">
                       <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
@@ -240,29 +250,33 @@ export default function FloatingAssistant({
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {chatMessages.map((msg) => (
-                        <div 
-                          key={msg.id} 
-                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div className={`
-                            rounded-lg px-4 py-2 max-w-xs sm:max-w-sm
-                            ${msg.role === 'user' 
-                              ? 'bg-blue-600 text-white rounded-tr-none' 
-                              : 'bg-gray-200 text-gray-800 rounded-tl-none'
-                            }
-                          `}>
-                            <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
-                            <div 
-                              className={`text-xs mt-1 ${
-                                msg.role === 'user' ? 'text-blue-100' : 'text-gray-500'
-                              }`}
-                            >
-                              {formatRelativeTime(msg.timestamp)}
+                      {/* Show most recent 10 messages */}
+                      {[...chatMessages]
+                        .slice(-10) // Get the last 10 messages
+                        .reverse() // Reverse to show most recent messages first
+                        .map((msg) => (
+                          <div 
+                            key={msg.id} 
+                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div className={`
+                              rounded-lg px-4 py-2 max-w-xs sm:max-w-sm
+                              ${msg.role === 'user' 
+                                ? 'bg-blue-600 text-white rounded-tr-none' 
+                                : 'bg-gray-200 text-gray-800 rounded-tl-none'
+                              }
+                            `}>
+                              <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                              <div 
+                                className={`text-xs mt-1 ${
+                                  msg.role === 'user' ? 'text-blue-100' : 'text-gray-500'
+                                }`}
+                              >
+                                {formatRelativeTime(msg.timestamp)}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
                       
                       {sendMessageMutation.isPending && (
                         <div className="flex justify-start">
