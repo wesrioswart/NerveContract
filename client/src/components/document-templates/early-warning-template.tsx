@@ -312,43 +312,44 @@ export default function EarlyWarningTemplate() {
             )}
           </div>
           
-          <AnimationWrapper type="fadeIn" delay={0.3} className="flex justify-between mt-8">
-            <div className="flex space-x-2">
-              <AnimatedButton 
-                type="button" 
-                variant="outline" 
-                className="gap-1 bg-white" 
-                animation="subtle"
-                disabled={isSubmitting}
-              >
-                <Save className="w-4 h-4" />
-                Save Draft
-              </AnimatedButton>
+          <AnimationWrapper type="fadeIn" delay={0.3} className="mt-8">
+            <div className="w-full flex justify-between">
+              <div className="flex space-x-4">
+                <AnimatedButton 
+                  type="button" 
+                  variant="outline" 
+                  className="gap-1 bg-white" 
+                  animation="subtle"
+                  disabled={isSubmitting}
+                >
+                  <Save className="w-4 h-4" />
+                  Save Draft
+                </AnimatedButton>
+                
+                <AnimatedButton 
+                  type="button" 
+                  onClick={handlePrint}
+                  variant="outline" 
+                  className="gap-1 bg-white" 
+                  animation="subtle"
+                  disabled={isSubmitting}
+                >
+                  <Printer className="w-4 h-4" />
+                  Print
+                </AnimatedButton>
+                
+                <AnimatedButton 
+                  type="button" 
+                  onClick={handleDownload}
+                  className="gap-1 bg-teal-600 hover:bg-teal-700 text-white" 
+                  animation="subtle"
+                  disabled={isSubmitting}
+                >
+                  <Download className="w-4 h-4" />
+                  Download PDF
+                </AnimatedButton>
+              </div>
               
-              <AnimatedButton 
-                type="button" 
-                onClick={handlePrint}
-                variant="outline" 
-                className="gap-1 bg-white" 
-                animation="subtle"
-                disabled={isSubmitting}
-              >
-                <Printer className="w-4 h-4" />
-                Print
-              </AnimatedButton>
-              
-              <AnimatedButton 
-                type="button" 
-                onClick={handleDownload}
-                className="gap-1 bg-teal-600 hover:bg-teal-700 text-white" 
-                animation="subtle"
-                disabled={isSubmitting}
-              >
-                <Download className="w-4 h-4" />
-                Download PDF
-              </AnimatedButton>
-            </div>
-            <div className="flex space-x-2">
               <AnimatedButton 
                 type="submit" 
                 className="gap-1 bg-orange-400 hover:bg-orange-500 text-white" 
