@@ -1,19 +1,121 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import { useProject } from "@/contexts/project-context";
+import { apiRequest } from "@/lib/queryClient";
 
 export const PMITemplate = () => {
+  const { toast } = useToast();
+  const { currentProject } = useProject();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    projectName: currentProject?.name || '',
+    contractName: '',
+    contractorName: '',
+    clauseReference: '14.3',
+    otherClause: '',
+    instructionTitle: '',
+    instructionDetails: '',
+    changeToScope: false,
+    changeToKeyDate: false,
+    compensationEvent: false,
+    noChange: false,
+    quotationRequired: '',
+    responseDate: '',
+    pmName: '',
+    pmSignature: ''
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData({ ...formData, [id]: value });
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, checked } = e.target;
+    setFormData({ ...formData, [id]: checked });
+  };
+
+  const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, quotationRequired: e.target.value });
+  };
+
+  const handleSelectChange = (value: string) => {
+    setFormData({ ...formData, clauseReference: value });
+  };
+  
+  // Update project name when current project changes
+  useEffect(() => {
+    if (currentProject) {
+      setFormData(prev => ({
+        ...prev,
+        projectName: currentProject.name
+      }));
+    }
+  }, [currentProject]);
+
+  const handleSubmit = async () => {
+    if (!formData.instructionTitle || !formData.instructionDetails) {
+      toast({
+        title: "Missing information",
+        description: "Please provide at least the instruction title and details",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // In a real implementation, this would save to the backend
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+
+      // Mock API call to save PMI data
+      /*
+      await apiRequest("POST", "/api/pmi", {
+        projectId: currentProject?.id,
+        title: formData.instructionTitle,
+        details: formData.instructionDetails,
+        clauseReference: formData.clauseReference === 'other' ? formData.otherClause : formData.clauseReference,
+        changeToScope: formData.changeToScope,
+        changeToKeyDate: formData.changeToKeyDate,
+        compensationEvent: formData.compensationEvent,
+        quotationRequired: formData.quotationRequired === 'yes',
+        responseDate: formData.responseDate ? new Date(formData.responseDate) : null,
+        pmName: formData.pmName,
+      });
+      */
+
+      toast({
+        title: "PMI submitted successfully",
+        description: "The Project Manager's Instruction has been saved and sent to the contractor",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to submit PMI",
+        description: "There was an error submitting the form. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
 
   const handleDownload = () => {
     // This would be implemented with a PDF generation library
-    alert("PDF download functionality would be implemented here");
+    toast({
+      title: "Download started",
+      description: "Your PDF is being generated and will download shortly."
+    });
   };
 
   return (
@@ -36,24 +138,42 @@ export const PMITemplate = () => {
         <CardContent className="space-y-6 pt-6">
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <Label htmlFor="project-name" className="font-semibold">Project Name</Label>
-              <Input id="project-name" placeholder="Enter project name" />
+              <Label htmlFor="projectName" className="font-semibold">Project Name</Label>
+              <Input 
+                id="projectName" 
+                placeholder="Enter project name" 
+                value={formData.projectName}
+                onChange={handleInputChange}
+              />
             </div>
             <div>
-              <Label htmlFor="contract-name" className="font-semibold">Contract Name</Label>
-              <Input id="contract-name" placeholder="Enter contract name" />
+              <Label htmlFor="contractName" className="font-semibold">Contract Name</Label>
+              <Input 
+                id="contractName" 
+                placeholder="Enter contract name" 
+                value={formData.contractName}
+                onChange={handleInputChange}
+              />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="contractor-name" className="font-semibold">Contractor</Label>
-            <Input id="contractor-name" placeholder="Enter contractor name" />
+            <Label htmlFor="contractorName" className="font-semibold">Contractor</Label>
+            <Input 
+              id="contractorName" 
+              placeholder="Enter contractor name" 
+              value={formData.contractorName}
+              onChange={handleInputChange}
+            />
           </div>
 
           <div>
-            <Label htmlFor="instruction-clause" className="font-semibold">Reference Clause(s)</Label>
-            <Select defaultValue="14.3">
-              <SelectTrigger id="instruction-clause">
+            <Label htmlFor="clauseReference" className="font-semibold">Reference Clause(s)</Label>
+            <Select 
+              value={formData.clauseReference}
+              onValueChange={handleSelectChange}
+            >
+              <SelectTrigger id="clauseReference">
                 <SelectValue placeholder="Select clause" />
               </SelectTrigger>
               <SelectContent>
@@ -67,21 +187,34 @@ export const PMITemplate = () => {
           </div>
 
           <div>
-            <Label htmlFor="other-clause" className="font-semibold">Other Clause Reference (if applicable)</Label>
-            <Input id="other-clause" placeholder="Enter clause reference" />
+            <Label htmlFor="otherClause" className="font-semibold">Other Clause Reference (if applicable)</Label>
+            <Input 
+              id="otherClause" 
+              placeholder="Enter clause reference" 
+              disabled={formData.clauseReference !== 'other'}
+              value={formData.otherClause}
+              onChange={handleInputChange}
+            />
           </div>
 
           <div>
-            <Label htmlFor="instruction-title" className="font-semibold">Instruction Title</Label>
-            <Input id="instruction-title" placeholder="Enter a descriptive title for this instruction" />
+            <Label htmlFor="instructionTitle" className="font-semibold">Instruction Title</Label>
+            <Input 
+              id="instructionTitle" 
+              placeholder="Enter a descriptive title for this instruction" 
+              value={formData.instructionTitle}
+              onChange={handleInputChange}
+            />
           </div>
 
           <div>
-            <Label htmlFor="instruction-description" className="font-semibold">Instruction Details</Label>
+            <Label htmlFor="instructionDetails" className="font-semibold">Instruction Details</Label>
             <Textarea 
-              id="instruction-description" 
+              id="instructionDetails" 
               placeholder="Provide a clear, detailed description of the instruction" 
               className="min-h-[150px]"
+              value={formData.instructionDetails}
+              onChange={handleInputChange}
             />
           </div>
 
@@ -89,53 +222,102 @@ export const PMITemplate = () => {
             <Label className="font-semibold">This Instruction Results In:</Label>
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div className="flex items-center space-x-2">
-                <input type="checkbox" id="change-to-scope" />
-                <Label htmlFor="change-to-scope">Change to the Scope (Cl. 14.3)</Label>
+                <input 
+                  type="checkbox" 
+                  id="changeToScope" 
+                  checked={formData.changeToScope}
+                  onChange={handleCheckboxChange}
+                />
+                <Label htmlFor="changeToScope">Change to the Scope (Cl. 14.3)</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <input type="checkbox" id="change-to-key-date" />
-                <Label htmlFor="change-to-key-date">Change to Key Date (Cl. 14.3)</Label>
+                <input 
+                  type="checkbox" 
+                  id="changeToKeyDate" 
+                  checked={formData.changeToKeyDate}
+                  onChange={handleCheckboxChange}
+                />
+                <Label htmlFor="changeToKeyDate">Change to Key Date (Cl. 14.3)</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <input type="checkbox" id="compensation-event" />
-                <Label htmlFor="compensation-event">Compensation Event (Cl. 60.1(1))</Label>
+                <input 
+                  type="checkbox" 
+                  id="compensationEvent" 
+                  checked={formData.compensationEvent}
+                  onChange={handleCheckboxChange}
+                />
+                <Label htmlFor="compensationEvent">Compensation Event (Cl. 60.1(1))</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <input type="checkbox" id="no-change" />
-                <Label htmlFor="no-change">No change to Prices or Time</Label>
+                <input 
+                  type="checkbox" 
+                  id="noChange" 
+                  checked={formData.noChange}
+                  onChange={handleCheckboxChange}
+                />
+                <Label htmlFor="noChange">No change to Prices or Time</Label>
               </div>
             </div>
           </div>
 
           <div>
-            <Label htmlFor="quotation-required" className="font-semibold">Quotation Required:</Label>
+            <Label htmlFor="quotationRequired" className="font-semibold">Quotation Required:</Label>
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div className="flex items-center space-x-2">
-                <input type="radio" name="quotation" id="quotation-yes" value="yes" />
+                <input 
+                  type="radio" 
+                  name="quotation" 
+                  id="quotation-yes" 
+                  value="yes" 
+                  checked={formData.quotationRequired === 'yes'}
+                  onChange={handleRadioChange}
+                />
                 <Label htmlFor="quotation-yes">Yes - Submit within 3 weeks (Cl. 62.3)</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <input type="radio" name="quotation" id="quotation-no" value="no" />
+                <input 
+                  type="radio" 
+                  name="quotation" 
+                  id="quotation-no" 
+                  value="no" 
+                  checked={formData.quotationRequired === 'no'}
+                  onChange={handleRadioChange}
+                />
                 <Label htmlFor="quotation-no">No</Label>
               </div>
             </div>
           </div>
 
           <div>
-            <Label htmlFor="response-required" className="font-semibold">Contractor Response Required By:</Label>
-            <Input type="date" id="response-required" />
+            <Label htmlFor="responseDate" className="font-semibold">Contractor Response Required By:</Label>
+            <Input 
+              type="date" 
+              id="responseDate" 
+              value={formData.responseDate}
+              onChange={handleInputChange}
+            />
           </div>
 
           <div className="border-t pt-4">
             <p className="font-semibold mb-2">Project Manager</p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="pm-name">Name</Label>
-                <Input id="pm-name" placeholder="Project Manager name" />
+                <Label htmlFor="pmName">Name</Label>
+                <Input 
+                  id="pmName" 
+                  placeholder="Project Manager name" 
+                  value={formData.pmName}
+                  onChange={handleInputChange}
+                />
               </div>
               <div>
-                <Label htmlFor="pm-signature">Signature</Label>
-                <Input id="pm-signature" placeholder="Electronic signature or typed name" />
+                <Label htmlFor="pmSignature">Signature</Label>
+                <Input 
+                  id="pmSignature" 
+                  placeholder="Electronic signature or typed name" 
+                  value={formData.pmSignature}
+                  onChange={handleInputChange}
+                />
               </div>
             </div>
           </div>
@@ -166,9 +348,24 @@ export const PMITemplate = () => {
           </div>
         </CardContent>
         
-        <CardFooter className="flex justify-end space-x-2 border-t pt-4">
-          <Button variant="outline" onClick={handlePrint}>Print</Button>
-          <Button onClick={handleDownload}>Download PDF</Button>
+        <CardFooter className="flex justify-between space-x-2 border-t pt-4">
+          <div>
+            <Button 
+              onClick={handleSubmit} 
+              className="bg-green-600 hover:bg-green-700"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
+              ) : (
+                'Submit PMI'
+              )}
+            </Button>
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={handlePrint}>Print</Button>
+            <Button onClick={handleDownload}>Download PDF</Button>
+          </div>
         </CardFooter>
       </Card>
     </div>
