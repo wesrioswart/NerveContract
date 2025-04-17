@@ -35,7 +35,7 @@ export default function TemplatesPage() {
   };
   
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-6 w-full">
       <AnimationWrapper as="h1" type="slideIn" className="text-3xl font-bold mb-6">
         NEC4 Document Templates
       </AnimationWrapper>
@@ -144,7 +144,7 @@ export default function TemplatesPage() {
           </div>
           
           <AnimationWrapper type="fadeIn" delay={0.6} className="w-full">
-            <div className="w-full max-w-full">
+            <div className="w-full max-w-full overflow-x-auto">
               {renderTemplate()}
             </div>
           </AnimationWrapper>
