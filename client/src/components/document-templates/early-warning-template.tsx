@@ -312,56 +312,75 @@ export default function EarlyWarningTemplate() {
             )}
           </div>
           
-          <AnimationWrapper type="fadeIn" delay={0.3} className="flex justify-end mt-8 space-x-3">
-            <AnimatedButton 
-              type="button" 
-              variant="outline" 
-              className="gap-1" 
-              animation="subtle"
-              disabled={isSubmitting}
-            >
-              <Save className="w-4 h-4" />
-              Save Draft
-            </AnimatedButton>
-            <AnimatedButton 
-              type="submit" 
-              className="bg-amber-500 hover:bg-amber-600 text-white gap-1" 
-              animation="bounce"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-4 h-4" />
-                  Generate Notice
-                </>
-              )}
-            </AnimatedButton>
+          <AnimationWrapper type="fadeIn" delay={0.3} className="flex justify-between mt-8">
+            <div className="flex space-x-2">
+              <AnimatedButton 
+                type="button" 
+                variant="outline" 
+                className="gap-1 bg-white" 
+                animation="subtle"
+                disabled={isSubmitting}
+              >
+                <Save className="w-4 h-4" />
+                Save Draft
+              </AnimatedButton>
+            </div>
+            <div className="flex space-x-2">
+              <AnimatedButton 
+                type="submit" 
+                className="gap-1 bg-orange-400 hover:bg-orange-500 text-white" 
+                animation="bounce"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-4 h-4" />
+                    Generate Notice
+                  </>
+                )}
+              </AnimatedButton>
+            </div>
           </AnimationWrapper>
         </form>
       ) : (
         <div>
-          <AnimationWrapper type="fadeIn" delay={0.2} className="p-6 border-b border-gray-200 text-right space-x-2 print:hidden">
-            <AnimatedButton variant="outline" size="sm" onClick={handlePrint} className="gap-1" animation="subtle">
-              <Printer className="w-4 h-4" />
-              Print
-            </AnimatedButton>
-            <AnimatedButton variant="outline" size="sm" onClick={handleDownload} className="gap-1" animation="subtle">
-              <Download className="w-4 h-4" />
-              Download PDF
-            </AnimatedButton>
-            <AnimatedButton
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPreview(false)}
-              animation="subtle"
-            >
-              Edit
-            </AnimatedButton>
+          <AnimationWrapper type="fadeIn" delay={0.2} className="p-6 border-b border-gray-200 print:hidden">
+            <div className="flex justify-between items-center">
+              <AnimatedButton
+                onClick={() => setShowPreview(false)}
+                variant="outline"
+                animation="subtle"
+                className="bg-white"
+              >
+                Back to Edit
+              </AnimatedButton>
+              
+              <div className="flex space-x-2">
+                <AnimatedButton 
+                  variant="outline" 
+                  onClick={handlePrint} 
+                  className="gap-1 bg-white" 
+                  animation="subtle"
+                >
+                  <Printer className="w-4 h-4" />
+                  Print
+                </AnimatedButton>
+                
+                <AnimatedButton 
+                  onClick={handleDownload} 
+                  className="gap-1 bg-teal-600 hover:bg-teal-700 text-white" 
+                  animation="subtle"
+                >
+                  <Download className="w-4 h-4" />
+                  Download PDF
+                </AnimatedButton>
+              </div>
+            </div>
           </AnimationWrapper>
           
           <div className="p-8 max-w-4xl mx-auto">
