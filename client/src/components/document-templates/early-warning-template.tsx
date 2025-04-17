@@ -324,6 +324,30 @@ export default function EarlyWarningTemplate() {
                 <Save className="w-4 h-4" />
                 Save Draft
               </AnimatedButton>
+              
+              <AnimatedButton 
+                type="button" 
+                onClick={handlePrint}
+                variant="outline" 
+                className="gap-1 bg-white" 
+                animation="subtle"
+                disabled={isSubmitting}
+              >
+                <Printer className="w-4 h-4" />
+                Print
+              </AnimatedButton>
+              
+              <AnimatedButton 
+                type="button" 
+                onClick={handleDownload}
+                variant="outline" 
+                className="gap-1 bg-white" 
+                animation="subtle"
+                disabled={isSubmitting}
+              >
+                <Download className="w-4 h-4" />
+                Download
+              </AnimatedButton>
             </div>
             <div className="flex space-x-2">
               <AnimatedButton 

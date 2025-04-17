@@ -364,27 +364,48 @@ export const PMITemplate = () => {
           
           <CardFooter className="flex justify-between space-x-2 border-t pt-4">
             <AnimationWrapper type="slideIn" delay={1.5}>
-              <Button 
-                onClick={handleSubmit} 
-                className="bg-green-600 hover:bg-green-700"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
-                ) : (
-                  <><Save className="mr-2 h-4 w-4" /> Submit PMI</>
-                )}
-              </Button>
+              <div className="flex space-x-2">
+                <AnimatedButton 
+                  onClick={handleSubmit} 
+                  className="gap-1 bg-green-600 hover:bg-green-700 text-white"
+                  animation="bounce"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Submit PMI
+                    </>
+                  )}
+                </AnimatedButton>
+              </div>
             </AnimationWrapper>
             
             <AnimationWrapper type="fadeIn" delay={1.6}>
               <div className="flex space-x-2">
-                <Button variant="outline" onClick={handlePrint}>
-                  <Printer className="mr-2 h-4 w-4" /> Print
-                </Button>
-                <Button onClick={handleDownload}>
-                  <Download className="mr-2 h-4 w-4" /> Download PDF
-                </Button>
+                <AnimatedButton 
+                  variant="outline" 
+                  onClick={handlePrint} 
+                  className="gap-1 bg-white" 
+                  animation="subtle"
+                >
+                  <Printer className="h-4 w-4" />
+                  Print
+                </AnimatedButton>
+                
+                <AnimatedButton 
+                  onClick={handleDownload} 
+                  className="gap-1 bg-teal-600 hover:bg-teal-700 text-white" 
+                  animation="subtle"
+                >
+                  <Download className="h-4 w-4" />
+                  Download PDF
+                </AnimatedButton>
               </div>
             </AnimationWrapper>
           </CardFooter>
