@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, DollarSign, AlertOctagon, HelpCircle } from "lucide-react";
+import { AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt } from "lucide-react";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
@@ -13,6 +13,7 @@ import EarlyWarningTemplate from '@/components/document-templates/early-warning-
 import CompensationEventTemplate from '@/components/document-templates/compensation-event-template';
 import NCRTemplate from '@/components/document-templates/ncr-template';
 import TechnicalQueryTemplate from '@/components/document-templates/technical-query-template';
+import PaymentApplicationTemplate from '@/components/document-templates/payment-application-template';
 
 export default function TemplatesPage() {
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
@@ -30,6 +31,8 @@ export default function TemplatesPage() {
         return <NCRTemplate />;
       case 'technical-query':
         return <TechnicalQueryTemplate />;
+      case 'payment-application':
+        return <PaymentApplicationTemplate />;
       default:
         return (
           <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -180,6 +183,34 @@ export default function TemplatesPage() {
               animation="default"
             >
               Create TQ
+            </AnimatedButton>
+          </CardFooter>
+        </AnimatedCard>
+        
+        {/* Template Card - Payment Application */}
+        <AnimatedCard animation="hover" index={5} className="border-2 border-green-500">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Payment Application</CardTitle>
+              <Receipt className="text-green-500 w-5 h-5" />
+            </div>
+            <CardDescription>
+              Template for submitting payment applications under NEC4 Option Y(UK)2
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500">
+              Use this template to submit applications for payment as a Contractor,
+              showing the amount due and calculations as required by the payment provisions.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <AnimatedButton 
+              onClick={() => setActiveTemplate('payment-application')}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+              animation="default"
+            >
+              Create Payment Application
             </AnimatedButton>
           </CardFooter>
         </AnimatedCard>
