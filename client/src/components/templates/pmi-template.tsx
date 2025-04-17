@@ -10,6 +10,7 @@ import { Loader2, Download, Printer, Save } from "lucide-react";
 import { useProject } from "@/contexts/project-context";
 import { apiRequest } from "@/lib/queryClient";
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
+import { AnimatedButton } from "@/components/ui/animated-button";
 
 export const PMITemplate = () => {
   const { toast } = useToast();
