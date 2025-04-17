@@ -330,8 +330,8 @@ export default function EarlyWarningTemplate() {
               </div>
               
               <AnimationWrapper type="fadeIn" delay={0.3} className="mt-8">
-                <div className="w-full flex justify-between">
-                  <div className="flex space-x-4">
+                <div className="w-full flex flex-col sm:flex-row justify-between gap-4">
+                  <div className="flex flex-wrap gap-2 sm:gap-4">
                     <AnimatedButton 
                       type="button" 
                       onClick={handleSaveDraft}
@@ -392,17 +392,17 @@ export default function EarlyWarningTemplate() {
           ) : (
             <div>
               <AnimationWrapper type="fadeIn" delay={0.2} className="p-6 border-b border-gray-200 print:hidden">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between gap-4 items-center">
                   <AnimatedButton
                     onClick={() => setShowPreview(false)}
                     variant="outline"
                     animation="subtle"
-                    className="bg-white"
+                    className="bg-white w-full sm:w-auto"
                   >
                     Back to Edit
                   </AnimatedButton>
                   
-                  <div className="flex space-x-2">
+                  <div className="flex flex-wrap gap-2">
                     <AnimatedButton 
                       variant="outline" 
                       onClick={handlePrint} 
