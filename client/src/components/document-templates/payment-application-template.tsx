@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useProject } from "@/contexts/project-context";
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
 import { AnimatedButton } from "@/components/ui/animated-button";
+
+import FloatingAssistant from "@/components/ai-assistant/floating-assistant";
 import html2pdf from 'html2pdf.js';
 
 // Define the form schema
@@ -159,6 +161,45 @@ export default function PaymentApplicationTemplate() {
   
   const pdfContentRef = useRef<HTMLDivElement>(null);
   
+  // Handle AI form population
+  useEffect(() => {
+    const handleAiFormPopulation = (event: CustomEvent) => {
+      const formData = event.detail?.formData;
+      
+      if (!formData) return;
+      
+      // Update form with AI generated data
+      Object.keys(formData).forEach(key => {
+        if (key === 'paymentItems' && Array.isArray(formData[key])) {
+          // Handle payment items array
+          const items = formData[key].map(item => ({
+            description: item.description || '',
+            workSection: item.workSection || '',
+            amount: item.amount?.toString() || '0.00'
+          }));
+          setValue('paymentItems', items);
+        } else if (formSchema.shape[key as keyof typeof formSchema.shape]) {
+          // Only set value if it's part of the form schema
+          setValue(key as any, formData[key]?.toString() || '');
+        }
+      });
+      
+      toast({
+        title: "Form Populated",
+        description: "AI has suggested values for your payment application.",
+        variant: "default"
+      });
+    };
+    
+    // Add event listener with TypeScript cast
+    window.addEventListener('ai-form-populated', handleAiFormPopulation as EventListener);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('ai-form-populated', handleAiFormPopulation as EventListener);
+    };
+  }, [setValue]);
+  
   const handleDownload = () => {
     if (!pdfContentRef.current) return;
     
@@ -190,6 +231,13 @@ export default function PaymentApplicationTemplate() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
+      {/* Floating AI Assistant */}
+      <FloatingAssistant 
+        userId={1} 
+        currentForm="payment-application"
+        currentData={watch()}
+      />
+      
       <AnimationWrapper type="fadeIn">
         <div className="border-2 bg-white rounded-lg shadow-md overflow-hidden">
           <div className="p-6 border-b border-gray-200">
