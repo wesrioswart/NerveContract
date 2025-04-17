@@ -340,13 +340,12 @@ export default function EarlyWarningTemplate() {
               <AnimatedButton 
                 type="button" 
                 onClick={handleDownload}
-                variant="outline" 
-                className="gap-1 bg-white" 
+                className="gap-1 bg-teal-600 hover:bg-teal-700 text-white" 
                 animation="subtle"
                 disabled={isSubmitting}
               >
                 <Download className="w-4 h-4" />
-                Download
+                Download PDF
               </AnimatedButton>
             </div>
             <div className="flex space-x-2">
