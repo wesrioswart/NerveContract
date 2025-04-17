@@ -103,8 +103,8 @@ function App() {
           />
           
           <div className={cn(
-            "flex-1 flex flex-col overflow-hidden",
-            sidebarCollapsed ? "ml-16" : "ml-0"
+            "flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+            sidebarCollapsed ? "ml-16" : "ml-64"
           )}>
             <Header 
               user={currentUser} 
