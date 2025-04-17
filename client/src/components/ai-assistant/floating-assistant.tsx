@@ -225,7 +225,15 @@ export default function FloatingAssistant({
                     <div className="text-center text-gray-500 mt-10">
                       <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
                       <h4 className="font-medium text-gray-600 mb-1">NEC4 AI Assistant</h4>
-                      <p className="text-sm">Ask me about NEC4 contracts, programmes, or for help with forms!</p>
+                      <p className="text-sm">Ask me about NEC4 contracts using everyday language!</p>
+                      <div className="mt-2 text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                        <p className="font-medium text-gray-600 mb-1">Examples:</p>
+                        <ul className="list-disc pl-4 space-y-1 text-left">
+                          <li>"What happens if the project gets delayed?"</li>
+                          <li>"What should I do if a subcontractor isn't performing well?"</li>
+                          <li>"Who is responsible for quality issues?"</li>
+                        </ul>
+                      </div>
                       
                       {currentForm && (
                         <Button 
@@ -250,10 +258,9 @@ export default function FloatingAssistant({
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {/* Show most recent 10 messages */}
+                      {/* Show most recent messages, older ones first */}
                       {[...chatMessages]
-                        .slice(-10) // Get the last 10 messages
-                        .reverse() // Reverse to show most recent messages first
+                        .slice(-7) // Get the last 7 messages (limiting for better readability)
                         .map((msg) => (
                           <div 
                             key={msg.id} 
@@ -293,7 +300,7 @@ export default function FloatingAssistant({
                 <form onSubmit={handleSubmit} className="p-3 border-t border-gray-200 bg-white">
                   <div className="flex space-x-2">
                     <Textarea
-                      placeholder="Ask about NEC4, programme analysis, or form help..."
+                      placeholder="Ask any NEC4 question in your own words..."
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       className="flex-1 resize-none"

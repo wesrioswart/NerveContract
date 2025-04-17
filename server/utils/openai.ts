@@ -265,6 +265,44 @@ async function askContractAssistant(question: string): Promise<string> {
     
     console.log("Sending request to OpenAI...");
     
+    // Extract the actual user query when receiving an enhanced query
+    const userQueryMatch = question.match(/User query: "([^"]+)"/);
+    const actualQuestion = userQueryMatch ? userQueryMatch[1] : question;
+    
+    // Check if this is a common, everyday language query about NEC4 topics
+    const isEverydayLanguageQuery = (
+      // Check for everyday phrases about delays
+      !!actualQuestion.match(/delay|behind schedule|late|slow progress|falling behind|not on time/i) ||
+      // Check for everyday phrases about changes
+      !!actualQuestion.match(/change|different|modify|adjust|update|alteration/i) ||
+      // Check for everyday phrases about quality issues
+      !!actualQuestion.match(/quality|not good enough|defect|problem|issue|broken|damage/i) ||
+      // Check for everyday phrases about disputes
+      !!actualQuestion.match(/disagree|conflict|argue|dispute|problem with contractor|not happy with/i) ||
+      // Check for everyday phrases about payments
+      !!actualQuestion.match(/pay|money|funds|cost|expense|invoice|bill/i)
+    );
+    
+    // Prepare the prompt with context mapping for everyday language
+    let enhancedPrompt = question;
+    
+    if (isEverydayLanguageQuery) {
+      console.log("Detected everyday language query, enhancing with NEC4 context");
+      enhancedPrompt = `
+The user is asking about NEC4 contracts using everyday language. Their query is:
+"${actualQuestion}"
+
+Please interpret their intent and provide a helpful response that references the specific relevant NEC4 clauses. 
+Consider whether this might relate to:
+- Compensation events (Clause 60)
+- Programme requirements (Clause 31/32)
+- Early warning procedures (Clause 15)
+- Payment procedures (Clause 50-51)
+- Defects management (Clause 40-45)
+- Dispute resolution procedures (Clause 90-93)
+      `;
+    }
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -289,8 +327,8 @@ async function askContractAssistant(question: string): Promise<string> {
         {
           role: "user",
           content: knowledgeContext ? 
-            `${knowledgeContext}\n\nPlease answer the following question using the NEC4 clauses above:\n${question}` : 
-            question
+            `${knowledgeContext}\n\nPlease answer the following question using the NEC4 clauses above:\n${enhancedPrompt}` : 
+            enhancedPrompt
         }
       ],
       max_tokens: 500,
