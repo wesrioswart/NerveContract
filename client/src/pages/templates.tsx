@@ -8,7 +8,7 @@ import { AnimatedButton } from "@/components/ui/animated-button";
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
 import { animatedToast } from "@/components/ui/animated-toast";
 import { useToast } from "@/hooks/use-toast";
-import PMITemplate from '@/components/templates/pmi-template';
+import PMITemplate from '@/components/document-templates/pmi-template';
 import EarlyWarningTemplate from '@/components/document-templates/early-warning-template';
 import CompensationEventTemplate from '@/components/document-templates/compensation-event-template';
 
