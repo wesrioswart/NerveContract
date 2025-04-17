@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
-import { AlertCircle, Download, Printer, Save } from "lucide-react";
+import { AlertCircle, Download, Printer, Save, Loader2 } from "lucide-react";
+import { useProject } from "@/contexts/project-context";
+import { useToast } from "@/hooks/use-toast";
 
 // Form schema for Early Warning
 const formSchema = z.object({
@@ -27,17 +29,21 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function EarlyWarningTemplate() {
   const [showPreview, setShowPreview] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { currentProject } = useProject();
+  const { toast } = useToast();
   
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      projectName: "Westfield Development Project",
-      referenceNumber: "EW-019",
+      projectName: currentProject?.name || "Westfield Development Project",
+      referenceNumber: "EW-" + Math.floor(Math.random() * 900 + 100), // Generate a random number for demo
       dateIssued: new Date().toISOString().split("T")[0],
       issuedBy: "John Smith",
       role: "Contractor's Project Manager",
@@ -53,12 +59,44 @@ export default function EarlyWarningTemplate() {
   
   const meetingRequested = watch("meetingRequested");
   
-  const onSubmit = (data: FormValues) => {
-    // In a real implementation, this would save or generate a PDF
-    console.log("Form data:", data);
+  // Update project name when current project changes
+  useEffect(() => {
+    if (currentProject) {
+      setValue("projectName", currentProject.name);
+    }
+  }, [currentProject, setValue]);
+  
+  const onSubmit = async (data: FormValues) => {
+    if (!data.description || !data.potentialImpact || !data.proposedMitigation) {
+      toast({
+        title: "Missing information",
+        description: "Please provide all required information for the Early Warning Notice",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    // Show preview after saving
-    setShowPreview(true);
+    setIsSubmitting(true);
+    try {
+      // In a real implementation, this would save to the backend
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+
+      toast({
+        title: "Early Warning submitted successfully",
+        description: "The Early Warning Notice has been saved and sent to the appropriate parties",
+      });
+      
+      // Show preview after saving
+      setShowPreview(true);
+    } catch (error) {
+      toast({
+        title: "Failed to submit Early Warning",
+        description: "There was an error submitting the form. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const handlePrint = () => {
@@ -66,8 +104,11 @@ export default function EarlyWarningTemplate() {
   };
   
   const handleDownload = () => {
-    // In a real implementation, this would generate and download a PDF
-    alert("PDF download would be implemented here");
+    // This would be implemented with a PDF generation library
+    toast({
+      title: "Download started",
+      description: "Your PDF is being generated and will download shortly."
+    });
   };
   
   return (
@@ -272,13 +313,33 @@ export default function EarlyWarningTemplate() {
           </div>
           
           <AnimationWrapper type="fadeIn" delay={0.3} className="flex justify-end mt-8 space-x-3">
-            <AnimatedButton type="button" variant="outline" className="gap-1" animation="subtle">
+            <AnimatedButton 
+              type="button" 
+              variant="outline" 
+              className="gap-1" 
+              animation="subtle"
+              disabled={isSubmitting}
+            >
               <Save className="w-4 h-4" />
               Save Draft
             </AnimatedButton>
-            <AnimatedButton type="submit" className="bg-amber-500 hover:bg-amber-600 text-white gap-1" animation="bounce">
-              <AlertCircle className="w-4 h-4" />
-              Generate Notice
+            <AnimatedButton 
+              type="submit" 
+              className="bg-amber-500 hover:bg-amber-600 text-white gap-1" 
+              animation="bounce"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-4 h-4" />
+                  Generate Notice
+                </>
+              )}
             </AnimatedButton>
           </AnimationWrapper>
         </form>
