@@ -125,7 +125,7 @@ export default function TemplatesPage() {
       
       {/* Template Preview Area */}
       <AnimationWrapper type="fadeIn" delay={0.3}>
-        <div className="bg-gray-50 rounded-lg p-6 border shadow-sm">
+        <div className="bg-gray-50 rounded-lg p-6 border shadow-sm w-full">
           <div className="flex justify-between items-center mb-6">
             <AnimationWrapper as="h2" type="slideIn" delay={0.4} className="text-2xl font-bold">
               Template Preview
@@ -143,8 +143,10 @@ export default function TemplatesPage() {
             )}
           </div>
           
-          <AnimationWrapper type="fadeIn" delay={0.6}>
-            {renderTemplate()}
+          <AnimationWrapper type="fadeIn" delay={0.6} className="w-full">
+            <div className="w-full max-w-full">
+              {renderTemplate()}
+            </div>
           </AnimationWrapper>
         </div>
       </AnimationWrapper>
