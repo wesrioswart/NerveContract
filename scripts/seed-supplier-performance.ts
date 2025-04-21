@@ -4,6 +4,7 @@ import {
   users
 } from "@shared/schema";
 import { pgTable, serial, integer, text, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { drizzle } from "drizzle-orm/neon-serverless";
 
 // Define the supplier performance table structure
 export const supplierPerformance = pgTable("supplier_performance", {
@@ -289,7 +290,7 @@ async function seedSupplierData() {
     const userId = firstUser[0].id;
     
     // Create the tables if they don't exist
-    console.log("Checking for supplier performance table...");
+    console.log("Creating supplier performance and invoice tables...");
     try {
       await db.execute(`
         CREATE TABLE IF NOT EXISTS supplier_performance (
@@ -308,14 +309,7 @@ async function seedSupplierData() {
           details JSONB
         )
       `);
-      console.log("Supplier performance table created or verified.");
-    } catch (error) {
-      console.error("Error creating supplier performance table:", error);
-      return;
-    }
-    
-    console.log("Checking for supplier invoices table...");
-    try {
+      
       await db.execute(`
         CREATE TABLE IF NOT EXISTS supplier_invoices (
           id SERIAL PRIMARY KEY,
@@ -335,28 +329,26 @@ async function seedSupplierData() {
           created_at TIMESTAMP DEFAULT NOW()
         )
       `);
-      console.log("Supplier invoices table created or verified.");
+      
+      console.log("Tables created successfully.");
     } catch (error) {
-      console.error("Error creating supplier invoices table:", error);
+      console.error("Error creating tables:", error);
       return;
     }
     
     // Check if we already have performance data
     const existingPerformance = await db.execute(`
-      SELECT COUNT(*) as count FROM supplier_performance
+      SELECT COUNT(*) FROM supplier_performance
     `);
+    
+    // Use the count function of the result
     const performanceCount = parseInt(existingPerformance.rows[0].count);
     
     if (performanceCount === 0) {
       console.log("Seeding supplier performance data...");
       
       // Process each performance record with the correct user ID
-      const performanceDataWithUserId = SUPPLIER_PERFORMANCE_DATA.map(record => ({
-        ...record,
-        evaluatedBy: userId
-      }));
-      
-      for (const record of performanceDataWithUserId) {
+      for (const record of SUPPLIER_PERFORMANCE_DATA) {
         await db.execute(`
           INSERT INTO supplier_performance (
             supplier_id, evaluation_date, evaluated_by, 
@@ -368,7 +360,7 @@ async function seedSupplierData() {
         `, [
           record.supplierId,
           record.evaluationDate,
-          record.evaluatedBy,
+          userId,
           record.deliveryScore,
           record.qualityScore,
           record.serviceScore,
@@ -387,8 +379,10 @@ async function seedSupplierData() {
     
     // Check if we already have invoice data
     const existingInvoices = await db.execute(`
-      SELECT COUNT(*) as count FROM supplier_invoices
+      SELECT COUNT(*) FROM supplier_invoices
     `);
+    
+    // Use the count function of the result
     const invoiceCount = parseInt(existingInvoices.rows[0].count);
     
     if (invoiceCount === 0) {
