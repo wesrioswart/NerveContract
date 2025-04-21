@@ -1927,30 +1927,66 @@ export default function DailySiteReportTemplate() {
         <div>
           <h3 className="text-xl font-bold mb-3 border-b pb-2">Labour</h3>
           {values.teamMembers.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {values.teamMembers.map((member, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{member.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.role}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.hours}</td>
+            <>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
                     </tr>
-                  ))}
-                  <tr className="bg-gray-50">
-                    <td colSpan={2} className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">Total Hours:</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{calculateTotalLabourHours()}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {values.teamMembers.map((member, index) => (
+                      <tr key={index}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{member.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.role}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.company || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {member.isSubcontractor ? 
+                            <Badge className="bg-amber-100 text-amber-800">Subcontractor</Badge> : 
+                            <Badge className="bg-blue-100 text-blue-800">Direct</Badge>
+                          }
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.hours}</td>
+                      </tr>
+                    ))}
+                    <tr className="bg-gray-50">
+                      <td colSpan={4} className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">Total Hours:</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{calculateTotalLabourHours()}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              {getSubcontractorInfo().count > 0 && (
+                <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-md">
+                  <h4 className="font-semibold text-amber-800 mb-2">Subcontractor Summary</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-sm text-amber-700">
+                        <span className="font-medium">Subcontractors on site:</span> {getSubcontractorInfo().count} people
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-amber-700">
+                        <span className="font-medium">Subcontractor companies:</span> {getSubcontractorInfo().uniqueCompanies.length}
+                      </p>
+                    </div>
+                  </div>
+                  {getSubcontractorInfo().uniqueCompanies.length > 0 && (
+                    <div className="mt-2">
+                      {getSubcontractorInfo().uniqueCompanies.map((company, index) => (
+                        <Badge key={index} variant="outline" className="mr-1 mb-1 bg-white border-amber-200">{company}</Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           ) : (
             <p className="text-gray-500 italic">No labour recorded for today.</p>
           )}
