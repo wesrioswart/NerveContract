@@ -8,35 +8,45 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useMutation } from '@tanstack/react-query';
 import { Switch } from '@/components/ui/switch';
-import { InsertSupplier } from '@shared/schema';
 
 interface NewSupplierModalProps {
   open: boolean;
   onClose: () => void;
 }
 
+interface SupplierFormData {
+  name: string;
+  contactPerson: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  accountNumber: string | null;
+  isGpsmacs: boolean | null;
+}
+
 export default function NewSupplierModal({ open, onClose }: NewSupplierModalProps) {
   const { toast } = useToast();
   
   // Form state
-  const [formData, setFormData] = useState<InsertSupplier>({
+  const [formData, setFormData] = useState<SupplierFormData>({
     name: '',
     contactPerson: '',
-    contactEmail: '',
-    contactPhone: '',
+    email: '',
+    phone: '',
     address: '',
-    isPreferred: false,
-    notes: '',
+    accountNumber: '',
+    isGpsmacs: false,
   });
 
   // Mutation for creating a supplier
   const createSupplierMutation = useMutation({
-    mutationFn: async (data: InsertSupplier) => {
+    mutationFn: async (data: SupplierFormData) => {
       const res = await apiRequest('POST', '/api/suppliers', data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/suppliers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/procurement/dashboard'] });
       toast({
         title: "Supplier Created",
         description: "The supplier has been created successfully.",
@@ -57,8 +67,8 @@ export default function NewSupplierModal({ open, onClose }: NewSupplierModalProp
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSwitchChange = (name: string, checked: boolean) => {
-    setFormData({ ...formData, [name]: checked });
+  const handleSwitchChange = (checked: boolean) => {
+    setFormData({ ...formData, isGpsmacs: checked });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -102,33 +112,33 @@ export default function NewSupplierModal({ open, onClose }: NewSupplierModalProp
             <Input 
               id="contactPerson"
               name="contactPerson"
-              value={formData.contactPerson}
+              value={formData.contactPerson || ''}
               onChange={handleInputChange}
-              placeholder="Enter contact person name"
+              placeholder="Enter contact person"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="contactEmail">Email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input 
-                id="contactEmail"
-                name="contactEmail"
+                id="email"
+                name="email"
                 type="email"
-                value={formData.contactEmail}
+                value={formData.email || ''}
                 onChange={handleInputChange}
-                placeholder="Enter contact email"
+                placeholder="Enter email address"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="contactPhone">Phone</Label>
+              <Label htmlFor="phone">Phone</Label>
               <Input 
-                id="contactPhone"
-                name="contactPhone"
-                value={formData.contactPhone}
+                id="phone"
+                name="phone"
+                value={formData.phone || ''}
                 onChange={handleInputChange}
-                placeholder="Enter contact phone"
+                placeholder="Enter phone number"
               />
             </div>
           </div>
@@ -138,7 +148,7 @@ export default function NewSupplierModal({ open, onClose }: NewSupplierModalProp
             <Textarea 
               id="address"
               name="address"
-              value={formData.address}
+              value={formData.address || ''}
               onChange={handleInputChange}
               placeholder="Enter supplier address"
               rows={3}
@@ -146,24 +156,26 @@ export default function NewSupplierModal({ open, onClose }: NewSupplierModalProp
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea 
-              id="notes"
-              name="notes"
-              value={formData.notes}
+            <Label htmlFor="accountNumber">Account Number</Label>
+            <Input 
+              id="accountNumber"
+              name="accountNumber"
+              value={formData.accountNumber || ''}
               onChange={handleInputChange}
-              placeholder="Enter any additional notes"
-              rows={3}
+              placeholder="Enter account number"
             />
           </div>
 
           <div className="flex items-center space-x-2">
-            <Switch 
-              id="isPreferred"
-              checked={formData.isPreferred}
-              onCheckedChange={(checked) => handleSwitchChange('isPreferred', checked)}
+            <Switch
+              id="isGpsmacs"
+              checked={formData.isGpsmacs || false}
+              onCheckedChange={handleSwitchChange}
             />
-            <Label htmlFor="isPreferred" className="cursor-pointer">Preferred Supplier</Label>
+            <Label htmlFor="isGpsmacs">GPSMACS Supplier</Label>
+            <div className="ml-2 text-sm text-muted-foreground">
+              (GPSMACS suppliers provide materials, equipment, plant or PPE using the GPSMACS coding system)
+            </div>
           </div>
 
           <DialogFooter>

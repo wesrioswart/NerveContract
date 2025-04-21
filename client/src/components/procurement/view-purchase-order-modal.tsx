@@ -1,17 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { apiRequest, queryClient } from '@/lib/queryClient';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { AlertCircle, Printer, FileDown, Truck, Calendar, ClipboardList } from 'lucide-react';
-import { PurchaseOrder, PurchaseOrderItem } from '@shared/schema';
-import { Separator } from "@/components/ui/separator";
+import { useQuery } from '@tanstack/react-query';
+import { AlertCircle, Download, FileText, ClipboardList, User, Building, Phone, Mail, MapPin, Truck, Calendar } from 'lucide-react';
 import { purchaseOrderStatusColors } from '@/lib/constants';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiRequest } from '@/lib/queryClient';
+import { useMutation } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 
 interface ViewPurchaseOrderModalProps {
   open: boolean;
@@ -19,74 +17,128 @@ interface ViewPurchaseOrderModalProps {
   purchaseOrderId: number;
 }
 
-interface PurchaseOrderDetails extends PurchaseOrder {
-  supplierName?: string;
-  supplierContact?: string;
-  supplierEmail?: string;
-  nominalCodeDescription?: string;
+interface PurchaseOrderItem {
+  id: number;
+  description: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  vatRate: number;
+  lineTotal: number;
+}
+
+interface PurchaseOrderDetails {
+  id: number;
+  reference: string;
+  projectReference: string;
+  projectName: string;
+  nominalCode: string;
+  supplierId: number;
+  supplierName: string;
+  supplierEmail: string | null;
+  supplierPhone: string | null;
+  supplierContactPerson: string | null;
+  description: string;
+  deliveryMethod: string;
+  hireDuration: string;
+  estimatedCost: number;
+  totalCost: number;
+  vatIncluded: boolean;
+  deliveryDate: string;
+  deliveryAddress: string;
+  status: string;
+  createdAt: string;
   items: PurchaseOrderItem[];
 }
 
 export default function ViewPurchaseOrderModal({ open, onClose, purchaseOrderId }: ViewPurchaseOrderModalProps) {
   const { toast } = useToast();
-  const [statusUpdateMode, setStatusUpdateMode] = useState(false);
-  const [newStatus, setNewStatus] = useState<string>("");
-
+  
   // Fetch purchase order details
   const { data: po, isLoading, isError } = useQuery<PurchaseOrderDetails>({
     queryKey: ['/api/purchase-orders', purchaseOrderId],
     enabled: open && !!purchaseOrderId
   });
 
-  // Status update mutation
+  // Format currency
+  const formatCurrency = (value: number): string => {
+    return `£${(value / 100).toFixed(2)}`;
+  };
+
+  // Update PO status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: number, status: string }) => {
-      const res = await apiRequest('PATCH', `/api/purchase-orders/${id}/status`, { status });
+    mutationFn: async (newStatus: string) => {
+      const res = await apiRequest('PATCH', `/api/purchase-orders/${purchaseOrderId}`, {
+        status: newStatus
+      });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/purchase-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/purchase-orders', purchaseOrderId] });
-      setStatusUpdateMode(false);
       toast({
         title: "Status Updated",
-        description: "The purchase order status has been updated successfully."
+        description: "Purchase order status has been updated successfully.",
       });
+      onClose();
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to Update Status",
+        title: "Update Failed",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   });
 
-  const handleStatusUpdate = () => {
-    if (!po || !newStatus || newStatus === po.status) return;
-    updateStatusMutation.mutate({ id: po.id, status: newStatus });
+  // Download PO as PDF
+  const downloadPDF = async () => {
+    try {
+      const res = await apiRequest('GET', `/api/purchase-orders/${purchaseOrderId}/pdf`);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `PO-${po?.reference || purchaseOrderId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Failed to download purchase order PDF.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const getStatusLabel = (status: string) => {
-    return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+  // Handle status update
+  const handleStatusUpdate = (newStatus: string) => {
+    if (po?.status === newStatus) return;
+    updateStatusMutation.mutate(newStatus);
   };
 
-  const printPO = () => {
-    window.print();
-  };
-
-  // This would be more sophisticated in a production app
-  const downloadPOAsPDF = () => {
-    toast({
-      title: "Coming Soon",
-      description: "PDF download functionality is coming soon."
-    });
+  // Get next status options based on current status
+  const getNextStatusOptions = (currentStatus: string): string[] => {
+    switch (currentStatus) {
+      case 'draft':
+        return ['pending_approval'];
+      case 'pending_approval':
+        return ['approved', 'cancelled'];
+      case 'approved':
+        return ['ordered', 'cancelled'];
+      case 'ordered':
+        return ['delivered', 'cancelled'];
+      case 'delivered':
+        return ['completed'];
+      default:
+        return [];
+    }
   };
 
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={open => !open && onClose()}>
-        <DialogContent className="sm:max-w-[800px]">
+        <DialogContent className="sm:max-w-[700px]">
           <div className="flex justify-center my-8">
             <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
           </div>
@@ -98,7 +150,7 @@ export default function ViewPurchaseOrderModal({ open, onClose, purchaseOrderId 
   if (isError || !po) {
     return (
       <Dialog open={open} onOpenChange={open => !open && onClose()}>
-        <DialogContent className="sm:max-w-[800px]">
+        <DialogContent className="sm:max-w-[700px]">
           <div className="flex flex-col items-center my-8 text-center">
             <AlertCircle className="h-12 w-12 text-destructive mb-4" />
             <h3 className="text-lg font-semibold">Error Loading Purchase Order</h3>
@@ -110,187 +162,167 @@ export default function ViewPurchaseOrderModal({ open, onClose, purchaseOrderId 
     );
   }
 
-  const totalItems = po.items.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = po.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  const vat = po.vatIncluded ? po.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice * item.vatRate / 100), 0) : 0;
+  const nextStatusOptions = getNextStatusOptions(po.status);
 
   return (
     <Dialog open={open} onOpenChange={open => !open && onClose()}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="flex flex-row items-center justify-between print:hidden">
-          <DialogTitle className="text-xl mr-4">Purchase Order</DialogTitle>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={printPO} className="flex items-center gap-1">
-              <Printer className="h-4 w-4" />
-              <span className="hidden sm:inline">Print</span>
-            </Button>
-            <Button variant="outline" size="sm" onClick={downloadPOAsPDF} className="flex items-center gap-1">
-              <FileDown className="h-4 w-4" />
-              <span className="hidden sm:inline">PDF</span>
-            </Button>
+        <DialogHeader className="flex flex-row items-center justify-between">
+          <div className="space-y-1">
+            <DialogTitle className="text-xl">Purchase Order {po.reference}</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Created on {new Date(po.createdAt).toLocaleDateString()}
+            </p>
           </div>
+          <Badge className={purchaseOrderStatusColors[po.status]}>
+            {po.status.replace('_', ' ')}
+          </Badge>
         </DialogHeader>
 
-        {/* PO Header */}
-        <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-2xl font-bold">{po.reference}</h2>
-            <div className="flex items-center gap-2 mt-1">
-              {statusUpdateMode ? (
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={newStatus || po.status}
-                    onValueChange={setNewStatus}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="pending_approval">Pending Approval</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="ordered">Ordered</SelectItem>
-                      <SelectItem value="delivered">Delivered</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button size="sm" onClick={handleStatusUpdate} disabled={updateStatusMutation.isPending}>
-                    {updateStatusMutation.isPending ? "Updating..." : "Update"}
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setStatusUpdateMode(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <Badge className={`${purchaseOrderStatusColors[po.status]}`}>
-                    {getStatusLabel(po.status)}
-                  </Badge>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => {
-                      setNewStatus(po.status);
-                      setStatusUpdateMode(true);
-                    }}
-                    className="print:hidden"
-                  >
-                    Change
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-          
-          <div className="flex flex-col items-end text-sm md:text-right">
-            <div className="flex items-center gap-2 mb-1">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>Delivery Date: {po.deliveryDate}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Truck className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {po.deliveryMethod.charAt(0).toUpperCase() + po.deliveryMethod.slice(1)}
-                {po.hireDuration && po.hireDuration !== 'N/A' && ` (Hire: ${po.hireDuration})`}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 print:grid-cols-2">
-          {/* Supplier Info */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card>
-            <CardContent className="pt-6">
-              <h3 className="font-semibold mb-2">Supplier</h3>
-              <p className="font-medium">{po.supplierName}</p>
-              {po.supplierContact && <p className="text-sm">{po.supplierContact}</p>}
-              {po.supplierEmail && <p className="text-sm">{po.supplierEmail}</p>}
-            </CardContent>
-          </Card>
-
-          {/* Delivery Info */}
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="font-semibold mb-2">Delivery Address</h3>
-              <p className="whitespace-pre-line">{po.deliveryAddress}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Description */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <ClipboardList className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold">Description</h3>
-          </div>
-          <p className="whitespace-pre-line">{po.description}</p>
-          
-          <div className="text-sm text-muted-foreground mt-2">
-            Nominal Code: {po.nominalCodeDescription}
-          </div>
-        </div>
-
-        {/* Items */}
-        <div className="mb-6">
-          <h3 className="font-semibold mb-3">Order Items</h3>
-          <div className="border rounded-md overflow-hidden">
-            <table className="w-full divide-y divide-border">
-              <thead className="bg-muted">
-                <tr className="divide-x divide-border">
-                  <th className="px-4 py-2 text-left text-sm font-medium">Description</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium w-20">Qty</th>
-                  <th className="px-4 py-2 text-center text-sm font-medium w-20">Unit</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium w-28">Unit Price</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium w-28">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {po.items.map((item, index) => (
-                  <tr key={index} className="divide-x divide-border">
-                    <td className="px-4 py-2 text-sm">{item.description}</td>
-                    <td className="px-4 py-2 text-sm text-right">{item.quantity}</td>
-                    <td className="px-4 py-2 text-sm text-center">{item.unit}</td>
-                    <td className="px-4 py-2 text-sm text-right">£{(item.unitPrice / 100).toFixed(2)}</td>
-                    <td className="px-4 py-2 text-sm text-right">£{((item.quantity * item.unitPrice) / 100).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Order Summary */}
-        <div className="flex flex-col items-end mb-6">
-          <div className="w-full max-w-xs space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Total Items:</span>
-              <span>{totalItems} items</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal:</span>
-              <span>£{(subtotal / 100).toFixed(2)}</span>
-            </div>
-            {po.vatIncluded && (
-              <>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">VAT:</span>
-                  <span>£{(vat / 100).toFixed(2)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between font-semibold">
-                  <span>Total (incl. VAT):</span>
-                  <span>£{((subtotal + vat) / 100).toFixed(2)}</span>
-                </div>
-              </>
-            )}
-            {!po.vatIncluded && (
-              <div className="flex justify-between font-semibold">
-                <span>Total:</span>
-                <span>£{(subtotal / 100).toFixed(2)}</span>
+            <CardHeader className="py-3">
+              <div className="flex items-center gap-2">
+                <Building className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm">Supplier</CardTitle>
               </div>
-            )}
+            </CardHeader>
+            <CardContent className="py-3">
+              <div className="text-sm space-y-2">
+                <p className="font-medium">{po.supplierName}</p>
+                {po.supplierContactPerson && (
+                  <div className="flex items-center gap-2">
+                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{po.supplierContactPerson}</span>
+                  </div>
+                )}
+                {po.supplierPhone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{po.supplierPhone}</span>
+                  </div>
+                )}
+                {po.supplierEmail && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{po.supplierEmail}</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="py-3">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm">Project Details</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="py-3">
+              <div className="text-sm space-y-2">
+                <p><span className="text-muted-foreground">Project:</span> {po.projectName}</p>
+                <p><span className="text-muted-foreground">Reference:</span> {po.projectReference}</p>
+                <p><span className="text-muted-foreground">Nominal Code:</span> {po.nominalCode}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="py-3">
+              <div className="flex items-center gap-2">
+                <Truck className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm">Delivery Details</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="py-3">
+              <div className="text-sm space-y-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{po.deliveryDate}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+                  <span className="whitespace-pre-line">{po.deliveryAddress}</span>
+                </div>
+                <p><span className="text-muted-foreground">Method:</span> {po.deliveryMethod}</p>
+                {po.hireDuration && po.hireDuration !== "N/A" && (
+                  <p><span className="text-muted-foreground">Hire Duration:</span> {po.hireDuration}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mb-6">
+          <h3 className="font-semibold mb-2">Description</h3>
+          <p className="text-sm whitespace-pre-line">{po.description}</p>
+        </div>
+
+        <div className="rounded-md border mb-6">
+          <div className="p-4 bg-muted font-medium flex items-center justify-between">
+            <h3>Items</h3>
+            <span>Total: {formatCurrency(po.totalCost)}{po.vatIncluded ? " + VAT" : " (VAT included)"}</span>
           </div>
+          <table className="w-full">
+            <thead className="bg-muted/50">
+              <tr className="border-b">
+                <th className="py-3 px-4 text-left font-medium">Description</th>
+                <th className="py-3 px-4 text-right font-medium">Quantity</th>
+                <th className="py-3 px-4 text-right font-medium">Unit Price</th>
+                <th className="py-3 px-4 text-right font-medium">VAT</th>
+                <th className="py-3 px-4 text-right font-medium">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {po.items.map(item => (
+                <tr key={item.id}>
+                  <td className="py-3 px-4 text-sm">{item.description}</td>
+                  <td className="py-3 px-4 text-sm text-right">{item.quantity} {item.unit}</td>
+                  <td className="py-3 px-4 text-sm text-right">{formatCurrency(item.unitPrice)}</td>
+                  <td className="py-3 px-4 text-sm text-right">{item.vatRate}%</td>
+                  <td className="py-3 px-4 text-sm text-right font-medium">{formatCurrency(item.lineTotal)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <Separator className="my-4" />
+
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={downloadPDF}
+            >
+              <Download className="h-4 w-4" />
+              Download PDF
+            </Button>
+          </div>
+
+          {nextStatusOptions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              {nextStatusOptions.map(status => (
+                <Button
+                  key={status}
+                  variant={status === 'cancelled' ? 'destructive' : 'default'}
+                  size="sm"
+                  disabled={updateStatusMutation.isPending}
+                  onClick={() => handleStatusUpdate(status)}
+                >
+                  {status === 'pending_approval' && 'Submit for Approval'}
+                  {status === 'approved' && 'Approve'}
+                  {status === 'ordered' && 'Mark as Ordered'}
+                  {status === 'delivered' && 'Mark as Delivered'}
+                  {status === 'completed' && 'Mark as Completed'}
+                  {status === 'cancelled' && 'Cancel Order'}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

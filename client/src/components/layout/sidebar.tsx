@@ -14,7 +14,9 @@ import {
   GanttChart,
   Mail,
   Clipboard,
-  BadgeCheck
+  BadgeCheck,
+  ShoppingCart,
+  Package2
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +60,12 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   // Financial items
   const financialNavItems = [
     { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
+  ];
+  
+  // Procurement & Inventory items
+  const procurementNavItems = [
+    { path: "/procurement", label: "Procurement", icon: ShoppingCart },
+    { path: "/inventory", label: "Inventory", icon: Package2, badge: "New" },
   ];
 
   // Utility items
@@ -181,6 +189,16 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
             </h4>
           )}
           {renderNavItems(financialNavItems)}
+          
+          {!collapsed && <Separator className="my-3" />}
+          
+          {/* Procurement & Inventory */}
+          {!collapsed && (
+            <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
+              Resources
+            </h4>
+          )}
+          {renderNavItems(procurementNavItems)}
         </nav>
       </div>
       
