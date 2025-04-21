@@ -113,8 +113,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function ProgressReportTemplate() {
-  // We'll use a hardcoded project ID for the template demonstration
-  const [projectId, setProjectId] = useState<number | null>(1);
+  // Use static data for template demonstration instead of live queries
   const [view, setView] = useState<'form' | 'preview'>('form');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionComplete, setSubmissionComplete] = useState(false);
@@ -123,41 +122,41 @@ export default function ProgressReportTemplate() {
   
   const todayFormatted = format(new Date(), "dd/MM/yyyy");
   
-  // Get project data
-  const { data: project } = useQuery({
-    queryKey: ['/api/projects', projectId],
-    enabled: !!projectId
-  });
+  // Use static template data
+  const project = {
+    id: 1,
+    name: "Westfield Development Project",
+    contractReference: "NEC4-2023-001",
+    clientName: "Westfield Corporation",
+    contractorName: "ABC Construction Ltd",
+    startDate: new Date("2023-01-10"),
+    completionDate: new Date("2024-12-15"),
+    contractValue: 15000000
+  };
   
-  // Get compensation events
-  const { data: compensationEvents = [] } = useQuery({
-    queryKey: ['/api/projects', projectId, 'compensation-events'],
-    enabled: !!projectId
-  });
+  // Static data for demo
+  const compensationEvents = [
+    { id: 1, status: "Notified", reference: "CE-001", title: "Site access delay", estimatedValue: 25000 },
+    { id: 2, status: "Quotation Due", reference: "CE-002", title: "Ground conditions variance", estimatedValue: 15000 },
+    { id: 3, status: "Implemented", reference: "CE-003", title: "Additional drainage works", estimatedValue: 32000 }
+  ];
   
-  // Get early warnings
-  const { data: earlyWarnings = [] } = useQuery({
-    queryKey: ['/api/projects', projectId, 'early-warnings'],
-    enabled: !!projectId
-  });
+  const earlyWarnings = [
+    { id: 1, status: "Open", reference: "EW-001", description: "Potential supply chain delay", mitigationPlan: "Sourcing alternative suppliers" },
+    { id: 2, status: "Open", reference: "EW-002", description: "Weather impact on foundation works", mitigationPlan: "Adjusting programme sequence" }
+  ];
   
-  // Get non-conformance reports
-  const { data: nonConformanceReports = [] } = useQuery({
-    queryKey: ['/api/projects', projectId, 'non-conformance-reports'],
-    enabled: !!projectId
-  });
+  const nonConformanceReports = [
+    { id: 1, status: "Open", reference: "NCR-001", description: "Concrete strength below specification", location: "Block A foundations" }
+  ];
   
-  // Get programme milestones
-  const { data: programmeMilestones = [] } = useQuery({
-    queryKey: ['/api/projects', projectId, 'programme-milestones'],
-    enabled: !!projectId
-  });
-  
-  // Get team members
-  const { data: teamMembers = [] } = useQuery({
-    queryKey: ['/api/projects', projectId, 'user-assignments'],
-    enabled: !!projectId
-  });
+  const programmeMilestones = [
+    { id: 1, status: "Completed", name: "Site mobilization" },
+    { id: 2, status: "Completed", name: "Foundations complete - Block A" },
+    { id: 3, status: "In Progress", name: "Structural frame - Block A" },
+    { id: 4, status: "Not Started", name: "Roof installation - Block A" },
+    { id: 5, status: "Not Started", name: "External envelope - Block A" }
+  ];
   
   // Calculate derived values
   const openCEsCount = compensationEvents.filter(ce => ce.status !== 'Accepted' && ce.status !== 'Rejected').length;
