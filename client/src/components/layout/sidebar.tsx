@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 
 type SidebarProps = {
   user: any;
-  onLogout: () => void;
+  onLogout: () => Promise<void>;  // Updated to match async function
   collapsed?: boolean;
   onToggle?: () => void;
 };
