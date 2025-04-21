@@ -209,7 +209,7 @@ export default function NewInventoryItemModal({ open, onClose }: NewInventoryIte
                   <SelectValue placeholder="Select a nominal code" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {nominalCodes.map(code => (
                     <SelectItem key={code.id} value={code.id.toString()}>
                       {code.code} - {code.description}

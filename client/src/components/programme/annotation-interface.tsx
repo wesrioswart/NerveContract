@@ -698,7 +698,7 @@ export default function AnnotationInterface({
                   <SelectValue placeholder="Select related task" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {taskData.map(task => (
                     <SelectItem key={task.id} value={task.id}>{task.name}</SelectItem>
                   ))}

@@ -261,7 +261,7 @@ export default function StockTransactionModal({ open, onClose, type, items, loca
                   <SelectValue placeholder="Select project (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {projects.map(project => (
                     <SelectItem key={project.id} value={project.id.toString()}>
                       {project.contractReference} - {project.name}
@@ -283,7 +283,7 @@ export default function StockTransactionModal({ open, onClose, type, items, loca
                   <SelectValue placeholder="Select purchase order (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {purchaseOrders.map(po => (
                     <SelectItem key={po.id} value={po.id.toString()}>
                       {po.reference}
