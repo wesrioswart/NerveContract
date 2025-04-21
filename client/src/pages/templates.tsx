@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt } from "lucide-react";
+import { AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt, BarChart2 } from "lucide-react";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
@@ -14,6 +14,7 @@ import CompensationEventTemplate from '@/components/document-templates/compensat
 import NCRTemplate from '@/components/document-templates/ncr-template';
 import TechnicalQueryTemplate from '@/components/document-templates/technical-query-template';
 import PaymentApplicationTemplate from '@/components/document-templates/payment-application-template';
+import ProgressReportTemplate from '@/components/document-templates/progress-report-template';
 
 export default function TemplatesPage() {
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
@@ -33,6 +34,8 @@ export default function TemplatesPage() {
         return <TechnicalQueryTemplate />;
       case 'payment-application':
         return <PaymentApplicationTemplate />;
+      case 'progress-report':
+        return <ProgressReportTemplate />;
       default:
         return (
           <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -131,8 +134,36 @@ export default function TemplatesPage() {
           </CardFooter>
         </AnimatedCard>
         
+        {/* Template Card - Progress Report */}
+        <AnimatedCard animation="hover" index={3} className="border-2 border-indigo-500">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Progress Report</CardTitle>
+              <BarChart2 className="text-indigo-500 w-5 h-5" />
+            </div>
+            <CardDescription>
+              Template for submitting Progress Reports under NEC4 Clause 31.2
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500">
+              Use this template to submit comprehensive progress reports showing actual versus
+              planned progress, forecasts, and early warnings in accordance with Clause 31.2.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <AnimatedButton 
+              onClick={() => setActiveTemplate('progress-report')}
+              className="w-full bg-indigo-500 hover:bg-indigo-600 text-white"
+              animation="default"
+            >
+              Create Progress Report
+            </AnimatedButton>
+          </CardFooter>
+        </AnimatedCard>
+        
         {/* Template Card - Non-Conformance Report */}
-        <AnimatedCard animation="hover" index={3} className="border-2 border-red-500">
+        <AnimatedCard animation="hover" index={4} className="border-2 border-red-500">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Non-Conformance Report</CardTitle>
@@ -160,7 +191,7 @@ export default function TemplatesPage() {
         </AnimatedCard>
         
         {/* Template Card - Technical Query */}
-        <AnimatedCard animation="hover" index={4} className="border-2 border-purple-500">
+        <AnimatedCard animation="hover" index={5} className="border-2 border-purple-500">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Technical Query</CardTitle>
@@ -188,7 +219,7 @@ export default function TemplatesPage() {
         </AnimatedCard>
         
         {/* Template Card - Payment Application */}
-        <AnimatedCard animation="hover" index={5} className="border-2 border-green-500">
+        <AnimatedCard animation="hover" index={6} className="border-2 border-green-500">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Payment Application</CardTitle>
