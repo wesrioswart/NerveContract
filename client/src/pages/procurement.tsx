@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import PageHeader from "@/components/layout/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Search, Plus, Building, ClipboardList, ShoppingCart } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Loader2, Search, Plus, Building, ClipboardList, ShoppingCart, ShieldAlert } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { purchaseOrderStatusColors } from "@/lib/constants";
 import NewPurchaseOrderModal from "@/components/procurement/new-purchase-order-modal";
 import NewSupplierModal from "@/components/procurement/new-supplier-modal";
 import ViewPurchaseOrderModal from "@/components/procurement/view-purchase-order-modal";
+import { useUser } from "@/contexts/user-context";
 
 interface PurchaseOrderDashboard {
   totalPOs: number;
@@ -55,19 +56,25 @@ interface Supplier {
 }
 
 export default function Procurement() {
+  // Get authentication status from user context
+  const { isAuthenticated, user } = useUser();
+
   // Fetch purchase order dashboard data
-  const { data: dashboardData, isLoading: isDashboardLoading } = useQuery<PurchaseOrderDashboard>({
+  const { data: dashboardData, isLoading: isDashboardLoading, error: dashboardError } = useQuery<PurchaseOrderDashboard>({
     queryKey: ['/api/procurement/dashboard'],
+    enabled: isAuthenticated, // Only run query if authenticated
   });
 
   // Fetch purchase orders
-  const { data: purchaseOrders = [], isLoading: isPOsLoading } = useQuery<PurchaseOrder[]>({
+  const { data: purchaseOrders = [], isLoading: isPOsLoading, error: purchaseOrdersError } = useQuery<PurchaseOrder[]>({
     queryKey: ['/api/purchase-orders'],
+    enabled: isAuthenticated, // Only run query if authenticated
   });
 
   // Fetch suppliers
-  const { data: suppliers = [], isLoading: isSuppliersLoading } = useQuery<Supplier[]>({
+  const { data: suppliers = [], isLoading: isSuppliersLoading, error: suppliersError } = useQuery<Supplier[]>({
     queryKey: ['/api/suppliers'],
+    enabled: isAuthenticated, // Only run query if authenticated
   });
 
   // State for tab
@@ -103,6 +110,31 @@ export default function Procurement() {
     return `£${(value / 100).toFixed(2)}`;
   };
 
+  // Check if user is not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[600px] flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <div className="flex items-center justify-center mb-4">
+              <ShieldAlert className="h-12 w-12 text-amber-500" />
+            </div>
+            <CardTitle className="text-center">Authentication Required</CardTitle>
+            <CardDescription className="text-center">
+              You need to log in to access procurement management features.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center pb-6">
+            <Button onClick={() => window.location.href = '/auth'}>
+              Log In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Handle loading state
   if (isPOsLoading || isSuppliersLoading || isDashboardLoading) {
     return (
       <div className="flex items-center justify-center min-h-[600px]">
