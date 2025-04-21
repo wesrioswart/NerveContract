@@ -59,7 +59,7 @@ export default function NewPurchaseOrderModal({ open, onClose, suppliers }: NewP
 
   // Mutation for creating a purchase order
   const createPOMutation = useMutation({
-    mutationFn: async (data: { items: PurchaseOrderItem[], ...InsertPurchaseOrder }) => {
+    mutationFn: async (data: Partial<InsertPurchaseOrder> & { items: PurchaseOrderItem[] }) => {
       const res = await apiRequest('POST', '/api/purchase-orders', data);
       return res.json();
     },

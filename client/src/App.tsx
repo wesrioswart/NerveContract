@@ -14,6 +14,8 @@ import PaymentCertificates from "@/pages/payment-certificates";
 import Reports from "@/pages/reports";
 import Templates from "@/pages/templates";
 import EmailProcessor from "@/pages/email-processor";
+import Procurement from "@/pages/procurement";
+import Inventory from "@/pages/inventory";
 import Login from "@/pages/login";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -125,6 +127,8 @@ function App() {
                   <Route path="/payment-certificates" component={PaymentCertificates} />
                   <Route path="/reports" component={Reports} />
                   <Route path="/templates" component={Templates} />
+                  <Route path="/procurement" component={Procurement} />
+                  <Route path="/inventory" component={Inventory} />
                   <Route path="/email-processor" component={EmailProcessor} />
                   <Route component={NotFound} />
                 </Switch>
