@@ -497,6 +497,3 @@ export const progressReportRelations = relations(progressReports, ({ one }) => (
 
 export type ProgressReport = typeof progressReports.$inferSelect;
 export type InsertProgressReport = z.infer<typeof insertProgressReportSchema>;
-
-export type UserToProject = typeof usersToProjects.$inferSelect;
-export type InsertUserToProject = z.infer<typeof insertUserToProjectSchema>;

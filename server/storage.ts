@@ -7,10 +7,11 @@ import {
   ActivityRelationship, InsertActivityRelationship, ProgrammeAnalysis, InsertProgrammeAnalysis,
   ProgrammeAnnotation, InsertProgrammeAnnotation, Nec4Team, InsertNec4Team, 
   Nec4TeamMember, InsertNec4TeamMember, UserToProject, InsertUserToProject,
+  ProgressReport, InsertProgressReport,
   users, projects, compensationEvents, earlyWarnings, nonConformanceReports,
   technicalQueries, programmeMilestones, paymentCertificates, chatMessages,
   programmes, programmeActivities, activityRelationships, programmeAnalyses, programmeAnnotations,
-  nec4Teams, nec4TeamMembers, usersToProjects
+  nec4Teams, nec4TeamMembers, usersToProjects, progressReports
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray } from "drizzle-orm";
@@ -126,6 +127,13 @@ export interface IStorage {
   getProjectUserAssignments(projectId: number): Promise<UserToProject[]>;
   createUserProjectAssignment(assignment: InsertUserToProject): Promise<UserToProject>;
   deleteUserProjectAssignment(id: number): Promise<void>;
+
+  // Progress Reports
+  getProgressReport(id: number): Promise<ProgressReport | undefined>;
+  getProgressReportsByProject(projectId: number): Promise<ProgressReport[]>;
+  createProgressReport(report: InsertProgressReport): Promise<ProgressReport>;
+  updateProgressReport(id: number, report: Partial<ProgressReport>): Promise<ProgressReport>;
+  deleteProgressReport(id: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
