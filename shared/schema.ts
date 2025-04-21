@@ -423,4 +423,80 @@ export type Nec4TeamMember = typeof nec4TeamMembers.$inferSelect;
 export type InsertNec4TeamMember = z.infer<typeof insertNec4TeamMemberSchema>;
 
 export type UserToProject = typeof usersToProjects.$inferSelect;
+
+// Progress Reports
+export const progressReports = pgTable("progress_reports", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => projects.id),
+  title: text("title").notNull(),
+  reportDate: date("report_date").notNull(),
+  reportPeriodStart: date("report_period_start").notNull(),
+  reportPeriodEnd: date("report_period_end").notNull(),
+  overallProgress: real("overall_progress").notNull(), // Percentage complete (0-100)
+  overallSummary: text("overall_summary").notNull(),
+  forecastCompletion: date("forecast_completion"),
+  contractCompletion: date("contract_completion"),
+  statusColor: text("status_color", { enum: ["green", "amber", "red"] }).notNull(),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  sectionProgress: jsonb("section_progress").$type<Array<{
+    section: string,
+    team: string,
+    percentComplete: number,
+    issues: string,
+    nextWeekFocus: string
+  }>>(),
+  risksAndEarlyWarnings: jsonb("risks_and_early_warnings").$type<Array<{
+    riskId: string,
+    description: string,
+    status: string,
+    mitigation: string,
+    registerLink: string
+  }>>(),
+  compensationEvents: jsonb("compensation_events").$type<Array<{
+    ceRef: string,
+    description: string,
+    status: string,
+    costImpact: number,
+    timeImpact: number,
+    affectedSection: string
+  }>>(),
+  issuesAndQueries: jsonb("issues_and_queries").$type<Array<{
+    ref: string,
+    type: string, // NCR or TQR
+    description: string,
+    section: string,
+    status: string,
+    raisedDate: string
+  }>>(),
+  aiSummary: text("ai_summary"),
+  attachments: jsonb("attachments").$type<Array<{
+    name: string,
+    url: string,
+    type: string
+  }>>(),
+});
+
+export const insertProgressReportSchema = createInsertSchema(progressReports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const progressReportRelations = relations(progressReports, ({ one }) => ({
+  project: one(projects, {
+    fields: [progressReports.projectId],
+    references: [projects.id]
+  }),
+  creator: one(users, {
+    fields: [progressReports.createdBy],
+    references: [users.id]
+  })
+}));
+
+export type ProgressReport = typeof progressReports.$inferSelect;
+export type InsertProgressReport = z.infer<typeof insertProgressReportSchema>;
+
+export type UserToProject = typeof usersToProjects.$inferSelect;
 export type InsertUserToProject = z.infer<typeof insertUserToProjectSchema>;

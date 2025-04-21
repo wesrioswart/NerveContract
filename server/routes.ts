@@ -5,7 +5,7 @@ import { z } from "zod";
 import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarningSchema, 
   insertProgrammeSchema, insertProgrammeActivitySchema, insertActivityRelationshipSchema,
   insertNec4TeamSchema, insertNec4TeamMemberSchema, insertUserToProjectSchema, 
-  insertProjectSchema } from "@shared/schema";
+  insertProjectSchema, insertProgressReportSchema } from "@shared/schema";
 import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured } from "./utils/openai";
 import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
 import { parseProgrammeFile } from "./services/programme-parser";
