@@ -188,9 +188,9 @@ export default function Inventory() {
                     <Package className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardData.totalItems}</div>
+                    <div className="text-2xl font-bold">{dashboardData.totalItems || 0}</div>
                     <p className="text-xs text-muted-foreground">
-                      across {dashboardData.itemsByCategory.length} categories
+                      across {dashboardData.itemsByCategory?.length || 0} categories
                     </p>
                   </CardContent>
                 </Card>
@@ -201,7 +201,7 @@ export default function Inventory() {
                     <Warehouse className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardData.totalLocations}</div>
+                    <div className="text-2xl font-bold">{dashboardData.totalLocations || 0}</div>
                     <p className="text-xs text-muted-foreground">
                       across different sites and yards
                     </p>
@@ -214,25 +214,25 @@ export default function Inventory() {
                     <Package className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardData.totalStock}</div>
+                    <div className="text-2xl font-bold">{dashboardData.totalStock || 0}</div>
                     <p className="text-xs text-muted-foreground">
                       units across all inventory items
                     </p>
                   </CardContent>
                 </Card>
                 
-                <Card className={dashboardData.lowStockItems > 0 ? "border-amber-300" : ""}>
+                <Card className={(dashboardData.lowStockItems || 0) > 0 ? "border-amber-300" : ""}>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
                     <Package className={cn(
                       "h-4 w-4",
-                      dashboardData.lowStockItems > 0 ? "text-amber-500" : "text-muted-foreground"
+                      (dashboardData.lowStockItems || 0) > 0 ? "text-amber-500" : "text-muted-foreground"
                     )} />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardData.lowStockItems}</div>
+                    <div className="text-2xl font-bold">{dashboardData.lowStockItems || 0}</div>
                     <p className="text-xs text-muted-foreground">
-                      {dashboardData.lowStockItems > 0 
+                      {(dashboardData.lowStockItems || 0) > 0 
                         ? "items below reorder point" 
                         : "all items are in stock"}
                     </p>
@@ -246,7 +246,7 @@ export default function Inventory() {
                     <CardTitle className="text-lg">Recent Transactions</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {dashboardData.recentTransactions.length > 0 ? (
+                    {dashboardData.recentTransactions?.length > 0 ? (
                       <div className="space-y-4">
                         {dashboardData.recentTransactions.map(transaction => (
                           <div key={transaction.id} className="flex items-center justify-between">
@@ -281,12 +281,16 @@ export default function Inventory() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {dashboardData.itemsByCategory.map(category => (
+                      {dashboardData.itemsByCategory?.map(category => (
                         <div key={category.category} className="flex items-center justify-between">
                           <div className="font-medium">{category.category}</div>
                           <Badge variant="outline">{category.count}</Badge>
                         </div>
-                      ))}
+                      )) || (
+                        <div className="text-center py-4 text-muted-foreground">
+                          No categories available
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
