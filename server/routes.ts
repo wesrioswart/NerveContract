@@ -1379,6 +1379,219 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
+  // Progress Reports routes
+  app.get("/api/projects/:id/progress-reports", requireAuth, async (req: Request, res: Response) => {
+    const projectId = parseInt(req.params.id);
+    
+    if (isNaN(projectId)) {
+      return res.status(400).json({ message: "Invalid project ID" });
+    }
+    
+    const reports = await storage.getProgressReportsByProject(projectId);
+    return res.status(200).json(reports);
+  });
+
+  app.get("/api/progress-reports/:id", requireAuth, async (req: Request, res: Response) => {
+    const reportId = parseInt(req.params.id);
+    
+    if (isNaN(reportId)) {
+      return res.status(400).json({ message: "Invalid progress report ID" });
+    }
+    
+    const report = await storage.getProgressReport(reportId);
+    
+    if (!report) {
+      return res.status(404).json({ message: "Progress report not found" });
+    }
+    
+    return res.status(200).json(report);
+  });
+
+  app.post("/api/progress-reports", requireAuth, async (req: Request, res: Response) => {
+    try {
+      // Process the request body - convert date strings to Date objects
+      const processedData = {
+        ...req.body,
+        reportDate: req.body.reportDate ? new Date(req.body.reportDate) : undefined,
+        reportPeriodStart: req.body.reportPeriodStart ? new Date(req.body.reportPeriodStart) : undefined,
+        reportPeriodEnd: req.body.reportPeriodEnd ? new Date(req.body.reportPeriodEnd) : undefined,
+        forecastCompletion: req.body.forecastCompletion ? new Date(req.body.forecastCompletion) : undefined,
+        contractCompletion: req.body.contractCompletion ? new Date(req.body.contractCompletion) : undefined,
+        createdBy: (req.user as any).id
+      };
+      
+      // Validate the data
+      const validatedData = insertProgressReportSchema.parse(processedData);
+      
+      // Create the progress report
+      const report = await storage.createProgressReport(validatedData);
+      
+      // Return the created report
+      return res.status(201).json(report);
+    } catch (error) {
+      console.error("Error creating progress report:", error);
+      if (error instanceof Error) {
+        return res.status(400).json({ 
+          message: "Invalid progress report data", 
+          error: error.message 
+        });
+      }
+      return res.status(400).json({ message: "Invalid progress report data" });
+    }
+  });
+
+  app.patch("/api/progress-reports/:id", requireAuth, async (req: Request, res: Response) => {
+    const reportId = parseInt(req.params.id);
+    
+    if (isNaN(reportId)) {
+      return res.status(400).json({ message: "Invalid progress report ID" });
+    }
+    
+    try {
+      // Process the request body - convert date strings to Date objects
+      const processedData = {
+        ...req.body,
+        reportDate: req.body.reportDate ? new Date(req.body.reportDate) : undefined,
+        reportPeriodStart: req.body.reportPeriodStart ? new Date(req.body.reportPeriodStart) : undefined,
+        reportPeriodEnd: req.body.reportPeriodEnd ? new Date(req.body.reportPeriodEnd) : undefined,
+        forecastCompletion: req.body.forecastCompletion ? new Date(req.body.forecastCompletion) : undefined,
+        contractCompletion: req.body.contractCompletion ? new Date(req.body.contractCompletion) : undefined
+      };
+      
+      // Update the progress report
+      const report = await storage.updateProgressReport(reportId, processedData);
+      
+      // Return the updated report
+      return res.status(200).json(report);
+    } catch (error) {
+      console.error("Error updating progress report:", error);
+      if (error instanceof Error) {
+        return res.status(400).json({ 
+          message: "Error updating progress report", 
+          error: error.message 
+        });
+      }
+      return res.status(404).json({ message: "Progress report not found" });
+    }
+  });
+
+  app.delete("/api/progress-reports/:id", requireAuth, async (req: Request, res: Response) => {
+    const reportId = parseInt(req.params.id);
+    
+    if (isNaN(reportId)) {
+      return res.status(400).json({ message: "Invalid progress report ID" });
+    }
+    
+    try {
+      await storage.deleteProgressReport(reportId);
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting progress report:", error);
+      return res.status(500).json({ message: "Error deleting progress report" });
+    }
+  });
+
+  // AI-enhanced progress report route
+  app.post("/api/ai-assistant/generate-progress-report", requireAuth, async (req: Request, res: Response) => {
+    try {
+      if (!isOpenAIConfigured()) {
+        return res.status(400).json({ message: "OpenAI API key is not configured." });
+      }
+
+      const { projectId } = req.body;
+      
+      // Gather relevant project data for AI analysis
+      const project = await storage.getProject(projectId);
+      const compensationEvents = await storage.getCompensationEventsByProject(projectId);
+      const earlyWarnings = await storage.getEarlyWarningsByProject(projectId);
+      const nonConformanceReports = await storage.getNonConformanceReportsByProject(projectId);
+      const programmeMilestones = await storage.getProgrammeMilestonesByProject(projectId);
+      
+      // Calculate overall progress based on milestones
+      const completedMilestones = programmeMilestones.filter(m => m.status === "Completed").length;
+      const totalMilestones = programmeMilestones.length;
+      const overallProgress = totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0;
+      
+      // Get active risks from early warnings
+      const activeRisks = earlyWarnings.filter(ew => ew.status === "Open").map(ew => ({
+        riskId: ew.reference,
+        description: ew.description,
+        status: ew.status,
+        mitigation: ew.mitigationPlan || "",
+        registerLink: `/early-warnings/${ew.id}`
+      }));
+      
+      // Get compensation event impacts
+      const ceImpacts = compensationEvents.map(ce => ({
+        ceRef: ce.reference,
+        description: ce.title,
+        status: ce.status,
+        costImpact: ce.estimatedValue || 0,
+        timeImpact: 0, // Would need to calculate based on programme data
+        affectedSection: "Main Works" // This would need to come from actual section data
+      }));
+      
+      // Get issues and queries
+      const issues = nonConformanceReports.map(ncr => ({
+        ref: ncr.reference,
+        type: "NCR",
+        description: ncr.description,
+        section: ncr.location,
+        status: ncr.status,
+        raisedDate: ncr.raisedAt.toISOString().split('T')[0]
+      }));
+      
+      // Ask the AI to generate a summary based on the project data
+      const prompt = `
+      You are an NEC4 contract expert. Generate a concise insight in plain language based on this project data:
+
+      Project: ${project?.name}
+      Overall Progress: ${overallProgress.toFixed(1)}%
+      Active Risks: ${activeRisks.length}
+      Open Compensation Events: ${compensationEvents.filter(ce => ce.status !== "Accepted" && ce.status !== "Rejected").length}
+      Open NCRs: ${nonConformanceReports.filter(ncr => ncr.status === "Open").length}
+      
+      Focus on:
+      1. Current progress status
+      2. Key risks and their impact
+      3. Potential delays and mitigation strategies
+      4. Financial implications of compensation events
+      5. Quality issues from NCRs
+      
+      Keep your response under 200 words.
+      `;
+      
+      const aiSummary = await askContractAssistant(prompt);
+      
+      // Create a progress report draft
+      const reportDraft = {
+        projectId,
+        title: `Progress Report - ${new Date().toLocaleDateString()}`,
+        reportDate: new Date(),
+        reportPeriodStart: new Date(new Date().setDate(new Date().getDate() - 14)), // 2 weeks ago
+        reportPeriodEnd: new Date(),
+        overallProgress: overallProgress,
+        overallSummary: `Project is ${overallProgress.toFixed(1)}% complete.`,
+        statusColor: overallProgress > 75 ? "green" : overallProgress > 40 ? "amber" : "red",
+        risksAndEarlyWarnings: activeRisks,
+        compensationEvents: ceImpacts,
+        issuesAndQueries: issues,
+        aiSummary: aiSummary || "AI analysis could not be generated."
+      };
+      
+      return res.status(200).json(reportDraft);
+    } catch (error) {
+      console.error("Error generating progress report:", error);
+      if (error instanceof Error) {
+        return res.status(500).json({ 
+          message: "Error generating progress report", 
+          error: error.message 
+        });
+      }
+      return res.status(500).json({ message: "Error generating progress report" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

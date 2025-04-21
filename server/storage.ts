@@ -1253,6 +1253,53 @@ export class DatabaseStorage implements IStorage {
       .delete(usersToProjects)
       .where(eq(usersToProjects.id, id));
   }
+  
+  // Progress Reports methods
+  async getProgressReport(id: number): Promise<ProgressReport | undefined> {
+    const [report] = await db
+      .select()
+      .from(progressReports)
+      .where(eq(progressReports.id, id));
+    return report || undefined;
+  }
+
+  async getProgressReportsByProject(projectId: number): Promise<ProgressReport[]> {
+    return await db
+      .select()
+      .from(progressReports)
+      .where(eq(progressReports.projectId, projectId));
+  }
+
+  async createProgressReport(report: InsertProgressReport): Promise<ProgressReport> {
+    const [newReport] = await db
+      .insert(progressReports)
+      .values(report)
+      .returning();
+    return newReport;
+  }
+
+  async updateProgressReport(id: number, report: Partial<ProgressReport>): Promise<ProgressReport> {
+    const [updated] = await db
+      .update(progressReports)
+      .set({
+        ...report,
+        updatedAt: new Date()
+      })
+      .where(eq(progressReports.id, id))
+      .returning();
+      
+    if (!updated) {
+      throw new Error(`Progress Report with id ${id} not found`);
+    }
+    
+    return updated;
+  }
+
+  async deleteProgressReport(id: number): Promise<void> {
+    await db
+      .delete(progressReports)
+      .where(eq(progressReports.id, id));
+  }
 }
 
 // Create an instance of the database storage
