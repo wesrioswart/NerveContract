@@ -220,34 +220,14 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
           {!collapsed ? (
             <div className="space-y-1">
               <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
-                Templates
+                NEC4 Templates
               </h4>
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="templates" className="border-0">
-                  <AccordionTrigger className="py-2 px-3 text-sm hover:bg-blue-50 rounded-md">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-gray-500" />
-                      <span className="text-sm font-medium">NEC4 Templates</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="pt-1 pb-0">
-                    <div className="flex flex-col space-y-1 pl-8">
-                      <Link href="/templates/daily-site-report" className="text-sm py-2 px-3 rounded-md hover:bg-blue-50 text-gray-800">
-                        Daily Site Report
-                      </Link>
-                      <Link href="/templates/progress-report" className="text-sm py-2 px-3 rounded-md hover:bg-blue-50 text-gray-800">
-                        Progress Report
-                      </Link>
-                      <Link href="/templates/pmi" className="text-sm py-2 px-3 rounded-md hover:bg-blue-50 text-gray-800">
-                        Project Manager Instruction
-                      </Link>
-                      <Link href="/templates" className="text-sm py-2 px-3 rounded-md hover:bg-blue-50 text-gray-800">
-                        All Templates
-                      </Link>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+              {renderNavItems([
+                { path: "/templates/daily-site-report", label: "Daily Site Report", icon: Clipboard },
+                { path: "/templates/progress-report", label: "Progress Report", icon: BadgeCheck },
+                { path: "/templates/pmi", label: "Project Manager Instruction", icon: FileWarning },
+                { path: "/templates", label: "All Templates", icon: FileText }
+              ])}
             </div>
           ) : (
             renderNavItems([{ path: "/templates", label: "Templates", icon: FileText }])
