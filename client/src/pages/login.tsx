@@ -31,6 +31,7 @@ export default function Login({ onLogin }: LoginProps) {
     setIsLoading(true);
     
     try {
+      // This will create the server-side session
       const response = await apiRequest("POST", "/api/auth/login", {
         username,
         password,
@@ -42,6 +43,16 @@ export default function Login({ onLogin }: LoginProps) {
       }
       
       const userData = await response.json();
+      
+      // Now fetch current user to verify session is established
+      const userCheckResponse = await fetch("/api/auth/me", {
+        credentials: "include" // Important: include credentials for cookies
+      });
+      
+      if (!userCheckResponse.ok) {
+        throw new Error("Failed to establish user session");
+      }
+      
       onLogin(userData);
       
       toast({
