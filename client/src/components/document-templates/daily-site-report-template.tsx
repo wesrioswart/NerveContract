@@ -23,6 +23,7 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
 import html2pdf from 'html2pdf.js';
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
 import { AnimatedButton } from "@/components/ui/animated-button";
@@ -41,6 +42,8 @@ const teamMemberSchema = z.object({
   name: z.string().min(1, { message: 'Name is required' }),
   role: z.string().min(1, { message: 'Role is required' }),
   hours: z.number().min(0, { message: 'Hours must be non-negative' }),
+  company: z.string().optional(),
+  isSubcontractor: z.boolean().default(false),
 });
 
 // Define Plant & Equipment schema
@@ -302,6 +305,18 @@ export default function DailySiteReportTemplate() {
   // Calculate total hours from team members
   const calculateTotalLabourHours = () => {
     return formValues.teamMembers.reduce((total, member) => total + member.hours, 0);
+  };
+  
+  // Calculate and display subcontractor information
+  const getSubcontractorInfo = () => {
+    const subcontractors = formValues.teamMembers.filter(member => member.isSubcontractor && member.company);
+    const uniqueCompanies = [...new Set(subcontractors.map(sub => sub.company))];
+    
+    return {
+      count: subcontractors.length,
+      uniqueCompanies: uniqueCompanies.filter(Boolean),
+      allSubcontractors: subcontractors
+    };
   };
   
   // Handle form submission
@@ -660,7 +675,7 @@ export default function DailySiteReportTemplate() {
                 <FormItem>
                   <FormLabel>Contract Reference</FormLabel>
                   <FormControl>
-                    <Input disabled value={project.contractReference} {...field} />
+                    <Input disabled {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -831,7 +846,7 @@ export default function DailySiteReportTemplate() {
             
             {formValues.teamMembers.map((member, index) => (
               <div key={index} className="grid grid-cols-1 md:grid-cols-7 gap-4 items-end border-b pb-3">
-                <div className="md:col-span-3">
+                <div className="md:col-span-2">
                   <FormField
                     control={form.control}
                     name={`teamMembers.${index}.name`}
@@ -847,7 +862,7 @@ export default function DailySiteReportTemplate() {
                   />
                 </div>
                 
-                <div className="md:col-span-3">
+                <div className="md:col-span-2">
                   <FormField
                     control={form.control}
                     name={`teamMembers.${index}.role`}
@@ -857,6 +872,38 @@ export default function DailySiteReportTemplate() {
                         <FormControl>
                           <Input placeholder="Role" {...field} />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <FormField
+                    control={form.control}
+                    name={`teamMembers.${index}.company`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Company</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Company name" {...field} value={field.value || ''} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`teamMembers.${index}.isSubcontractor`}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-2 mt-2">
+                        <FormControl>
+                          <Checkbox 
+                            checked={field.value} 
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel className="text-xs !mt-0">Subcontractor</FormLabel>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1008,7 +1055,7 @@ export default function DailySiteReportTemplate() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Tool className="h-5 w-5 text-primary" />
+              <Wrench className="h-5 w-5 text-primary" />
               Materials
             </CardTitle>
           </CardHeader>
