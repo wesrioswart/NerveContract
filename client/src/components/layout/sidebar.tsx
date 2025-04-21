@@ -8,14 +8,12 @@ import {
   FileWarning, 
   Receipt, 
   FileText, 
-  BarChart, 
   Settings, 
   LogOut, 
   User,
   GanttChart,
   Mail,
   Clipboard,
-  FileSpreadsheet,
   BadgeCheck
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
@@ -60,12 +58,6 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   // Financial items
   const financialNavItems = [
     { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
-  ];
-
-  // Reports and Analysis items
-  const reportsNavItems = [
-    { path: "/reports", label: "Progress Reports", icon: BarChart },
-    { path: "/reports/analysis", label: "NEC4 Compliance", icon: FileSpreadsheet },
   ];
 
   // Utility items
@@ -189,16 +181,6 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
             </h4>
           )}
           {renderNavItems(financialNavItems)}
-          
-          {!collapsed && <Separator className="my-3" />}
-          
-          {/* Reports & Analysis */}
-          {!collapsed && (
-            <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
-              Reports & Analysis
-            </h4>
-          )}
-          {renderNavItems(reportsNavItems)}
         </nav>
       </div>
       
