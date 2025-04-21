@@ -39,6 +39,10 @@ const formSchema = z.object({
   reportDate: z.date(),
   contractReference: z.string().min(1, { message: 'Contract reference is required' }),
   
+  // Reporter Details
+  reporterPosition: z.enum(['Contractor', 'Project Manager', 'Supervisor', 'Quantity Surveyor', 'Employer', 'Other']),
+  reporterName: z.string().min(1, { message: 'Your name is required' }),
+  
   // Project Details
   contractName: z.string().min(1, { message: 'Contract name is required' }),
   employerName: z.string().min(1, { message: 'Employer name is required' }),
@@ -178,6 +182,10 @@ export default function ProgressReportTemplate() {
       },
       reportDate: new Date(),
       contractReference: project?.contractReference || '',
+      
+      // Reporter details
+      reporterPosition: 'Contractor',
+      reporterName: '',
       
       contractName: project?.name || '',
       employerName: project?.clientName || '',
@@ -493,6 +501,63 @@ export default function ProgressReportTemplate() {
             </CardContent>
           </Card>
           
+          {/* Reporter Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Info className="h-5 w-5 text-primary" />
+                Reporter Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="reporterPosition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your Position</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your position" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Contractor">Contractor</SelectItem>
+                        <SelectItem value="Project Manager">Project Manager</SelectItem>
+                        <SelectItem value="Supervisor">Supervisor</SelectItem>
+                        <SelectItem value="Quantity Surveyor">Quantity Surveyor</SelectItem>
+                        <SelectItem value="Employer">Employer</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Your position in the NEC4 contract hierarchy
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="reporterName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Smith" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Your full name as the person completing this report
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
           {/* Project Details */}
           <Card>
             <CardHeader>
@@ -1579,6 +1644,14 @@ export default function ProgressReportTemplate() {
             <div>
               <div className="text-sm font-medium text-gray-500">Project Manager:</div>
               <div>{watchedValues.projectManagerName}</div>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-2 bg-blue-50 rounded-md border border-blue-100">
+            <div className="text-sm font-medium text-blue-800">Report Prepared By:</div>
+            <div className="flex justify-between items-center">
+              <div className="font-medium">{watchedValues.reporterName}</div>
+              <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">{watchedValues.reporterPosition}</div>
             </div>
           </div>
         </div>
