@@ -1,0 +1,49 @@
+Layer | Task Description
+📚 Preprocessing | Extract named entities (dates, teams, locations, quantities)
+🧠 NLP Summary Engine | Convert diary text into structured daily logs
+⚠️ Trigger Detection | If key terms appear (e.g., “delay”, “variation”, “unexpected condition”) ➜ flag potential CE/NCR
+📈 Progress Inference | Match completed work vs planned tasks using programme sync
+🗂️ Data Grouping | Sort logs by section (e.g., Groundworks, M&E, Civils)
+📊 Trend Analysis | Detect recurring issues, productivity drops, risk clusters
+🧾 CE Suggestion Engine | Draft potential CE entries from daily log data and link them to causes
+🧾 Summary Generator | Weekly summary pulls: % complete, key wins, delays, forecast impacts
+📤 Report Exporter | PDF  / API push to reporting dashboard      Exactly — you’re thinking like a system designer now, and this is *spot on*.
+
+Let me break this into a **reporting model** that gives both:
+
+---
+
+## 🔭 **Two-Tier Reporting Model for NEC4 AI System**
+
+### **1. Executive Overview Report** (Bird's Eye View)
+> *Ideal for client, PM, commercial manager, or senior stakeholders*
+
+**Frequency:** Weekly or Milestone-based  
+**Powered by:** Summarised data from daily reports, CE logs, programme sync
+
+**Content:**
+- 🧭 **Overall % complete**
+- 🚦 **Key Milestones: Met / Slipping**
+- 📉 **Programme health:** Ahead / On Track / Behind (e.g. Gantt drift summary)
+- ⚠️ **Active Risks or EWNs**
+- 💸 **Major CEs + Cost/Time Summary**
+- 📊 **Phase Breakdown Snapshot**
+- 📌 **AI Insights** (e.g., “Workfront X has had 4 NCRs and is trending late”)
+
+---
+
+### **2. Detailed Progress Report** (Ops View)
+> *For engineers, supervisors, site managers, planners, and QS*
+
+**Frequency:** Daily or Weekly  
+**Powered by:** Site diaries, timesheets, photo uploads, CE notifications
+
+**Content:**
+- 📅 **Date + Section Summary**
+- 👷 **Labour / Plant / Material Allocation**
+- 📌 **Tasks completed**
+- 🔧 **In-progress tasks**
+- 🛑 **Delays + reasons**
+- 📷 **Photo log (with tags like “pre-pour”, “rework”, “weather”)**
+- 🧾 **Linked NCRs, TQRs, EWNs**
+- 📈 **Auto-generated CE suggestions** from site conditions

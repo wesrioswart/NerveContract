@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt, BarChart2 } from "lucide-react";
+import { AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt, BarChart2, Calendar, FileText } from "lucide-react";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
@@ -15,6 +15,7 @@ import NCRTemplate from '@/components/document-templates/ncr-template';
 import TechnicalQueryTemplate from '@/components/document-templates/technical-query-template';
 import PaymentApplicationTemplate from '@/components/document-templates/payment-application-template';
 import ProgressReportTemplate from '@/components/document-templates/progress-report-template-tabs';
+import DailySiteReportTemplate from '@/components/document-templates/daily-site-report-template';
 
 export default function TemplatesPage() {
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
@@ -36,6 +37,8 @@ export default function TemplatesPage() {
         return <PaymentApplicationTemplate />;
       case 'progress-report':
         return <ProgressReportTemplate />;
+      case 'daily-site-report':
+        return <DailySiteReportTemplate />;
       default:
         return (
           <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -242,6 +245,34 @@ export default function TemplatesPage() {
               animation="default"
             >
               Create Payment Application
+            </AnimatedButton>
+          </CardFooter>
+        </AnimatedCard>
+
+        {/* Template Card - Daily Site Report */}
+        <AnimatedCard animation="hover" index={7} className="border-2 border-cyan-500">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Daily Site Report</CardTitle>
+              <Calendar className="text-cyan-500 w-5 h-5" />
+            </div>
+            <CardDescription>
+              Template for recording daily site activities and progress
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500">
+              Use this template to record daily site activities, labor, plant, materials, progress, 
+              and issues. The AI will analyze reports to identify risks and update executive dashboards.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <AnimatedButton 
+              onClick={() => setActiveTemplate('daily-site-report')}
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white"
+              animation="default"
+            >
+              Create Daily Site Report
             </AnimatedButton>
           </CardFooter>
         </AnimatedCard>
