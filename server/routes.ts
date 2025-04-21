@@ -39,7 +39,7 @@ const documentAnalysisSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Configure express-session
+  // Configure express-session with storage
   app.use(
     session({
       secret: 'nec4-contract-manager-secret',
@@ -47,8 +47,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       saveUninitialized: false,
       cookie: {
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-      }
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        httpOnly: true
+      },
+      store: storage.sessionStore
     })
   );
 
