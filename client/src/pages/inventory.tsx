@@ -79,15 +79,27 @@ export default function Inventory() {
   const [viewItemId, setViewItemId] = useState<number | null>(null);
   const [viewLocationId, setViewLocationId] = useState<number | null>(null);
 
+  // Add totalStock property to each item
+  const itemsWithTotalStock = items.map(item => ({
+    ...item,
+    totalStock: 0 // This would normally come from the API, we're setting a default for now
+  }));
+
+  // Add itemCount property to each location
+  const locationsWithItemCount = locations.map(location => ({
+    ...location,
+    itemCount: 0 // This would normally come from the API, we're setting a default for now
+  }));
+
   // Filter items based on search query
-  const filteredItems = items.filter(item => 
+  const filteredItems = itemsWithTotalStock.filter(item => 
     item.name.toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
     item.code.toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
     item.category.toLowerCase().includes(itemSearchQuery.toLowerCase())
   );
 
   // Filter locations based on search query
-  const filteredLocations = locations.filter(location => 
+  const filteredLocations = locationsWithItemCount.filter(location => 
     location.name.toLowerCase().includes(locationSearchQuery.toLowerCase()) ||
     location.type.toLowerCase().includes(locationSearchQuery.toLowerCase())
   );
