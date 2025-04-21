@@ -77,7 +77,9 @@ export default function Suppliers() {
   const filteredSuppliers = suppliers.filter((supplier: any) => 
     supplier.name.toLowerCase().includes(supplierSearchQuery.toLowerCase()) ||
     (supplier.accountNumber && supplier.accountNumber.toLowerCase().includes(supplierSearchQuery.toLowerCase())) ||
-    (supplier.contactPerson && supplier.contactPerson.toLowerCase().includes(supplierSearchQuery.toLowerCase()))
+    (supplier.contactPerson && supplier.contactPerson.toLowerCase().includes(supplierSearchQuery.toLowerCase())) ||
+    (supplier.contactEmail && supplier.contactEmail.toLowerCase().includes(supplierSearchQuery.toLowerCase())) ||
+    (supplier.contactPhone && supplier.contactPhone.toLowerCase().includes(supplierSearchQuery.toLowerCase()))
   );
 
   // Filter performance records based on search query
@@ -181,9 +183,9 @@ export default function Suppliers() {
                       </TableCell>
                       <TableCell>{supplier.contactPerson || '—'}</TableCell>
                       <TableCell>
-                        <div>{supplier.email || '—'}</div>
+                        <div>{supplier.contactEmail || '—'}</div>
                         <div className="text-sm text-muted-foreground">
-                          {supplier.phone || '—'}
+                          {supplier.contactPhone || '—'}
                         </div>
                       </TableCell>
                       <TableCell>{supplier.accountNumber || '—'}</TableCell>
@@ -232,12 +234,12 @@ export default function Suppliers() {
                     </div>
                     
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Email</label>
+                      <label className="text-sm font-medium">Contact Email</label>
                       <Input placeholder="e.g. contact@supplier.com" type="email" />
                     </div>
                     
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Phone</label>
+                      <label className="text-sm font-medium">Contact Phone</label>
                       <Input placeholder="e.g. +44 20 7123 4567" />
                     </div>
                   </div>
