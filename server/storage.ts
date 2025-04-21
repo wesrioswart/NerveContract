@@ -604,12 +604,19 @@ export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
   
   constructor() {
-    // Initialize PostgreSQL session store
+    // Initialize PostgreSQL session store with robust configuration
     const PostgresStore = connectPg(session);
     this.sessionStore = new PostgresStore({
       pool,
       createTableIfMissing: true,
-      tableName: 'session' 
+      tableName: 'session',
+      // Add these parameters for more reliable session storage
+      pruneSessionInterval: 60, // Prune invalid sessions every 60 seconds
+      errorLog: console.error, // Log any session store errors
+      conObject: {
+        connectionString: process.env.DATABASE_URL,
+        ssl: false // Set to true in production with proper certificates
+      }
     });
   }
   

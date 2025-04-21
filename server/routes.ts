@@ -47,10 +47,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       saveUninitialized: false,
       cookie: {
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days for longer persistence
         httpOnly: true
       },
-      store: storage.sessionStore
+      store: storage.sessionStore,
+      // Add rolling session to extend timeout on activity
+      rolling: true
     })
   );
 
