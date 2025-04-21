@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useUser } from "@/contexts/user-context";
 
 type LoginProps = {
-  onLogin: (user: any) => void;
+  onLogin: () => void;
 };
 
 export default function Login({ onLogin }: LoginProps) {
@@ -15,6 +16,7 @@ export default function Login({ onLogin }: LoginProps) {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { setUser, refreshUser } = useUser();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,16 +46,14 @@ export default function Login({ onLogin }: LoginProps) {
       
       const userData = await response.json();
       
-      // Now fetch current user to verify session is established
-      const userCheckResponse = await fetch("/api/auth/me", {
-        credentials: "include" // Important: include credentials for cookies
-      });
+      // Update the user context with the logged in user
+      setUser(userData);
       
-      if (!userCheckResponse.ok) {
-        throw new Error("Failed to establish user session");
-      }
+      // Refresh user data to ensure the session is established
+      await refreshUser();
       
-      onLogin(userData);
+      // Call the onLogin callback to navigate away
+      onLogin();
       
       toast({
         title: "Welcome",

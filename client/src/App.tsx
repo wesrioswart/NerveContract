@@ -21,27 +21,24 @@ import Login from "@/pages/login";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ProjectProvider } from "./contexts/project-context";
-import { UserProvider } from "./contexts/user-context";
+import { UserProvider, useUser } from "./contexts/user-context";
 import FloatingAssistant from "./components/ai-assistant/floating-assistant";
+import { Loader2 } from "lucide-react";
 
-function App() {
+// AppContent component that uses the UserProvider context
+function AppContent() {
   const [location, setLocation] = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const { user, isAuthenticated, isLoading, logout } = useUser();
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [currentForm, setCurrentForm] = useState<string | undefined>(undefined);
   const [currentFormData, setCurrentFormData] = useState<Record<string, any> | undefined>(undefined);
 
+  // Redirect to login if not authenticated
   useEffect(() => {
-    // Check if user is logged in
-    const user = localStorage.getItem("user");
-    if (user) {
-      setIsLoggedIn(true);
-      setCurrentUser(JSON.parse(user));
-    } else if (location !== "/login") {
+    if (!isLoading && !isAuthenticated && location !== "/login") {
       setLocation("/login");
     }
-  }, [location, setLocation]);
+  }, [isAuthenticated, isLoading, location, setLocation]);
 
   // Set current form based on route
   useEffect(() => {
@@ -64,30 +61,25 @@ function App() {
     setCurrentFormData(undefined);
   }, [location]);
 
-  const handleLogin = (user: any) => {
-    setIsLoggedIn(true);
-    setCurrentUser(user);
-    localStorage.setItem("user", JSON.stringify(user));
-    setLocation("/");
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setCurrentUser(null);
-    localStorage.removeItem("user");
-    setLocation("/login");
-  };
-
-  if (!isLoggedIn && location !== "/login") {
+  // Show loading indicator while checking auth status
+  if (isLoading) {
     return (
-      <Login onLogin={handleLogin} />
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="animate-spin h-12 w-12 text-primary mx-auto mb-4" />
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
     );
   }
 
+  // Show login screen if not authenticated
+  if (!isAuthenticated && location !== "/login") {
+    return <Login onLogin={() => setLocation("/")} />;
+  }
+
   if (location === "/login") {
-    return (
-      <Login onLogin={handleLogin} />
-    );
+    return <Login onLogin={() => setLocation("/")} />;
   }
 
   const toggleSidebar = () => {
@@ -95,61 +87,66 @@ function App() {
   };
 
   return (
-    <UserProvider>
-      <ProjectProvider>
-        <div className="app-container flex h-screen overflow-hidden bg-gray-50">
-          <Sidebar 
-            user={currentUser} 
-            onLogout={handleLogout} 
-            collapsed={sidebarCollapsed}
-            onToggle={toggleSidebar}
+    <ProjectProvider>
+      <div className="app-container flex h-screen overflow-hidden bg-gray-50">
+        <Sidebar 
+          user={user} 
+          onLogout={logout} 
+          collapsed={sidebarCollapsed}
+          onToggle={toggleSidebar}
+        />
+        
+        <div className={cn(
+          "flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+          sidebarCollapsed ? "ml-16" : "ml-64"
+        )}>
+          <Header 
+            user={user} 
+            onToggleSidebar={toggleSidebar}
+            sidebarCollapsed={sidebarCollapsed}
           />
           
-          <div className={cn(
-            "flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
-            sidebarCollapsed ? "ml-16" : "ml-64"
-          )}>
-            <Header 
-              user={currentUser} 
-              onToggleSidebar={toggleSidebar}
-              sidebarCollapsed={sidebarCollapsed}
-            />
-            
-            <main className="flex-1 overflow-y-auto p-6">
-              <div className="container mx-auto max-w-7xl">
-                <Switch>
-                  <Route path="/" component={Dashboard} />
-                  <Route path="/ai-assistant" component={AIAssistant} />
-                  <Route path="/compensation-events" component={CompensationEvents} />
-                  <Route path="/early-warnings" component={EarlyWarnings} />
-                  <Route path="/ncr-tqr" component={NCRTqr} />
-                  <Route path="/programme" component={Programme} />
-                  <Route path="/programme-management" component={ProgrammeManagement} />
-                  <Route path="/payment-certificates" component={PaymentCertificates} />
-                  <Route path="/reports" component={Reports} />
-                  <Route path="/templates" component={Templates} />
-                  <Route path="/procurement" component={Procurement} />
-                  <Route path="/suppliers" component={Suppliers} />
-                  <Route path="/inventory" component={Inventory} />
-                  <Route path="/email-processor" component={EmailProcessor} />
-                  <Route component={NotFound} />
-                </Switch>
-              </div>
-            </main>
-          </div>
-          
-          {/* Floating AI Assistant */}
-          {isLoggedIn && currentUser && (
-            <FloatingAssistant
-              userId={currentUser.id}
-              currentForm={currentForm}
-              currentData={currentFormData}
-            />
-          )}
-          
-          <Toaster />
+          <main className="flex-1 overflow-y-auto p-6">
+            <div className="container mx-auto max-w-7xl">
+              <Switch>
+                <Route path="/" component={Dashboard} />
+                <Route path="/ai-assistant" component={AIAssistant} />
+                <Route path="/compensation-events" component={CompensationEvents} />
+                <Route path="/early-warnings" component={EarlyWarnings} />
+                <Route path="/ncr-tqr" component={NCRTqr} />
+                <Route path="/programme" component={Programme} />
+                <Route path="/programme-management" component={ProgrammeManagement} />
+                <Route path="/payment-certificates" component={PaymentCertificates} />
+                <Route path="/reports" component={Reports} />
+                <Route path="/templates" component={Templates} />
+                <Route path="/procurement" component={Procurement} />
+                <Route path="/suppliers" component={Suppliers} />
+                <Route path="/inventory" component={Inventory} />
+                <Route path="/email-processor" component={EmailProcessor} />
+                <Route component={NotFound} />
+              </Switch>
+            </div>
+          </main>
         </div>
-      </ProjectProvider>
+        
+        {/* Floating AI Assistant */}
+        {isAuthenticated && user && (
+          <FloatingAssistant
+            userId={user.id}
+            currentForm={currentForm}
+            currentData={currentFormData}
+          />
+        )}
+      </div>
+    </ProjectProvider>
+  );
+}
+
+function App() {
+  return (
+    <UserProvider>
+      <AppContent />
+      <Toaster />
     </UserProvider>
   );
 }
