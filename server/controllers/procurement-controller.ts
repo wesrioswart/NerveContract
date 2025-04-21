@@ -61,6 +61,99 @@ export const getSuppliers = async (req: Request, res: Response) => {
     }
     
     const allSuppliers = await query.orderBy(asc(suppliers.name));
+    
+    // If we have no suppliers, return mock data for demonstration
+    if (allSuppliers.length === 0) {
+      const mockSuppliers = [
+        {
+          id: 1,
+          name: "Thurrock Engineering",
+          contactPerson: "Ross Fullbrook",
+          email: "ross.fullbrook@thurrockengineering.com",
+          phone: "+44 20 7123 4567",
+          address: "58 River Road, Barking, IG11 0DS",
+          accountNumber: "THUR-2023-001",
+          isGpsmacs: true,
+          createdAt: new Date(),
+          updatedAt: null
+        },
+        {
+          id: 2,
+          name: "City Materials Ltd",
+          contactPerson: "Sarah Johnson",
+          email: "sarah.j@citymaterials.co.uk",
+          phone: "+44 20 7890 1234",
+          address: "Unit 7, Industrial Estate, Manchester, M1 1AB",
+          accountNumber: "CITY-2022-154",
+          isGpsmacs: true,
+          createdAt: new Date(),
+          updatedAt: null
+        },
+        {
+          id: 3,
+          name: "FastTrack Equipment Hire",
+          contactPerson: "David Williams",
+          email: "d.williams@fasttrackequipment.com",
+          phone: "+44 20 7456 7890",
+          address: "245 Hire Way, Birmingham, B2 5QT",
+          accountNumber: "FAST-2023-078",
+          isGpsmacs: false,
+          createdAt: new Date(),
+          updatedAt: null
+        },
+        {
+          id: 4,
+          name: "SafeGuard PPE Solutions",
+          contactPerson: "Emma Parker",
+          email: "sales@safeguardppe.com",
+          phone: "+44 20 7234 5678",
+          address: "Safety House, 12 Protection Road, Leeds, LS1 4BD",
+          accountNumber: "SAFE-2023-042",
+          isGpsmacs: true,
+          createdAt: new Date(),
+          updatedAt: null
+        },
+        {
+          id: 5,
+          name: "Concrete Express",
+          contactPerson: "Michael Thompson",
+          email: "m.thompson@concreteexpress.co.uk",
+          phone: "+44 20 7345 6789",
+          address: "78 Cement Lane, Glasgow, G1 2CD",
+          accountNumber: "CONC-2022-031",
+          isGpsmacs: true,
+          createdAt: new Date(),
+          updatedAt: null
+        },
+        {
+          id: 6,
+          name: "Eco Timber Supplies",
+          contactPerson: "Lisa Chen",
+          email: "l.chen@ecotimber.co.uk",
+          phone: "+44 20 7654 3210",
+          address: "145 Green Way, Bristol, BS1 3FD",
+          accountNumber: "ECO-2023-098",
+          isGpsmacs: true,
+          createdAt: new Date(),
+          updatedAt: null
+        },
+        {
+          id: 7,
+          name: "PowerTech Electrical",
+          contactPerson: "James Wilson",
+          email: "j.wilson@powertechelectrical.com",
+          phone: "+44 20 7987 6543",
+          address: "Voltage House, 72 Circuit Road, Newcastle, NE1 2ET",
+          accountNumber: "POWER-2022-123",
+          isGpsmacs: false,
+          createdAt: new Date(),
+          updatedAt: null
+        }
+      ];
+      
+      return res.json(mockSuppliers);
+    }
+    
     res.json(allSuppliers);
   } catch (error) {
     console.error("Error fetching suppliers:", error);
@@ -289,6 +382,182 @@ export const updatePurchaseOrderStatus = async (req: Request, res: Response) => 
   } catch (error) {
     console.error("Error updating purchase order status:", error);
     res.status(500).json({ error: "Failed to update purchase order status" });
+  }
+};
+
+// Supplier Performance records
+export const getSupplierPerformance = async (_req: Request, res: Response) => {
+  try {
+    // Mock performance data for demonstration
+    const mockPerformanceRecords = [
+      {
+        id: 1,
+        supplierId: 1,
+        supplierName: "Thurrock Engineering",
+        projectId: 1,
+        projectName: "Westfield Development Project",
+        performanceDate: new Date(2025, 3, 12),
+        category: "quality",
+        rating: 4,
+        comments: "Materials delivered were of high quality, matching specifications exactly.",
+        reviewer: "Jane Cooper",
+        createdAt: new Date(2025, 3, 12)
+      },
+      {
+        id: 2,
+        supplierId: 1,
+        supplierName: "Thurrock Engineering",
+        projectId: 1,
+        projectName: "Westfield Development Project",
+        performanceDate: new Date(2025, 3, 5),
+        category: "delivery",
+        rating: 3,
+        comments: "Delivery was 1 day late but they communicated well about the delay.",
+        reviewer: "Jane Cooper",
+        createdAt: new Date(2025, 3, 5)
+      },
+      {
+        id: 3,
+        supplierId: 2,
+        supplierName: "City Materials Ltd",
+        projectId: 1,
+        projectName: "Westfield Development Project",
+        performanceDate: new Date(2025, 3, 10),
+        category: "quality",
+        rating: 5,
+        comments: "Exceptional quality on all items supplied.",
+        reviewer: "Jane Cooper",
+        createdAt: new Date(2025, 3, 10)
+      },
+      {
+        id: 4,
+        supplierId: 3,
+        supplierName: "FastTrack Equipment Hire",
+        projectId: 1,
+        projectName: "Westfield Development Project",
+        performanceDate: new Date(2025, 3, 2),
+        category: "service",
+        rating: 2,
+        comments: "Equipment arrived in poor condition and technical support was difficult to reach.",
+        reviewer: "Jane Cooper",
+        createdAt: new Date(2025, 3, 2)
+      },
+      {
+        id: 5,
+        supplierId: 4,
+        supplierName: "SafeGuard PPE Solutions",
+        projectId: 1,
+        projectName: "Westfield Development Project",
+        performanceDate: new Date(2025, 3, 8),
+        category: "quality",
+        rating: 5,
+        comments: "All PPE exceeded safety standards and was delivered with proper certification.",
+        reviewer: "Jane Cooper",
+        createdAt: new Date(2025, 3, 8)
+      },
+      {
+        id: 6,
+        supplierId: 5,
+        supplierName: "Concrete Express",
+        projectId: 1,
+        projectName: "Westfield Development Project",
+        performanceDate: new Date(2025, 2, 25),
+        category: "delivery",
+        rating: 5,
+        comments: "On-time delivery and excellent communication.",
+        reviewer: "Jane Cooper",
+        createdAt: new Date(2025, 2, 25)
+      }
+    ];
+    
+    res.json(mockPerformanceRecords);
+  } catch (error) {
+    console.error("Error fetching supplier performance:", error);
+    res.status(500).json({ error: "Failed to fetch supplier performance records" });
+  }
+};
+
+// Supplier Invoices
+export const getSupplierInvoices = async (_req: Request, res: Response) => {
+  try {
+    // Mock invoice data for demonstration
+    const mockInvoices = [
+      {
+        id: 1,
+        supplierId: 1,
+        supplierName: "Thurrock Engineering",
+        invoiceNumber: "INV-2025-0042",
+        purchaseOrderId: 1,
+        purchaseOrderReference: "PO-2025-0001",
+        amount: 4586.40,
+        status: "paid",
+        invoiceDate: new Date(2025, 3, 5),
+        dueDate: new Date(2025, 4, 5),
+        paidDate: new Date(2025, 3, 15),
+        createdAt: new Date(2025, 3, 5)
+      },
+      {
+        id: 2,
+        supplierId: 2,
+        supplierName: "City Materials Ltd",
+        invoiceNumber: "INV-2025-1124",
+        purchaseOrderId: 2,
+        purchaseOrderReference: "PO-2025-0002",
+        amount: 2350.75,
+        status: "pending",
+        invoiceDate: new Date(2025, 3, 10),
+        dueDate: new Date(2025, 4, 10),
+        paidDate: null,
+        createdAt: new Date(2025, 3, 10)
+      },
+      {
+        id: 3,
+        supplierId: 3,
+        supplierName: "FastTrack Equipment Hire",
+        invoiceNumber: "INV-2025-0078",
+        purchaseOrderId: 3,
+        purchaseOrderReference: "PO-2025-0003",
+        amount: 1890.00,
+        status: "overdue",
+        invoiceDate: new Date(2025, 2, 15),
+        dueDate: new Date(2025, 3, 15),
+        paidDate: null,
+        createdAt: new Date(2025, 2, 15)
+      },
+      {
+        id: 4,
+        supplierId: 4,
+        supplierName: "SafeGuard PPE Solutions",
+        invoiceNumber: "INV-2025-0356",
+        purchaseOrderId: 4,
+        purchaseOrderReference: "PO-2025-0004",
+        amount: 3456.25,
+        status: "paid",
+        invoiceDate: new Date(2025, 2, 20),
+        dueDate: new Date(2025, 3, 20),
+        paidDate: new Date(2025, 3, 10),
+        createdAt: new Date(2025, 2, 20)
+      },
+      {
+        id: 5,
+        supplierId: 5,
+        supplierName: "Concrete Express",
+        invoiceNumber: "INV-2025-0987",
+        purchaseOrderId: 5,
+        purchaseOrderReference: "PO-2025-0005",
+        amount: 12568.50,
+        status: "pending",
+        invoiceDate: new Date(2025, 3, 18),
+        dueDate: new Date(2025, 4, 18),
+        paidDate: null,
+        createdAt: new Date(2025, 3, 18)
+      }
+    ];
+    
+    res.json(mockInvoices);
+  } catch (error) {
+    console.error("Error fetching supplier invoices:", error);
+    res.status(500).json({ error: "Failed to fetch supplier invoices" });
   }
 };
 
