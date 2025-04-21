@@ -497,3 +497,288 @@ export const progressReportRelations = relations(progressReports, ({ one }) => (
 
 export type ProgressReport = typeof progressReports.$inferSelect;
 export type InsertProgressReport = z.infer<typeof insertProgressReportSchema>;
+
+// Procurement and Inventory Management
+
+// Nominal Codes from GPSMACS system
+export const nominalCodes = pgTable("nominal_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // e.g. 5399
+  description: text("description").notNull(), // e.g. "OTHER SITE CONSUMABLES"
+  category: text("category").notNull(), // e.g. "MATERIAL COSTS", "PLANT COSTS"
+  isProjectSpecific: boolean("is_project_specific").notNull(), // 5000-6999 (true) or 7000-8999 (false)
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Suppliers
+export const suppliers = pgTable("suppliers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  contactPerson: text("contact_person"),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
+  address: text("address"),
+  isPreferred: boolean("is_preferred").default(false),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Purchase Orders
+export const purchaseOrders = pgTable("purchase_orders", {
+  id: serial("id").primaryKey(),
+  reference: text("reference").notNull().unique(), // Generated PO number
+  projectId: integer("project_id").references(() => projects.id),
+  nominalCodeId: integer("nominal_code_id").notNull().references(() => nominalCodes.id),
+  description: text("description").notNull(),
+  deliveryMethod: text("delivery_method").notNull(), // "delivery" or "collection"
+  hireDuration: text("hire_duration"), // N/A for purchases
+  estimatedCost: integer("estimated_cost").notNull(), // Stored in pennies/cents
+  totalCost: integer("total_cost").notNull(), // Stored in pennies/cents
+  vatIncluded: boolean("vat_included").notNull(),
+  supplierId: integer("supplier_id").notNull().references(() => suppliers.id),
+  deliveryDate: text("delivery_date").notNull(), // Using text to handle various formats like "After Easter"
+  deliveryAddress: text("delivery_address").notNull(),
+  status: text("status", { 
+    enum: ["draft", "pending_approval", "approved", "ordered", "delivered", "completed", "cancelled"] 
+  }).notNull().default("draft"),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Purchase Order Items
+export const purchaseOrderItems = pgTable("purchase_order_items", {
+  id: serial("id").primaryKey(),
+  purchaseOrderId: integer("purchase_order_id").notNull().references(() => purchaseOrders.id),
+  description: text("description").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  unitPrice: integer("unit_price").notNull(), // Stored in pennies/cents
+  unit: text("unit").default("item"), // e.g., "each", "kg", "m", etc.
+  vatRate: integer("vat_rate").notNull().default(20), // percentage
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Inventory Items (Stock)
+export const inventoryItems = pgTable("inventory_items", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // Internal stock code
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(), // e.g., "Materials", "Plant", "PPE", "Tools"
+  subcategory: text("subcategory"), // More specific categorization
+  nominalCodeId: integer("nominal_code_id").references(() => nominalCodes.id),
+  unit: text("unit").notNull().default("each"), // Unit of measurement
+  minStockLevel: integer("min_stock_level").default(0),
+  maxStockLevel: integer("max_stock_level"),
+  reorderPoint: integer("reorder_point").default(0),
+  unitCost: integer("unit_cost"), // Average cost in pennies/cents
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Inventory Locations (Yards, Stores)
+export const inventoryLocations = pgTable("inventory_locations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // e.g., "Barking Yard", "Main Store"
+  address: text("address"),
+  type: text("type", { enum: ["yard", "store", "warehouse", "site"] }).notNull(),
+  contactPerson: text("contact_person"),
+  contactPhone: text("contact_phone"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Stock Levels - tracks quantities at specific locations
+export const stockLevels = pgTable("stock_levels", {
+  id: serial("id").primaryKey(),
+  itemId: integer("item_id").notNull().references(() => inventoryItems.id),
+  locationId: integer("location_id").notNull().references(() => inventoryLocations.id),
+  quantity: integer("quantity").notNull().default(0),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// Stock Transactions - tracks movements of inventory
+export const stockTransactions = pgTable("stock_transactions", {
+  id: serial("id").primaryKey(),
+  itemId: integer("item_id").notNull().references(() => inventoryItems.id),
+  type: text("type", { 
+    enum: ["purchase", "issue", "return", "transfer", "adjustment", "stocktake"]
+  }).notNull(),
+  quantity: integer("quantity").notNull(),
+  fromLocationId: integer("from_location_id").references(() => inventoryLocations.id),
+  toLocationId: integer("to_location_id").references(() => inventoryLocations.id),
+  projectId: integer("project_id").references(() => projects.id), // If allocated to a project
+  purchaseOrderId: integer("purchase_order_id").references(() => purchaseOrders.id),
+  comments: text("comments"),
+  transactionDate: timestamp("transaction_date").defaultNow(),
+  performedBy: integer("performed_by").notNull().references(() => users.id),
+});
+
+// Define relations
+export const nominalCodesRelations = relations(nominalCodes, ({ many }) => ({
+  purchaseOrders: many(purchaseOrders),
+  inventoryItems: many(inventoryItems),
+}));
+
+export const suppliersRelations = relations(suppliers, ({ many }) => ({
+  purchaseOrders: many(purchaseOrders),
+}));
+
+export const purchaseOrdersRelations = relations(purchaseOrders, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [purchaseOrders.projectId],
+    references: [projects.id],
+  }),
+  nominalCode: one(nominalCodes, {
+    fields: [purchaseOrders.nominalCodeId],
+    references: [nominalCodes.id],
+  }),
+  supplier: one(suppliers, {
+    fields: [purchaseOrders.supplierId],
+    references: [suppliers.id],
+  }),
+  creator: one(users, {
+    fields: [purchaseOrders.createdBy],
+    references: [users.id],
+  }),
+  approver: one(users, {
+    fields: [purchaseOrders.approvedBy],
+    references: [users.id],
+  }),
+  items: many(purchaseOrderItems),
+  stockTransactions: many(stockTransactions),
+}));
+
+export const purchaseOrderItemsRelations = relations(purchaseOrderItems, ({ one }) => ({
+  purchaseOrder: one(purchaseOrders, {
+    fields: [purchaseOrderItems.purchaseOrderId],
+    references: [purchaseOrders.id],
+  }),
+}));
+
+export const inventoryItemsRelations = relations(inventoryItems, ({ one, many }) => ({
+  nominalCode: one(nominalCodes, {
+    fields: [inventoryItems.nominalCodeId],
+    references: [nominalCodes.id],
+  }),
+  stockLevels: many(stockLevels),
+  stockTransactions: many(stockTransactions),
+}));
+
+export const inventoryLocationsRelations = relations(inventoryLocations, ({ many }) => ({
+  stockLevels: many(stockLevels),
+  stockTransactionsFrom: many(stockTransactions, { relationName: "fromLocation" }),
+  stockTransactionsTo: many(stockTransactions, { relationName: "toLocation" }),
+}));
+
+export const stockLevelsRelations = relations(stockLevels, ({ one }) => ({
+  item: one(inventoryItems, {
+    fields: [stockLevels.itemId],
+    references: [inventoryItems.id],
+  }),
+  location: one(inventoryLocations, {
+    fields: [stockLevels.locationId],
+    references: [inventoryLocations.id],
+  }),
+}));
+
+export const stockTransactionsRelations = relations(stockTransactions, ({ one }) => ({
+  item: one(inventoryItems, {
+    fields: [stockTransactions.itemId],
+    references: [inventoryItems.id],
+  }),
+  fromLocation: one(inventoryLocations, {
+    fields: [stockTransactions.fromLocationId],
+    references: [inventoryLocations.id],
+  }),
+  toLocation: one(inventoryLocations, {
+    fields: [stockTransactions.toLocationId],
+    references: [inventoryLocations.id],
+  }),
+  project: one(projects, {
+    fields: [stockTransactions.projectId],
+    references: [projects.id],
+  }),
+  purchaseOrder: one(purchaseOrders, {
+    fields: [stockTransactions.purchaseOrderId],
+    references: [purchaseOrders.id],
+  }),
+  performedByUser: one(users, {
+    fields: [stockTransactions.performedBy],
+    references: [users.id],
+  }),
+}));
+
+// Create insert schemas
+export const insertNominalCodeSchema = createInsertSchema(nominalCodes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSupplierSchema = createInsertSchema(suppliers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPurchaseOrderSchema = createInsertSchema(purchaseOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  approvedAt: true,
+});
+
+export const insertPurchaseOrderItemSchema = createInsertSchema(purchaseOrderItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertInventoryLocationSchema = createInsertSchema(inventoryLocations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertStockLevelSchema = createInsertSchema(stockLevels).omit({
+  id: true,
+  lastUpdated: true,
+});
+
+export const insertStockTransactionSchema = createInsertSchema(stockTransactions).omit({
+  id: true,
+  transactionDate: true,
+});
+
+// Define types
+export type NominalCode = typeof nominalCodes.$inferSelect;
+export type InsertNominalCode = z.infer<typeof insertNominalCodeSchema>;
+
+export type Supplier = typeof suppliers.$inferSelect;
+export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
+
+export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
+export type InsertPurchaseOrder = z.infer<typeof insertPurchaseOrderSchema>;
+
+export type PurchaseOrderItem = typeof purchaseOrderItems.$inferSelect;
+export type InsertPurchaseOrderItem = z.infer<typeof insertPurchaseOrderItemSchema>;
+
+export type InventoryItem = typeof inventoryItems.$inferSelect;
+export type InsertInventoryItem = z.infer<typeof insertInventoryItemSchema>;
+
+export type InventoryLocation = typeof inventoryLocations.$inferSelect;
+export type InsertInventoryLocation = z.infer<typeof insertInventoryLocationSchema>;
+
+export type StockLevel = typeof stockLevels.$inferSelect;
+export type InsertStockLevel = z.infer<typeof insertStockLevelSchema>;
+
+export type StockTransaction = typeof stockTransactions.$inferSelect;
+export type InsertStockTransaction = z.infer<typeof insertStockTransactionSchema>;
