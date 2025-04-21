@@ -59,8 +59,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
 
   // Programme items
   const programmeNavItems = [
-    { path: "/programme", label: "Programme Upload", icon: CalendarDays },
-    { path: "/programme-management", label: "Programme Management", icon: GanttChart },
+    { path: "/programme", label: "Programme", icon: GanttChart }
   ];
 
   // Financial items
@@ -76,9 +75,15 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/templates/pmi", label: "NEC4 PMI", icon: FileWarning },
   ];
 
+  // Reports and Analysis items
+  const reportsNavItems = [
+    { path: "/reports", label: "Progress Reports", icon: BarChart },
+    { path: "/reports/analysis", label: "NEC4 Compliance", icon: FileSpreadsheet },
+  ];
+
+  // Utility items
   const utilityItems = [
     { path: "/email-processor", label: "Email Processor", icon: Mail, badge: "New" },
-    { path: "/reports", label: "Reports & Analytics", icon: BarChart },
     { path: "/settings", label: "Settings", icon: Settings },
   ];
 
@@ -193,6 +198,20 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
             </div>
           ) : (
             renderNavItems(financialNavItems)
+          )}
+          
+          {!collapsed && <Separator className="my-3" />}
+          
+          {/* Reports & Analysis */}
+          {!collapsed ? (
+            <div className="space-y-1">
+              <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
+                Reports & Analysis
+              </h4>
+              {renderNavItems(reportsNavItems)}
+            </div>
+          ) : (
+            renderNavItems(reportsNavItems)
           )}
           
           {!collapsed && <Separator className="my-3" />}
