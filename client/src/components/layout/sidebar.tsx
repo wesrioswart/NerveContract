@@ -30,71 +30,50 @@ type SidebarProps = {
 
 export default function Sidebar({ user, onLogout, collapsed = false, onToggle }: SidebarProps) {
   const [location] = useLocation();
-
-  // Define all navigation items
-  const allNavItems = [
-    // NEC4 Templates - FIRST SECTION
-    {
-      section: "NEC4 Templates",
-      items: [
-        { path: "/templates/daily-site-report", label: "Daily Site Report", icon: Clipboard },
-        { path: "/templates/progress-report", label: "Progress Report", icon: BadgeCheck },
-        { path: "/templates/pmi", label: "Project Manager Instruction", icon: FileWarning },
-        { path: "/templates", label: "All Templates", icon: FileText },
-      ]
-    },
-    
-    // Core
-    {
-      section: null, // No header for core items
-      items: [
-        { path: "/", label: "Dashboard", icon: LayoutDashboard },
-        { path: "/ai-assistant", label: "AI Assistant", icon: MessageCircle },
-      ]
-    },
-    
-    // Contract Management
-    {
-      section: "Contract Management",
-      items: [
-        { path: "/compensation-events", label: "Compensation Events", icon: CheckCircle },
-        { path: "/early-warnings", label: "Early Warnings", icon: AlertTriangle },
-        { path: "/ncr-tqr", label: "NCRs & TQRs", icon: FileWarning },
-      ]
-    },
-    
-    // Programme Management
-    {
-      section: "Programme",
-      items: [
-        { path: "/programme", label: "Programme", icon: GanttChart }
-      ]
-    },
-    
-    // Financial Management
-    {
-      section: "Financial",
-      items: [
-        { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
-      ]
-    },
-    
-    // Reports and Analysis
-    {
-      section: "Reports & Analysis",
-      items: [
-        { path: "/reports", label: "Progress Reports", icon: BarChart },
-        { path: "/reports/analysis", label: "NEC4 Compliance", icon: FileSpreadsheet },
-      ]
-    }
+  
+  // NEC4 Templates - Placed prominently at the top
+  const templateItems = [
+    { path: "/templates/daily-site-report", label: "Daily Site Report", icon: Clipboard },
+    { path: "/templates/progress-report", label: "Progress Report", icon: BadgeCheck },
+    { path: "/templates/pmi", label: "Project Manager Instruction", icon: FileWarning },
+    { path: "/templates", label: "All Templates", icon: FileText },
   ];
   
-  // Utility items - displayed at the bottom
+  // Core navigation items
+  const coreNavItems = [
+    { path: "/", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/ai-assistant", label: "AI Assistant", icon: MessageCircle },
+  ];
+
+  // Contract management items
+  const contractNavItems = [
+    { path: "/compensation-events", label: "Compensation Events", icon: CheckCircle },
+    { path: "/early-warnings", label: "Early Warnings", icon: AlertTriangle },
+    { path: "/ncr-tqr", label: "NCRs & TQRs", icon: FileWarning },
+  ];
+
+  // Programme items
+  const programmeNavItems = [
+    { path: "/programme", label: "Programme", icon: GanttChart }
+  ];
+
+  // Financial items
+  const financialNavItems = [
+    { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
+  ];
+
+  // Reports and Analysis items
+  const reportsNavItems = [
+    { path: "/reports", label: "Progress Reports", icon: BarChart },
+    { path: "/reports/analysis", label: "NEC4 Compliance", icon: FileSpreadsheet },
+  ];
+
+  // Utility items
   const utilityItems = [
     { path: "/email-processor", label: "Email Processor", icon: Mail, badge: "New" },
     { path: "/settings", label: "Settings", icon: Settings },
   ];
-
+  
   // Function to render nav items
   const renderNavItems = (items: any[], activeHighlight = true) => {
     return items.map((item) => {
@@ -163,33 +142,63 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
         collapsed ? "px-2" : "px-3"
       )}>
         <nav className="flex flex-col space-y-1">
-          {/* All navigation sections */}
-          {allNavItems.map((section, index) => (
-            <div key={index}>
-              {/* If collapsed, just show the first template item for the templates section */}
-              {collapsed && index === 0 ? (
-                // When collapsed, show only the Daily Site Report for templates
-                renderNavItems([allNavItems[0].items[0]])
-              ) : (
-                <>
-                  {/* Show section header if not collapsed and section title exists */}
-                  {!collapsed && section.section && (
-                    <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
-                      {section.section}
-                    </h4>
-                  )}
-                  
-                  {/* Render the section items */}
-                  {renderNavItems(section.items)}
-                  
-                  {/* Separator after each section except the last one */}
-                  {!collapsed && index < allNavItems.length - 1 && (
-                    <Separator className="my-3" />
-                  )}
-                </>
-              )}
-            </div>
-          ))}
+          {/* NEC4 Templates Section - Placed at the top */}
+          {!collapsed ? (
+            <>
+              <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
+                NEC4 Templates
+              </h4>
+              {renderNavItems(templateItems)}
+            </>
+          ) : (
+            // Show only the Daily Site Report when collapsed
+            renderNavItems([templateItems[0]])
+          )}
+          
+          {!collapsed && <Separator className="my-3" />}
+          
+          {/* Core Navigation */}
+          {renderNavItems(coreNavItems)}
+          
+          {!collapsed && <Separator className="my-3" />}
+          
+          {/* Contract Management */}
+          {!collapsed && (
+            <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
+              Contract Management
+            </h4>
+          )}
+          {renderNavItems(contractNavItems)}
+          
+          {!collapsed && <Separator className="my-3" />}
+          
+          {/* Programme Management */}
+          {!collapsed && (
+            <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
+              Programme
+            </h4>
+          )}
+          {renderNavItems(programmeNavItems)}
+          
+          {!collapsed && <Separator className="my-3" />}
+          
+          {/* Financial Management */}
+          {!collapsed && (
+            <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
+              Financial
+            </h4>
+          )}
+          {renderNavItems(financialNavItems)}
+          
+          {!collapsed && <Separator className="my-3" />}
+          
+          {/* Reports & Analysis */}
+          {!collapsed && (
+            <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
+              Reports & Analysis
+            </h4>
+          )}
+          {renderNavItems(reportsNavItems)}
         </nav>
       </div>
       
