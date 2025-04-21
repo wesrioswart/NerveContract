@@ -16,7 +16,8 @@ import {
   Clipboard,
   BadgeCheck,
   ShoppingCart,
-  Package2
+  Package2,
+  Building
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -62,10 +63,11 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
   ];
   
-  // Procurement & Inventory items
+  // Procurement & Supplier items
   const procurementNavItems = [
     { path: "/procurement", label: "Procurement", icon: ShoppingCart },
-    { path: "/inventory", label: "Inventory", icon: Package2, badge: "New" },
+    { path: "/suppliers", label: "Supplier Accounts", icon: Building, badge: "New" },
+    { path: "/inventory", label: "Inventory", icon: Package2 },
   ];
 
   // Utility items

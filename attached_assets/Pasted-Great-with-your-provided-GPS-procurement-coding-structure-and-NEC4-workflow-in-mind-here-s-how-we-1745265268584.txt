@@ -1,0 +1,69 @@
+Great — with your provided GPS procurement coding structure and NEC4 workflow in mind, here’s how we can strategically design the **Procurement** and **Supplier Accounts** sections for your NEC4 AI platform:
+
+---
+
+## 🧱 New Sidebar Sections
+
+### 📦 **Procurement**
+This section will allow users to:
+- Submit and manage purchase requests
+- Assign correct project and nominal codes
+- Track item delivery and hire statuses
+- Attach quotes and invoices
+
+**Sub-tabs or views:**
+- **Create Requisition**
+- **Requisition List**
+- **Nominal Code Lookup**
+- **Delivery Tracker**
+
+---
+
+### 👤 **Supplier Accounts**
+This section would handle:
+- Supplier profiles with contact info
+- Past orders and invoice history
+- Linked project purchase history
+
+**Sub-tabs:**
+- **Approved Suppliers**
+- **Add New Supplier**
+- **Supplier Performance Log**
+- **Supplier Invoices**
+
+---
+
+## 📄 Example Procurement Entry (Auto-formatted by AI Agent)
+
+| Field                    | Example Value                                               |
+|--------------------------|-------------------------------------------------------------|
+| **Project Code**         | `C-121 Corys waste facility`                                |
+| **Nominal Code**         | `5399`                                                      |
+| **Classification**       | `OTHER SITE CONSUMABLES`                                    |
+| **Item Description**     | `as per below description`                                  |
+| **Delivery/Collection**  | `Delivery`                                                  |
+| **Hire Duration**        | `N/A`                                                       |
+| **Estimated Cost**       | `£35.67 + VAT`                                              |
+| **Total Cost**           | `£35.67 + VAT`                                              |
+| **Supplier**             | `Thurrock Engineering`                                      |
+| **Contact**              | `Ross Fullbrook <RossF@thurrockengineering.com>`            |
+| **Delivery Date**        | `After Easter`                                              |
+| **Delivery Address**     | `58 River Road, Barking, IG11 0DS`                          |
+
+---
+
+## ✅ AI Features to Support Procurement
+
+- 🧠 **NLP Auto-Coding:** AI parses item descriptions and suggests correct Nominal Codes from GPS's structure.
+- 📤 **Email to Requisition:** Forward a supplier email → AI auto-fills a requisition form.
+- 📊 **Spend Tracking by Code:** Dashboards show spend by Nominal Code, Supplier, or Project.
+- 📎 **Smart Document Matching:** AI matches invoices to deliveries and requisitions for auto-approval.
+
+---
+
+Would you like me to:
+1. Design a **React component UI** for this form or list view?
+2. Build a **form logic flowchart** for approval and status tracking?
+3. Set up a **database schema** recommendation for how to store these coded requisitions?
+
+You’ve got a great system structure already — we can now digitize it beautifully.

@@ -124,10 +124,11 @@ export default function Procurement() {
         onValueChange={setActiveTab} 
         className="space-y-6"
       >
-        <TabsList className="grid grid-cols-3 w-[400px]">
+        <TabsList className="grid grid-cols-4 w-[600px]">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="purchase-orders">Purchase Orders</TabsTrigger>
-          <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
+          <TabsTrigger value="create-requisition">Create Requisition</TabsTrigger>
+          <TabsTrigger value="requisition-list">Requisition List</TabsTrigger>
+          <TabsTrigger value="delivery-tracker">Delivery Tracker</TabsTrigger>
         </TabsList>
 
         {/* Dashboard Tab */}
