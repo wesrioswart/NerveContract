@@ -116,7 +116,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   return (
     <div 
       className={cn(
-        "sidebar bg-gray-50 shadow-lg h-screen fixed overflow-y-auto transition-all duration-300 ease-in-out z-50",
+        "sidebar bg-gray-50 shadow-lg h-screen fixed transition-all duration-300 ease-in-out z-50 flex flex-col",
         collapsed ? "w-16" : "w-64"
       )}
     >
@@ -136,9 +136,9 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
         )}
       </div>
       
-      {/* Main Navigation */}
+      {/* Main Navigation - with overflow scrolling */}
       <div className={cn(
-        "py-4", 
+        "py-4 flex-grow overflow-y-auto", 
         collapsed ? "px-2" : "px-3"
       )}>
         <nav className="flex flex-col space-y-1">
@@ -204,7 +204,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
       
       {/* Utility and Logout Section */}
       <div className={cn(
-        "absolute bottom-0 w-full border-t border-gray-200",
+        "w-full border-t border-gray-200 mt-auto",
         collapsed ? "p-2" : "p-3"
       )}>
         {/* Utility Items */}
