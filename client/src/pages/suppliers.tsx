@@ -1,126 +1,142 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription 
+} from "@/components/ui/card";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Search, Plus, Building, Phone, Mail, Info } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import NewSupplierModal from "@/components/procurement/new-supplier-modal";
+import { Plus, Search, Star, Calendar, FileText, CheckCircle2, XCircle, Clock } from "lucide-react";
 import PageHeader from "@/components/layout/page-header";
+import { formatCurrency } from "@/lib/utils";
 
-interface Supplier {
-  id: number;
-  name: string;
-  contactPerson: string;
-  email: string;
-  phone: string;
-  address: string;
-  accountNumber: string;
-  isGpsmacs: boolean;
-}
+export default function Suppliers() {
+  const [supplierSearchQuery, setSupplierSearchQuery] = useState<string>("");
+  const [performanceSearchQuery, setPerformanceSearchQuery] = useState<string>("");
+  const [invoiceSearchQuery, setInvoiceSearchQuery] = useState<string>("");
+  const [selectedTab, setSelectedTab] = useState("approved-suppliers");
+  const [isNewSupplierModalOpen, setIsNewSupplierModalOpen] = useState(false);
 
-interface SupplierPerformance {
-  id: number;
-  supplierId: number;
-  supplierName: string;
-  onTimeDelivery: number;
-  qualityRating: number;
-  responseTime: number;
-  costCompetitiveness: number;
-  lastUpdated: string;
-}
-
-interface SupplierInvoice {
-  id: number;
-  supplierId: number;
-  supplierName: string;
-  invoiceNumber: string;
-  amount: number;
-  issueDate: string;
-  dueDate: string;
-  status: 'paid' | 'pending' | 'overdue';
-}
-
-export default function SupplierAccounts() {
   // Fetch suppliers
-  const { data: suppliers = [], isLoading: isSuppliersLoading } = useQuery<Supplier[]>({
-    queryKey: ['/api/suppliers'],
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ["/api/suppliers"],
+    queryFn: async () => {
+      const res = await fetch("/api/suppliers");
+      if (!res.ok) throw new Error("Failed to fetch suppliers");
+      return res.json();
+    }
   });
 
-  // Fetch supplier performance data
-  const { data: performanceData = [], isLoading: isPerformanceLoading } = useQuery<SupplierPerformance[]>({
-    queryKey: ['/api/supplier-performance'],
+  // Fetch supplier performance records
+  const { data: performanceRecords = [] } = useQuery({
+    queryKey: ["/api/supplier-performance"],
+    queryFn: async () => {
+      const res = await fetch("/api/supplier-performance");
+      if (!res.ok) throw new Error("Failed to fetch performance records");
+      return res.json();
+    }
   });
 
   // Fetch supplier invoices
-  const { data: invoices = [], isLoading: isInvoicesLoading } = useQuery<SupplierInvoice[]>({
-    queryKey: ['/api/supplier-invoices'],
+  const { data: invoices = [] } = useQuery({
+    queryKey: ["/api/supplier-invoices"],
+    queryFn: async () => {
+      const res = await fetch("/api/supplier-invoices");
+      if (!res.ok) throw new Error("Failed to fetch invoices");
+      return res.json();
+    }
   });
 
-  // State for tab
-  const [activeTab, setActiveTab] = useState<string>("approved-suppliers");
-  
-  // State for search
-  const [supplierSearchQuery, setSupplierSearchQuery] = useState<string>("");
-  const [invoiceSearchQuery, setInvoiceSearchQuery] = useState<string>("");
-  
-  // State for modals
-  const [isNewSupplierModalOpen, setIsNewSupplierModalOpen] = useState<boolean>(false);
-
   // Filter suppliers based on search query
-  const filteredSuppliers = suppliers.filter(supplier => 
+  const filteredSuppliers = suppliers.filter((supplier: any) => 
     supplier.name.toLowerCase().includes(supplierSearchQuery.toLowerCase()) ||
-    supplier.contactPerson.toLowerCase().includes(supplierSearchQuery.toLowerCase()) ||
-    supplier.email.toLowerCase().includes(supplierSearchQuery.toLowerCase()) ||
-    (supplier.isGpsmacs && "gpsmacs".includes(supplierSearchQuery.toLowerCase()))
+    (supplier.accountNumber && supplier.accountNumber.toLowerCase().includes(supplierSearchQuery.toLowerCase())) ||
+    (supplier.contactPerson && supplier.contactPerson.toLowerCase().includes(supplierSearchQuery.toLowerCase()))
+  );
+
+  // Filter performance records based on search query
+  const filteredPerformanceRecords = performanceRecords.filter((record: any) =>
+    record.supplierName.toLowerCase().includes(performanceSearchQuery.toLowerCase()) ||
+    record.projectName.toLowerCase().includes(performanceSearchQuery.toLowerCase()) ||
+    record.category.toLowerCase().includes(performanceSearchQuery.toLowerCase()) ||
+    record.comments.toLowerCase().includes(performanceSearchQuery.toLowerCase())
   );
 
   // Filter invoices based on search query
-  const filteredInvoices = invoices.filter(invoice => 
+  const filteredInvoices = invoices.filter((invoice: any) =>
     invoice.supplierName.toLowerCase().includes(invoiceSearchQuery.toLowerCase()) ||
     invoice.invoiceNumber.toLowerCase().includes(invoiceSearchQuery.toLowerCase()) ||
+    invoice.purchaseOrderReference.toLowerCase().includes(invoiceSearchQuery.toLowerCase()) ||
     invoice.status.toLowerCase().includes(invoiceSearchQuery.toLowerCase())
   );
 
-  // Format currency
-  const formatCurrency = (value: number): string => {
-    return `£${(value / 100).toFixed(2)}`;
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setSelectedTab(value);
   };
 
+  // Status color mapping for invoices
   const invoiceStatusColors = {
-    paid: 'bg-green-100 text-green-800 hover:bg-green-100 hover:text-green-800',
-    pending: 'bg-amber-100 text-amber-800 hover:bg-amber-100 hover:text-amber-800',
-    overdue: 'bg-red-100 text-red-800 hover:bg-red-100 hover:text-red-800',
+    paid: "bg-green-100 text-green-800 hover:bg-green-100 hover:text-green-800",
+    pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 hover:text-yellow-800",
+    overdue: "bg-red-100 text-red-800 hover:bg-red-100 hover:text-red-800"
   };
 
-  if (isSuppliersLoading || isPerformanceLoading || isInvoicesLoading) {
+  // Rating stars component
+  const RatingStars = ({ rating }: { rating: number }) => {
     return (
-      <div className="flex items-center justify-center min-h-[600px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center">
+        {[...Array(5)].map((_, index) => (
+          <Star
+            key={index}
+            className={`h-4 w-4 ${
+              index < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+            }`}
+          />
+        ))}
       </div>
     );
-  }
+  };
 
   return (
-    <div className="space-y-8">
-      <PageHeader 
-        title="Supplier Accounts" 
-        subtitle="Manage supplier information, performance metrics, and invoices"
+    <div className="space-y-6">
+      <PageHeader
+        title="Supplier Accounts"
+        subtitle="Manage supplier relationships, track performance, and process invoices"
       />
 
-      <Tabs 
-        defaultValue="approved-suppliers" 
-        value={activeTab} 
-        onValueChange={setActiveTab} 
-        className="space-y-6"
-      >
-        <TabsList className="grid grid-cols-4 w-[600px]">
+      <Tabs defaultValue="approved-suppliers" value={selectedTab} onValueChange={handleTabChange}>
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="approved-suppliers">Approved Suppliers</TabsTrigger>
-          <TabsTrigger value="add-supplier">Add New Supplier</TabsTrigger>
+          <TabsTrigger value="add-new-supplier">Add New Supplier</TabsTrigger>
           <TabsTrigger value="performance-log">Performance Log</TabsTrigger>
-          <TabsTrigger value="invoices">Supplier Invoices</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices</TabsTrigger>
         </TabsList>
 
         {/* Approved Suppliers Tab */}
@@ -136,7 +152,7 @@ export default function SupplierAccounts() {
                 onChange={e => setSupplierSearchQuery(e.target.value)}
               />
             </div>
-            <Button onClick={() => setActiveTab("add-supplier")} className="flex items-center gap-2">
+            <Button onClick={() => setSelectedTab("add-new-supplier")} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Add New Supplier
             </Button>
@@ -155,30 +171,27 @@ export default function SupplierAccounts() {
               </TableHeader>
               <TableBody>
                 {filteredSuppliers.length > 0 ? (
-                  filteredSuppliers.map((supplier) => (
+                  filteredSuppliers.map((supplier: any) => (
                     <TableRow key={supplier.id} className="hover:bg-muted/50">
                       <TableCell>
                         <div className="font-medium">{supplier.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          {supplier.address.substring(0, 30)}
-                          {supplier.address.length > 30 ? '...' : ''}
+                          {supplier.address}
                         </div>
                       </TableCell>
                       <TableCell>{supplier.contactPerson || '—'}</TableCell>
                       <TableCell>
-                        <div className="flex items-center">
-                          <Mail className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /> 
-                          {supplier.email || '—'}
-                        </div>
-                        <div className="flex items-center mt-1">
-                          <Phone className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                        <div>{supplier.email || '—'}</div>
+                        <div className="text-sm text-muted-foreground">
                           {supplier.phone || '—'}
                         </div>
                       </TableCell>
                       <TableCell>{supplier.accountNumber || '—'}</TableCell>
                       <TableCell className="text-right">
                         {supplier.isGpsmacs ? (
-                          <Badge className="bg-blue-100 text-blue-800">GPSMACS</Badge>
+                          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 hover:text-blue-800">
+                            GPSMACS
+                          </Badge>
                         ) : (
                           <Badge variant="outline">Standard</Badge>
                         )}
@@ -198,106 +211,169 @@ export default function SupplierAccounts() {
         </TabsContent>
 
         {/* Add New Supplier Tab */}
-        <TabsContent value="add-supplier" className="space-y-6">
+        <TabsContent value="add-new-supplier" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Add a New Supplier</CardTitle>
+              <CardTitle>New Supplier Registration</CardTitle>
+              <CardDescription>Add a new supplier to the approved suppliers list</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center p-4">
-                <Button 
-                  onClick={() => setIsNewSupplierModalOpen(true)} 
-                  className="flex items-center gap-2"
-                >
-                  <Building className="h-4 w-4" />
-                  Register New Supplier
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Supplier Registration Guidelines</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-start gap-2">
-                  <Info className="h-5 w-5 text-blue-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Required Information</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Ensure you have company name, contact person, email, phone, and address when registering a new supplier.
-                    </p>
+              <form className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Supplier Name</label>
+                      <Input placeholder="e.g. Thurrock Engineering" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Contact Person</label>
+                      <Input placeholder="e.g. John Smith" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Email</label>
+                      <Input placeholder="e.g. contact@supplier.com" type="email" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Phone</label>
+                      <Input placeholder="e.g. +44 20 7123 4567" />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Address</label>
+                      <Input placeholder="e.g. 123 Business Street, London" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Account Number</label>
+                      <Input placeholder="e.g. SUP-2023-001" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Supplier Type</label>
+                      <select className="w-full p-2 rounded-md border">
+                        <option value="standard">Standard</option>
+                        <option value="gpsmacs">GPSMACS</option>
+                      </select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Notes</label>
+                      <textarea
+                        className="w-full p-2 rounded-md border min-h-[100px]"
+                        placeholder="Additional information about this supplier..."
+                      ></textarea>
+                    </div>
                   </div>
                 </div>
-
-                <div className="flex items-start gap-2">
-                  <Info className="h-5 w-5 text-blue-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Supplier Types</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Mark suppliers as GPSMACS suppliers if they provide materials, plant, equipment, and PPE using the GPSMACS coding system.
-                    </p>
-                  </div>
+                
+                <div className="flex justify-end space-x-3">
+                  <Button variant="outline" onClick={() => setSelectedTab("approved-suppliers")}>
+                    Cancel
+                  </Button>
+                  <Button>Add Supplier</Button>
                 </div>
-
-                <div className="flex items-start gap-2">
-                  <Info className="h-5 w-5 text-blue-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Account Numbers</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Enter the supplier's account number if applicable to help track purchases across systems.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Performance Log Tab */}
         <TabsContent value="performance-log" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search performance records..."
+                className="pl-8"
+                value={performanceSearchQuery}
+                onChange={e => setPerformanceSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-3">
+              <select className="p-2 rounded-md border text-sm">
+                <option value="all">All Categories</option>
+                <option value="quality">Quality</option>
+                <option value="delivery">Delivery</option>
+                <option value="service">Service</option>
+                <option value="price">Price</option>
+              </select>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add Performance Record
+              </Button>
+            </div>
+          </div>
+
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Supplier Name</TableHead>
-                  <TableHead className="text-center">On-Time Delivery</TableHead>
-                  <TableHead className="text-center">Quality Rating</TableHead>
-                  <TableHead className="text-center">Response Time</TableHead>
-                  <TableHead className="text-center">Cost Competitiveness</TableHead>
-                  <TableHead className="text-right">Last Updated</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Supplier</TableHead>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Rating</TableHead>
+                  <TableHead>Comments</TableHead>
+                  <TableHead>Reviewer</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {performanceData.length > 0 ? (
-                  performanceData.map((item) => (
-                    <TableRow key={item.id} className="hover:bg-muted/50">
+                {filteredPerformanceRecords.length > 0 ? (
+                  filteredPerformanceRecords.map((record: any) => (
+                    <TableRow key={record.id} className="hover:bg-muted/50">
                       <TableCell>
-                        <div className="font-medium">{item.supplierName}</div>
+                        {new Date(record.performanceDate).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Badge className={getRatingClass(item.onTimeDelivery)}>{item.onTimeDelivery.toFixed(1)}</Badge>
+                      <TableCell className="font-medium">{record.supplierName}</TableCell>
+                      <TableCell>{record.projectName}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="capitalize">
+                          {record.category}
+                        </Badge>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Badge className={getRatingClass(item.qualityRating)}>{item.qualityRating.toFixed(1)}</Badge>
+                      <TableCell>
+                        <RatingStars rating={record.rating} />
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Badge className={getRatingClass(item.responseTime)}>{item.responseTime.toFixed(1)}</Badge>
+                      <TableCell className="max-w-[300px] truncate">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="link" className="p-0 h-auto">
+                              {record.comments}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Performance Comments</DialogTitle>
+                              <DialogDescription>
+                                {record.supplierName} - {new Date(record.performanceDate).toLocaleDateString()}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <div className="font-medium mb-1">Rating</div>
+                                <RatingStars rating={record.rating} />
+                              </div>
+                              <div>
+                                <div className="font-medium mb-1">Comments</div>
+                                <p>{record.comments}</p>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Badge className={getRatingClass(item.costCompetitiveness)}>{item.costCompetitiveness.toFixed(1)}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right text-sm text-muted-foreground">
-                        {new Date(item.lastUpdated).toLocaleDateString()}
-                      </TableCell>
+                      <TableCell>{record.reviewer}</TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      No performance data available.
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      No performance records found.
                     </TableCell>
                   </TableRow>
                 )}
@@ -306,7 +382,7 @@ export default function SupplierAccounts() {
           </div>
         </TabsContent>
 
-        {/* Supplier Invoices Tab */}
+        {/* Invoices Tab */}
         <TabsContent value="invoices" className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="relative w-full max-w-sm">
@@ -319,43 +395,69 @@ export default function SupplierAccounts() {
                 onChange={e => setInvoiceSearchQuery(e.target.value)}
               />
             </div>
+            <div className="flex gap-3">
+              <select className="p-2 rounded-md border text-sm">
+                <option value="all">All Statuses</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="overdue">Overdue</option>
+              </select>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add Invoice
+              </Button>
+            </div>
           </div>
 
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice #</TableHead>
+                  <TableHead>Invoice</TableHead>
+                  <TableHead>PO Reference</TableHead>
                   <TableHead>Supplier</TableHead>
-                  <TableHead>Issue Date</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Date</TableHead>
                   <TableHead>Due Date</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredInvoices.length > 0 ? (
-                  filteredInvoices.map((invoice) => (
+                  filteredInvoices.map((invoice: any) => (
                     <TableRow key={invoice.id} className="hover:bg-muted/50">
                       <TableCell>
-                        <div className="font-medium">{invoice.invoiceNumber}</div>
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <div className="font-medium">{invoice.invoiceNumber}</div>
+                        </div>
                       </TableCell>
+                      <TableCell>{invoice.purchaseOrderReference}</TableCell>
                       <TableCell>{invoice.supplierName}</TableCell>
-                      <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
-                      <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <Badge className={invoiceStatusColors[invoice.status]}>
-                          {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="font-medium">
                         {formatCurrency(invoice.amount)}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(invoice.invoiceDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(invoice.dueDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={invoiceStatusColors[invoice.status as keyof typeof invoiceStatusColors] || ""}>
+                          <div className="flex items-center gap-1">
+                            {invoice.status === "paid" && <CheckCircle2 className="h-3 w-3" />}
+                            {invoice.status === "overdue" && <XCircle className="h-3 w-3" />}
+                            {invoice.status === "pending" && <Clock className="h-3 w-3" />}
+                            {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                          </div>
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                       No invoices found.
                     </TableCell>
                   </TableRow>
@@ -365,22 +467,6 @@ export default function SupplierAccounts() {
           </div>
         </TabsContent>
       </Tabs>
-
-      {/* Add New Supplier Modal */}
-      {isNewSupplierModalOpen && (
-        <NewSupplierModal 
-          open={isNewSupplierModalOpen} 
-          onClose={() => setIsNewSupplierModalOpen(false)}
-        />
-      )}
     </div>
   );
-}
-
-// Helper function to determine rating badge color
-function getRatingClass(rating: number): string {
-  if (rating >= 4) return 'bg-green-100 text-green-800';
-  if (rating >= 3) return 'bg-blue-100 text-blue-800';
-  if (rating >= 2) return 'bg-amber-100 text-amber-800';
-  return 'bg-red-100 text-red-800';
 }
