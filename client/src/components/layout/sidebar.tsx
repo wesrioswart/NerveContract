@@ -44,6 +44,14 @@ type SidebarProps = {
 export default function Sidebar({ user, onLogout, collapsed = false, onToggle }: SidebarProps) {
   const [location] = useLocation();
 
+  // NEC4 Templates items (positioned first for visibility)
+  const templateItems = [
+    { path: "/templates/daily-site-report", label: "Daily Site Report", icon: Clipboard },
+    { path: "/templates/progress-report", label: "Progress Report", icon: BadgeCheck },
+    { path: "/templates/pmi", label: "Project Manager Instruction", icon: FileWarning },
+    { path: "/templates", label: "All Templates", icon: FileText },
+  ];
+
   // Core navigation items
   const coreNavItems = [
     { path: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -65,14 +73,6 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   // Financial items
   const financialNavItems = [
     { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
-  ];
-
-  // Templates and utility items
-  const templateItems = [
-    { path: "/templates", label: "All Templates", icon: FileText },
-    { path: "/templates/daily-site-report", label: "Daily Site Report", icon: Clipboard },
-    { path: "/templates/progress-report", label: "Progress Report", icon: BadgeCheck },
-    { path: "/templates/pmi", label: "NEC4 PMI", icon: FileWarning },
   ];
 
   // Reports and Analysis items
@@ -155,6 +155,20 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
         collapsed ? "px-2" : "px-3"
       )}>
         <nav className="flex flex-col space-y-1">
+          {/* Templates Section - Placed at the top */}
+          {!collapsed ? (
+            <div className="space-y-1">
+              <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
+                NEC4 Templates
+              </h4>
+              {renderNavItems(templateItems)}
+            </div>
+          ) : (
+            renderNavItems([{ path: "/templates", label: "Templates", icon: FileText }])
+          )}
+          
+          {!collapsed && <Separator className="my-3" />}
+          
           {/* Core Navigation */}
           {renderNavItems(coreNavItems)}
           
@@ -212,25 +226,6 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
             </div>
           ) : (
             renderNavItems(reportsNavItems)
-          )}
-          
-          {!collapsed && <Separator className="my-3" />}
-          
-          {/* Templates Section */}
-          {!collapsed ? (
-            <div className="space-y-1">
-              <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
-                NEC4 Templates
-              </h4>
-              {renderNavItems([
-                { path: "/templates/daily-site-report", label: "Daily Site Report", icon: Clipboard },
-                { path: "/templates/progress-report", label: "Progress Report", icon: BadgeCheck },
-                { path: "/templates/pmi", label: "Project Manager Instruction", icon: FileWarning },
-                { path: "/templates", label: "All Templates", icon: FileText }
-              ])}
-            </div>
-          ) : (
-            renderNavItems([{ path: "/templates", label: "Templates", icon: FileText }])
           )}
         </nav>
       </div>
