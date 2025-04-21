@@ -6,6 +6,8 @@ import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarn
   insertProgrammeSchema, insertProgrammeActivitySchema, insertActivityRelationshipSchema,
   insertNec4TeamSchema, insertNec4TeamMemberSchema, insertUserToProjectSchema, 
   insertProjectSchema, insertProgressReportSchema } from "@shared/schema";
+import * as procurementController from "./controllers/procurement-controller";
+import * as inventoryController from "./controllers/inventory-controller";
 import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured } from "./utils/openai";
 import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
 import { parseProgrammeFile } from "./services/programme-parser";
@@ -1591,6 +1593,44 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
       return res.status(500).json({ message: "Error generating progress report" });
     }
   });
+
+  // ======== PROCUREMENT ROUTES ========
+  
+  // Nominal Codes
+  app.get("/api/nominal-codes", procurementController.getNominalCodes);
+  app.get("/api/nominal-codes/:id", procurementController.getNominalCode);
+  app.post("/api/nominal-codes", requireAuth, procurementController.createNominalCode);
+  
+  // Suppliers
+  app.get("/api/suppliers", procurementController.getSuppliers);
+  app.get("/api/suppliers/:id", procurementController.getSupplier);
+  app.post("/api/suppliers", requireAuth, procurementController.createSupplier);
+  app.patch("/api/suppliers/:id", requireAuth, procurementController.updateSupplier);
+  
+  // Purchase Orders
+  app.get("/api/purchase-orders", requireAuth, procurementController.getPurchaseOrders);
+  app.get("/api/purchase-orders/:id", requireAuth, procurementController.getPurchaseOrder);
+  app.post("/api/purchase-orders", requireAuth, procurementController.createPurchaseOrder);
+  app.patch("/api/purchase-orders/:id/status", requireAuth, procurementController.updatePurchaseOrderStatus);
+  
+  // ======== INVENTORY ROUTES ========
+  
+  // Inventory Items
+  app.get("/api/inventory/items", requireAuth, inventoryController.getInventoryItems);
+  app.get("/api/inventory/items/:id", requireAuth, inventoryController.getInventoryItem);
+  app.post("/api/inventory/items", requireAuth, inventoryController.createInventoryItem);
+  app.patch("/api/inventory/items/:id", requireAuth, inventoryController.updateInventoryItem);
+  
+  // Inventory Locations
+  app.get("/api/inventory/locations", requireAuth, inventoryController.getInventoryLocations);
+  app.get("/api/inventory/locations/:id", requireAuth, inventoryController.getInventoryLocation);
+  app.post("/api/inventory/locations", requireAuth, inventoryController.createInventoryLocation);
+  
+  // Stock Transactions
+  app.post("/api/inventory/transactions", requireAuth, inventoryController.createStockTransaction);
+  
+  // Dashboard & Analytics
+  app.get("/api/inventory/dashboard", requireAuth, inventoryController.getInventoryDashboard);
 
   const httpServer = createServer(app);
   return httpServer;
