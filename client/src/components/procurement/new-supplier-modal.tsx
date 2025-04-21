@@ -17,8 +17,8 @@ interface NewSupplierModalProps {
 interface SupplierFormData {
   name: string;
   contactPerson: string | null;
-  email: string | null;
-  phone: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
   address: string | null;
   accountNumber: string | null;
   isGpsmacs: boolean | null;
