@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Calendar, AlertCircle, Info, ChevronDown, Check, Save, Printer, Download, XCircle, Upload } from 'lucide-react';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from "@/hooks/use-toast";
@@ -19,7 +20,6 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import html2pdf from 'html2pdf.js';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
@@ -119,10 +119,33 @@ type FormValues = z.infer<typeof formSchema>;
 export default function ProgressReportTemplate() {
   // Use static data for template demonstration instead of live queries
   const [view, setView] = useState<'form' | 'preview'>('form');
+  const [activeTab, setActiveTab] = useState('basic'); // For form organization
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionComplete, setSubmissionComplete] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0); // Store scroll position
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Preserve scroll position when form state changes
+  useEffect(() => {
+    // Set scroll position after render
+    const timeoutId = setTimeout(() => {
+      window.scrollTo(0, scrollPosition);
+    }, 0);
+    
+    return () => clearTimeout(timeoutId);
+  }, [scrollPosition]);
+  
+  // Save scroll position before any form input changes
+  const handleScroll = () => {
+    setScrollPosition(window.scrollY);
+  };
+  
+  // Add scroll event listener
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   
   const todayFormatted = format(new Date(), "dd/MM/yyyy");
   
@@ -327,10 +350,28 @@ export default function ProgressReportTemplate() {
   };
   
   // Form components
-  const FormView = () => (
+  const FormView = () => {
+    // Create a form watch to get current values for preview
+    const watchedValues = form.watch();
+    
+    return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <AnimationWrapper type="fadeIn" className="grid grid-cols-1 gap-6">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={setActiveTab} 
+          className="w-full mb-6"
+        >
+          <TabsList className="grid grid-cols-5 w-full">
+            <TabsTrigger value="basic">Basic Info</TabsTrigger>
+            <TabsTrigger value="project">Project Details</TabsTrigger>
+            <TabsTrigger value="progress">Progress</TabsTrigger>
+            <TabsTrigger value="issues">Issues & Events</TabsTrigger>
+            <TabsTrigger value="summary">Summary</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="basic" className="mt-4">
+            <AnimationWrapper type="fadeIn" className="grid grid-cols-1 gap-6">
           {/* Report Information */}
           <Card>
             <CardHeader>

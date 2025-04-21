@@ -14,7 +14,7 @@ import CompensationEventTemplate from '@/components/document-templates/compensat
 import NCRTemplate from '@/components/document-templates/ncr-template';
 import TechnicalQueryTemplate from '@/components/document-templates/technical-query-template';
 import PaymentApplicationTemplate from '@/components/document-templates/payment-application-template';
-import ProgressReportTemplate from '@/components/document-templates/progress-report-template';
+import ProgressReportTemplate from '@/components/document-templates/progress-report-template-tabs';
 
 export default function TemplatesPage() {
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
