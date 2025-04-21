@@ -244,9 +244,9 @@ export default function DailySiteReportTemplate() {
         weatherImpact: "None" as const,
         siteConditions: "Ground conditions dry and suitable for all works",
         teamMembers: [
-          { name: "John Smith", role: "Foreman", hours: 8 },
-          { name: "David Lee", role: "Groundworker", hours: 8 },
-          { name: "Sarah Wilson", role: "Electrician", hours: 6 },
+          { name: "John Smith", role: "Foreman", hours: 8, company: "ABC Construction Ltd", isSubcontractor: false },
+          { name: "David Lee", role: "Groundworker", hours: 8, company: "ABC Construction Ltd", isSubcontractor: false },
+          { name: "Sarah Wilson", role: "Electrician", hours: 6, company: "Wilson Electrical Services", isSubcontractor: true },
         ],
         totalLabourHours: 22,
         plant: [
@@ -390,7 +390,7 @@ export default function DailySiteReportTemplate() {
     const currentMembers = form.getValues('teamMembers');
     form.setValue('teamMembers', [
       ...currentMembers,
-      { name: '', role: '', hours: 0 }
+      { name: '', role: '', hours: 0, company: '', isSubcontractor: false }
     ]);
   };
   
@@ -945,9 +945,31 @@ export default function DailySiteReportTemplate() {
               </div>
             ))}
             
-            <div className="flex justify-between items-center pt-2">
-              <p className="text-sm font-medium">Total Labour Hours:</p>
-              <p className="text-sm font-bold">{calculateTotalLabourHours()} hours</p>
+            <div className="space-y-2 pt-2">
+              <div className="flex justify-between items-center">
+                <p className="text-sm font-medium">Total Labour Hours:</p>
+                <p className="text-sm font-bold">{calculateTotalLabourHours()} hours</p>
+              </div>
+              
+              {getSubcontractorInfo().count > 0 && (
+                <div className="flex flex-col space-y-1 p-3 bg-slate-50 rounded-md">
+                  <p className="text-sm flex justify-between">
+                    <span>Subcontractors on site:</span>
+                    <span className="font-medium">{getSubcontractorInfo().count} people</span>
+                  </p>
+                  {getSubcontractorInfo().uniqueCompanies.length > 0 && (
+                    <p className="text-sm flex justify-between">
+                      <span>Subcontractor companies:</span>
+                      <span className="font-medium">{getSubcontractorInfo().uniqueCompanies.length}</span>
+                    </p>
+                  )}
+                  <div className="text-xs text-slate-500">
+                    {getSubcontractorInfo().uniqueCompanies.map((company, index) => (
+                      <Badge key={index} variant="outline" className="mr-1 mb-1">{company}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
