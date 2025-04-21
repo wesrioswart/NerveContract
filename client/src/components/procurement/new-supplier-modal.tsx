@@ -31,8 +31,8 @@ export default function NewSupplierModal({ open, onClose }: NewSupplierModalProp
   const [formData, setFormData] = useState<SupplierFormData>({
     name: '',
     contactPerson: '',
-    email: '',
-    phone: '',
+    contactEmail: '',
+    contactPhone: '',
     address: '',
     accountNumber: '',
     isGpsmacs: false,
@@ -120,23 +120,23 @@ export default function NewSupplierModal({ open, onClose }: NewSupplierModalProp
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="contactEmail">Email</Label>
               <Input 
-                id="email"
-                name="email"
+                id="contactEmail"
+                name="contactEmail"
                 type="email"
-                value={formData.email || ''}
+                value={formData.contactEmail || ''}
                 onChange={handleInputChange}
                 placeholder="Enter email address"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="contactPhone">Phone</Label>
               <Input 
-                id="phone"
-                name="phone"
-                value={formData.phone || ''}
+                id="contactPhone"
+                name="contactPhone"
+                value={formData.contactPhone || ''}
                 onChange={handleInputChange}
                 placeholder="Enter phone number"
               />
