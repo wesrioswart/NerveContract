@@ -15,6 +15,7 @@ import Reports from "@/pages/reports";
 import Templates from "@/pages/templates";
 import EmailProcessor from "@/pages/email-processor";
 import Procurement from "@/pages/procurement";
+import Suppliers from "@/pages/suppliers";
 import Inventory from "@/pages/inventory";
 import Login from "@/pages/login";
 import { useEffect, useState } from "react";
@@ -128,6 +129,7 @@ function App() {
                   <Route path="/reports" component={Reports} />
                   <Route path="/templates" component={Templates} />
                   <Route path="/procurement" component={Procurement} />
+                  <Route path="/suppliers" component={Suppliers} />
                   <Route path="/inventory" component={Inventory} />
                   <Route path="/email-processor" component={EmailProcessor} />
                   <Route component={NotFound} />

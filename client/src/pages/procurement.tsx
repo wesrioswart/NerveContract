@@ -267,7 +267,113 @@ export default function Procurement() {
         </TabsContent>
 
         {/* Purchase Orders Tab */}
-        <TabsContent value="purchase-orders" className="space-y-6">
+        <TabsContent value="create-requisition" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Create New Requisition</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Project Code</label>
+                    <Input placeholder="e.g. C-121 Corys waste facility" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Nominal Code</label>
+                    <Input placeholder="e.g. 5399" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Classification</label>
+                    <Input placeholder="e.g. OTHER SITE CONSUMABLES" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Item Description</label>
+                    <Input placeholder="Detailed description of required items" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Delivery/Collection</label>
+                    <select className="w-full p-2 rounded-md border">
+                      <option value="delivery">Delivery</option>
+                      <option value="collection">Collection</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Hire Duration (if applicable)</label>
+                    <Input placeholder="e.g. 2 weeks or N/A" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Estimated Cost</label>
+                    <Input placeholder="£0.00 + VAT" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Supplier</label>
+                    <Input placeholder="e.g. Thurrock Engineering" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Contact Details</label>
+                    <Input placeholder="e.g. Ross Fullbrook <email@example.com>" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Delivery Date</label>
+                      <Input placeholder="e.g. 15/05/2025" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Delivery Address</label>
+                      <Input placeholder="Site address" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6 flex justify-end space-x-3">
+                <Button variant="outline">Save Draft</Button>
+                <Button onClick={() => setIsNewPOModalOpen(true)}>Submit Requisition</Button>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Nominal Code Lookup</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search GPSMACS codes..."
+                  className="pl-8"
+                />
+              </div>
+              
+              <div className="mt-4 text-sm">
+                <p className="text-muted-foreground mb-2">Common GPSMACS codes:</p>
+                <ul className="space-y-1">
+                  <li><span className="font-medium">5000-5999:</span> Construction Materials</li>
+                  <li><span className="font-medium">6000-6999:</span> Plant & Equipment</li>
+                  <li><span className="font-medium">7000-7999:</span> Small Equipment & Tools</li>
+                  <li><span className="font-medium">8000-8999:</span> PPE & Safety Equipment</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="requisition-list" className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -337,6 +443,79 @@ export default function Procurement() {
         </TabsContent>
 
         {/* Suppliers Tab */}
+        <TabsContent value="delivery-tracker" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search deliveries..."
+                className="pl-8"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <select className="p-2 rounded-md border text-sm">
+                <option value="all">All Statuses</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="in_transit">In Transit</option>
+                <option value="delivered">Delivered</option>
+                <option value="delayed">Delayed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add Delivery Note
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>PO Reference</TableHead>
+                  <TableHead>Supplier</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Delivery Date</TableHead>
+                  <TableHead>Delivery Address</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredPOs.length > 0 ? (
+                  filteredPOs.map((po) => (
+                    <TableRow 
+                      key={po.id} 
+                      className="cursor-pointer hover:bg-muted/50"
+                    >
+                      <TableCell>
+                        <div className="font-medium">{po.reference}</div>
+                      </TableCell>
+                      <TableCell>{po.supplierName}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{po.description}</TableCell>
+                      <TableCell>15/05/2025</TableCell>
+                      <TableCell className="max-w-[150px] truncate">
+                        Site address here
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-yellow-100 text-yellow-800">
+                          Scheduled
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      No deliveries found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+        
         <TabsContent value="suppliers" className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="relative w-full max-w-sm">
