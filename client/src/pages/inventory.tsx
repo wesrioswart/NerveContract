@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/table";
 import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Package, Search, Plus, Warehouse, ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight } from "lucide-react";
+import { Loader2, Package, Search, Plus, Warehouse, ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/layout/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { InventoryItem, InventoryLocation } from "@shared/schema";
 import NewInventoryItemModal from "@/components/inventory/new-inventory-item-modal";
@@ -22,6 +22,7 @@ import NewInventoryLocationModal from "@/components/inventory/new-inventory-loca
 import StockTransactionModal from "@/components/inventory/stock-transaction-modal";
 import ViewInventoryItemModal from "@/components/inventory/view-inventory-item-modal";
 import ViewInventoryLocationModal from "@/components/inventory/view-inventory-location-modal";
+import { useUser } from "@/contexts/user-context";
 
 interface StockLevel {
   locationId: number;
@@ -49,19 +50,25 @@ export interface InventoryDashboard {
 }
 
 export default function Inventory() {
+  // Get authentication status from user context
+  const { isAuthenticated, user } = useUser();
+
   // Fetch inventory dashboard data
-  const { data: dashboardData, isLoading: isDashboardLoading } = useQuery<InventoryDashboard>({
+  const { data: dashboardData, isLoading: isDashboardLoading, error: dashboardError } = useQuery<InventoryDashboard>({
     queryKey: ['/api/inventory/dashboard'],
+    enabled: isAuthenticated, // Only run query if authenticated
   });
 
   // Fetch inventory items
-  const { data: items = [], isLoading: isItemsLoading } = useQuery<InventoryItem[]>({
+  const { data: items = [], isLoading: isItemsLoading, error: itemsError } = useQuery<InventoryItem[]>({
     queryKey: ['/api/inventory/items'],
+    enabled: isAuthenticated, // Only run query if authenticated
   });
 
   // Fetch inventory locations
-  const { data: locations = [], isLoading: isLocationsLoading } = useQuery<InventoryLocation[]>({
+  const { data: locations = [], isLoading: isLocationsLoading, error: locationsError } = useQuery<InventoryLocation[]>({
     queryKey: ['/api/inventory/locations'],
+    enabled: isAuthenticated, // Only run query if authenticated
   });
 
   // State for tab
@@ -118,6 +125,31 @@ export default function Inventory() {
     return totalStock <= item.reorderPoint;
   };
 
+  // Check if user is not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[600px] flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <div className="flex items-center justify-center mb-4">
+              <ShieldAlert className="h-12 w-12 text-amber-500" />
+            </div>
+            <CardTitle className="text-center">Authentication Required</CardTitle>
+            <CardDescription className="text-center">
+              You need to log in to access inventory management features.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center pb-6">
+            <Button onClick={() => window.location.href = '/auth'}>
+              Log In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Handle loading state
   if (isItemsLoading || isLocationsLoading || isDashboardLoading) {
     return (
       <div className="flex items-center justify-center min-h-[600px]">
