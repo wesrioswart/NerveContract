@@ -1306,23 +1306,15 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     });
   });
   
-  // In-memory storage for generated files with access tokens
-  const generatedReports = new Map();
-
-  // Generate token for file access
-  function generateToken() {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  }
-
-  // Request file generation API
+  // Direct export endpoint that handles both generation and downloading
   app.post("/api/export/procurement-report", requireAuth, async (req: Request, res: Response) => {
     try {
       const { reportType, dateRange, format } = req.body;
       
-      // Generate token for this report
-      const token = generateToken();
+      // For API clients that need the URL, not direct download
+      const isRequestingUrl = req.query.getUrl === 'true';
       
-      // Schedule report generation (async)
+      // Generate report data - same for both formats
       const reportData = {
         title: `Procurement ${reportType} Report`,
         generatedAt: new Date().toISOString(),
@@ -1412,48 +1404,16 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
         ]
       };
       
-      // Store filename and format for download
+      // If just requesting the URL (for web API clients)
+      if (isRequestingUrl) {
+        return res.json({
+          success: true,
+          message: 'Use direct POST with Accept header for file download',
+        });
+      }
+      
+      // Set filename for the report
       const filename = `procurement_report_${new Date().toISOString().split('T')[0]}`;
-      const reportInfo = {
-        filename,
-        format,
-        reportData,
-        expiry: Date.now() + (15 * 60 * 1000) // 15 minute expiry
-      };
-      
-      generatedReports.set(token, reportInfo);
-      
-      // Return token for client to use
-      res.json({ 
-        success: true, 
-        downloadUrl: `/api/download/report/${token}`,
-        format
-      });
-    } catch (error) {
-      console.error("Error generating procurement report:", error);
-      res.status(500).json({ error: "Failed to generate procurement report" });
-    }
-  });
-  
-  // Actual download endpoint
-  app.get("/api/download/report/:token", async (req: Request, res: Response) => {
-    try {
-      const { token } = req.params;
-      
-      // Check if token exists and is valid
-      if (!generatedReports.has(token)) {
-        return res.status(404).send('Report not found or expired. Please generate a new report.');
-      }
-      
-      const reportInfo = generatedReports.get(token);
-      
-      // Check if report has expired
-      if (reportInfo.expiry < Date.now()) {
-        generatedReports.delete(token);
-        return res.status(404).send('Report has expired. Please generate a new report.');
-      }
-      
-      const { filename, format, reportData } = reportInfo;
       
       // Generate CSV
       if (format === 'csv') {
@@ -1528,14 +1488,9 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
         
         // Convert rows to CSV string and send as response
         const csvContent = stringify(rows);
-        res.write(csvContent);
-        res.end();
-        
-        // Clean up after successful download
-        generatedReports.delete(token);
-        return;
+        return res.send(csvContent);
       } 
-      // Generate PDF  
+      // Generate PDF
       else if (format === 'pdf') {
         const PDFDocument = await import('pdfkit');
         
@@ -1758,17 +1713,18 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
           doc.moveDown(0.5);
         });
         
-        // Finalize PDF and cleanup
+        // Finalize PDF
         doc.end();
-        generatedReports.delete(token);
         return;
       }
       
-      // Format not recognized
-      res.status(400).json({ error: "Invalid format specified" });
+      // If no format or invalid format specified
+      return res.status(400).json({ 
+        error: "Invalid format specified. Use 'pdf' or 'csv'."
+      });
     } catch (error) {
-      console.error("Error downloading report:", error);
-      res.status(500).send('An error occurred during report download. Please try again.');
+      console.error("Error generating report:", error);
+      res.status(500).json({ error: "Failed to generate report" });
     }
   });
 

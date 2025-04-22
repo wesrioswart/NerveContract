@@ -125,7 +125,7 @@ export default function Procurement() {
     return `£${(value / 100).toFixed(2)}`;
   };
 
-  // Function to download file from server using the new token approach
+  // Function to download file directly 
   const downloadFileFromServer = async (format: string) => {
     try {
       // Show loading state
@@ -134,30 +134,43 @@ export default function Procurement() {
         button.innerHTML = `<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating ${format.toUpperCase()}...`;
       }
       
-      // Step 1: Request a token for the report
-      const response = await fetch('/api/export/procurement-report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reportType: 'Detailed Breakdown',
-          dateRange: 'Jan 2023 - Apr 2023',
-          format
-        })
-      });
+      // Create an iframe for download that doesn't trigger popup blockers
+      const downloadFrame = document.createElement('iframe');
+      downloadFrame.style.display = 'none';
+      document.body.appendChild(downloadFrame);
       
-      const data = await response.json();
+      // Create a form and submit it within the iframe
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/api/export/procurement-report';
+      form.target = 'download_frame'; // Target the iframe
       
-      if (!data.success || !data.downloadUrl) {
-        throw new Error('Failed to generate report download link');
-      }
+      // Add hidden fields for the report parameters
+      const addHiddenField = (name: string, value: string) => {
+        const field = document.createElement('input');
+        field.type = 'hidden';
+        field.name = name;
+        field.value = value;
+        form.appendChild(field);
+      };
       
-      // Step 2: Open the download URL in a new window
-      window.open(data.downloadUrl, '_blank');
+      // Add all required parameters
+      addHiddenField('reportType', 'Detailed Breakdown');
+      addHiddenField('dateRange', 'Jan 2023 - Apr 2023');
+      addHiddenField('format', format);
       
-      // Reset button after short delay
+      // Apply a name to the iframe and add the form to the document
+      downloadFrame.name = 'download_frame';
+      document.body.appendChild(form);
+      
+      // Submit the form
+      form.submit();
+      
+      // Clean up and reset the button after a delay
       setTimeout(() => {
+        document.body.removeChild(form);
+        document.body.removeChild(downloadFrame);
+        
         if (button) {
           button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
         }
