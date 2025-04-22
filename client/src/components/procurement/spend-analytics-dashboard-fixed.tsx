@@ -317,7 +317,7 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
     <div className={className}>
       {/* Main Card */}
       <Card className="shadow-sm">
-        <CardHeader className="pb-4">
+        <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <CardTitle className="text-lg font-semibold">Spend Analytics Dashboard</CardTitle>
@@ -348,127 +348,92 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
             </div>
           </div>
           
-          {/* Filters Section */}
-          <div className="mt-4 pt-4 border-t border-border flex flex-col gap-3">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground">View:</span>
-                <div className="flex border border-input rounded-md overflow-hidden">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`h-7 px-2 rounded-none ${viewMode === 'chart' ? 'bg-muted' : ''}`}
-                    onClick={() => setViewMode('chart')}
-                  >
-                    <BarChart3 className="h-3.5 w-3.5 mr-1" />
-                    <span className="text-xs">Chart</span>
-                  </Button>
-                  <Separator orientation="vertical" className="h-7" />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`h-7 px-2 rounded-none ${viewMode === 'table' ? 'bg-muted' : ''}`}
-                    onClick={() => setViewMode('table')}
-                  >
-                    <Table className="h-3.5 w-3.5 mr-1" />
-                    <span className="text-xs">Table</span>
-                  </Button>
-                </div>
+          {/* Filters Row - Matching screenshot exactly */}
+          <div className="flex flex-wrap items-center gap-4 mt-4 border-t border-border/40 pt-4">
+            <div className="flex items-center gap-4">
+              <span className="text-sm">View:</span>
+              <div className="flex">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`px-2 py-1 h-auto rounded-md ${viewMode === 'chart' ? 'bg-muted' : ''}`}
+                  onClick={() => setViewMode('chart')}
+                >
+                  <BarChart3 className="h-4 w-4 mr-1.5" />
+                  <span>Chart</span>
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`px-2 py-1 h-auto rounded-md ${viewMode === 'table' ? 'bg-muted' : ''}`}
+                  onClick={() => setViewMode('table')}
+                >
+                  <Table className="h-4 w-4 mr-1.5" />
+                  <span>Table</span>
+                </Button>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground">Date range:</span>
-                <Select value={dateRange} onValueChange={(value) => setDateRange(value as any)}>
-                  <SelectTrigger className="h-7 w-[110px] text-xs">
-                    <SelectValue placeholder="Date range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <div className="p-1">
-                      <h4 className="text-xs font-semibold mb-1 text-muted-foreground px-2">Select time period</h4>
-                      <Separator className="my-1" />
-                      <div className="py-1">
-                        <SelectItem value="30d" className="text-xs">Last 30 days</SelectItem>
-                        <SelectItem value="90d" className="text-xs">Last 90 days</SelectItem>
-                        <SelectItem value="6m" className="text-xs">Last 6 months</SelectItem>
-                        <SelectItem value="1y" className="text-xs">Last year</SelectItem>
-                      </div>
-                    </div>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground">Compare to:</span>
-                <Select value={comparisonMode} onValueChange={(value) => setComparisonMode(value as any)}>
-                  <SelectTrigger className="h-7 w-[160px] text-xs">
-                    <SelectValue placeholder="Select comparison" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <div className="p-1">
-                      <h4 className="text-xs font-semibold mb-1 text-muted-foreground px-2">Select comparison type</h4>
-                      <Separator className="my-1" />
-                      <div className="py-1">
-                        <SelectItem value="none" className="flex items-center">
-                          <div className="flex items-center">
-                            <Check className={`mr-2 h-4 w-4 ${comparisonMode === 'none' ? 'opacity-100' : 'opacity-0'}`} />
-                            <span>No comparison</span>
-                          </div>
-                        </SelectItem>
-                        
-                        <SelectItem value="previous-period" className="flex items-center">
-                          <div className="flex items-center">
-                            <Check className={`mr-2 h-4 w-4 ${comparisonMode === 'previous-period' ? 'opacity-100' : 'opacity-0'}`} />
-                            <span>vs. Previous period</span>
-                          </div>
-                        </SelectItem>
-                        
-                        <SelectItem value="budget" className="flex items-center">
-                          <div className="flex items-center">
-                            <Check className={`mr-2 h-4 w-4 ${comparisonMode === 'budget' ? 'opacity-100' : 'opacity-0'}`} />
-                            <span>vs. Budget</span>
-                          </div>
-                        </SelectItem>
-                      </div>
-                    </div>
-                  </SelectContent>
-                </Select>
-              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm">Date range:</span>
+              <Select value={dateRange} onValueChange={(value) => setDateRange(value as any)}>
+                <SelectTrigger className="h-9 w-[130px]">
+                  <SelectValue placeholder="Date range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30d">Last 30 days</SelectItem>
+                  <SelectItem value="90d">Last 90 days</SelectItem>
+                  <SelectItem value="6m">Last 6 months</SelectItem>
+                  <SelectItem value="1y">Last year</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm">Compare to:</span>
+              <Select value={comparisonMode} onValueChange={(value) => setComparisonMode(value as any)}>
+                <SelectTrigger className="h-9 w-[180px]">
+                  <SelectValue placeholder="Select comparison" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No comparison</SelectItem>
+                  <SelectItem value="previous-period">vs. Previous period</SelectItem>
+                  <SelectItem value="budget">vs. Budget</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
           {/* Comparison indicator banner */}
-          <div className="mt-4 pt-4 border-t border-border/40">
-            <div className="flex items-center justify-between gap-4">
-              {comparisonMode !== 'none' && (
-                <div className="bg-blue-50 border border-blue-100 rounded-md py-1.5 px-3 flex items-center shadow-sm">
-                  <Info className="h-3.5 w-3.5 text-blue-500 mr-2" />
-                  <span className="text-xs text-blue-700 font-medium mr-2">Currently comparing:</span>
-                  <Badge variant="outline" className="bg-blue-100 text-blue-700 text-xs font-normal border-blue-200">
-                    {comparisonMode === 'previous-period' ? 'vs. Previous period' : 'vs. Budget'}
-                  </Badge>
-                </div>
-              )}
+          {comparisonMode !== 'none' && (
+            <div className="flex items-center mt-4 rounded-md py-1.5 px-3 bg-blue-50 border border-blue-100">
+              <Info className="h-4 w-4 text-blue-500 mr-2" />
+              <span className="text-sm text-blue-700 font-medium">Currently comparing:</span>
+              <Badge variant="outline" className="ml-2 bg-blue-100 text-blue-700 border-blue-200">
+                {comparisonMode === 'previous-period' ? 'vs. Previous period' : 'vs. Budget'}
+              </Badge>
             </div>
-          </div>
+          )}
 
-          {/* Tabs for different views */}
-          <div className="mt-4">
+          {/* Tabs for different views - Styled to match screenshot */}
+          <div className="mt-4 border-b border-border">
             <Tabs defaultValue="weekly" className="w-full">
-              <TabsList className="grid grid-cols-4 w-full md:w-[540px]">
-                <TabsTrigger value="weekly" className="flex items-center gap-1.5 text-xs">
-                  <Calendar className="h-3.5 w-3.5" />
+              <TabsList className="bg-transparent border-b-0 h-10 justify-start p-0 w-full gap-3">
+                <TabsTrigger value="weekly" className="data-[state=active]:border-primary data-[state=active]:border-b-2 data-[state=active]:bg-transparent border-b-2 border-transparent pb-2 mb-0 px-2 rounded-none">
+                  <Calendar className="h-4 w-4 mr-1.5" />
                   Weekly
                 </TabsTrigger>
-                <TabsTrigger value="monthly" className="flex items-center gap-1.5 text-xs">
-                  <Calendar className="h-3.5 w-3.5" />
+                <TabsTrigger value="monthly" className="data-[state=active]:border-primary data-[state=active]:border-b-2 data-[state=active]:bg-transparent border-b-2 border-transparent pb-2 mb-0 px-2 rounded-none">
+                  <Calendar className="h-4 w-4 mr-1.5" />
                   Monthly
                 </TabsTrigger>
-                <TabsTrigger value="category" className="flex items-center gap-1.5 text-xs">
-                  <PieChart className="h-3.5 w-3.5" />
+                <TabsTrigger value="category" className="data-[state=active]:border-primary data-[state=active]:border-b-2 data-[state=active]:bg-transparent border-b-2 border-transparent pb-2 mb-0 px-2 rounded-none">
+                  <PieChart className="h-4 w-4 mr-1.5" />
                   Category
                 </TabsTrigger>
-                <TabsTrigger value="insights" className="flex items-center gap-1.5 text-xs">
-                  <Lightbulb className="h-3.5 w-3.5" />
+                <TabsTrigger value="insights" className="data-[state=active]:border-primary data-[state=active]:border-b-2 data-[state=active]:bg-transparent border-b-2 border-transparent pb-2 mb-0 px-2 rounded-none">
+                  <Lightbulb className="h-4 w-4 mr-1.5" />
                   AI Insights
                 </TabsTrigger>
               </TabsList>
@@ -478,7 +443,7 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
         
         <CardContent className="pt-6">
           <Tabs defaultValue="weekly">
-            {/* Weekly Spend Chart */}
+            {/* Weekly Spend Chart - Line Chart Similar to Screenshot */}
             <TabsContent value="weekly" className="mt-0">
               <div className="relative h-[250px]">
                 {/* Y-axis labels with intermediate values - abbreviated for readability */}
@@ -498,15 +463,15 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   £0
                 </div>
                 
-                {/* View Detailed Breakdown Button for Weekly - moved to the right, above the graph */}
+                {/* View Details Button */}
                 <div className="absolute top-0 right-0">
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     size="sm" 
-                    className="text-xs h-6 bg-secondary/10 hover:bg-secondary/20 border-secondary/20 px-2"
+                    className="text-sm flex items-center gap-1.5"
                     onClick={() => openDetailedBreakdown('weekly')}
                   >
-                    <PieChart className="h-3 w-3 mr-1" />
+                    <Clock className="h-4 w-4" />
                     View Details
                   </Button>
                 </div>
@@ -520,220 +485,174 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
                 </div>
                 
-                {/* Trend Lines Visualization */}
-                {comparisonMode !== 'none' && (
-                  <div className="relative h-[200px] mt-6 mx-auto" style={{ maxWidth: "800px" }}>
-                    <svg width="100%" height="200" className="absolute top-0 left-0 z-0 overflow-visible">
-                      {/* Trend line for actual spend */}
+                {/* Line Chart Visualization - To match screenshot */}
+                <div className="relative h-[200px] mt-10 mx-auto" style={{ maxWidth: "800px" }}>
+                  <svg width="100%" height="200" className="overflow-visible">
+                    {/* Line chart for actual spend */}
+                    <polyline
+                      points={spendData.weeklySpend.map((week, i) => {
+                        const x = 45 + i * 80;
+                        const y = 200 - (week.amount / maxWeeklyAmount) * 180;
+                        return `${x},${y}`;
+                      }).join(' ')}
+                      fill="none"
+                      stroke="#8b5cf6"
+                      strokeWidth="2.5"
+                      className="opacity-90"
+                    />
+                    
+                    {/* Data points */}
+                    {spendData.weeklySpend.map((week, i) => {
+                      const x = 45 + i * 80;
+                      const y = 200 - (week.amount / maxWeeklyAmount) * 180;
+                      return (
+                        <g key={i}>
+                          <circle 
+                            cx={x} 
+                            cy={y} 
+                            r="4"
+                            className={`${week.hasAnomaly ? 'fill-red-500 stroke-white stroke-2' : 'fill-violet-500'}`}
+                          />
+                          {week.hasAnomaly && (
+                            <circle 
+                              cx={x} 
+                              cy={y} 
+                              r="8"
+                              className="fill-red-500 opacity-30 animate-pulse"
+                            />
+                          )}
+                        </g>
+                      );
+                    })}
+                    
+                    {/* Budget comparison line */}
+                    {comparisonMode === 'budget' && (
                       <polyline
                         points={spendData.weeklySpend.map((week, i) => {
                           const x = 45 + i * 80;
-                          const y = 200 - (week.amount / maxWeeklyAmount) * 180;
+                          const y = 200 - (week.budget / maxWeeklyAmount) * 180;
                           return `${x},${y}`;
                         }).join(' ')}
                         fill="none"
-                        stroke="#7C3AED"
+                        stroke="#22c55e"
                         strokeWidth="2"
-                        strokeDasharray="3,2"
-                        className="opacity-60"
+                        strokeDasharray="4,2"
+                        className="opacity-70"
                       />
-                      
-                      {/* Trend line for budget when in budget comparison mode */}
-                      {comparisonMode === 'budget' && (
-                        <polyline
-                          points={spendData.weeklySpend.map((week, i) => {
-                            const x = 45 + i * 80;
-                            const y = 200 - (week.budget / maxWeeklyAmount) * 180;
-                            return `${x},${y}`;
-                          }).join(' ')}
-                          fill="none"
-                          stroke="#22C55E"
-                          strokeWidth="2"
-                          strokeDasharray="2,2"
-                          className="opacity-60"
-                        />
-                      )}
-                    </svg>
-                  </div>
-                )}
-                
-                {/* Chart bars */}
-                <div className="relative flex justify-center items-end h-[200px] mt-6 mx-auto" style={{ maxWidth: "800px" }}>
-                  {spendData.weeklySpend.map((week, index) => (
-                    <TooltipProvider key={index}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex flex-col items-center mx-2" style={{ width: "80px" }}>
-                            <div className="relative" style={{ width: "50px" }}>
-                              {/* Budget indicator in budget comparison mode */}
-                              {comparisonMode === 'budget' && (
-                                <div className="flex flex-col items-center">
-                                  <div 
-                                    className="absolute border-2 border-dashed border-green-500 w-full"
-                                    style={{ 
-                                      top: `${100 - (week.budget / maxWeeklyAmount) * 100}%`, 
-                                      height: '0px',
-                                      zIndex: 2
-                                    }}
-                                  ></div>
-                                  {/* Budget label */}
-                                  <span 
-                                    className="absolute text-[9px] font-medium text-green-600"
-                                    style={{ 
-                                      top: `${95 - (week.budget / maxWeeklyAmount) * 100}%`, 
-                                      right: '-30px',
-                                      zIndex: 2
-                                    }}
-                                  >
-                                    {formatCurrency(week.budget, { abbreviated: true })}
-                                  </span>
+                    )}
+                  </svg>
+                  
+                  {/* X-axis labels */}
+                  <div className="flex justify-between px-10 mt-4">
+                    {spendData.weeklySpend.map((week, index) => (
+                      <TooltipProvider key={index}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex flex-col items-center text-center" style={{ width: "70px" }}>
+                              <span className="text-xs font-medium">{week.week}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {formatCurrency(week.amount, { abbreviated: true })}
+                              </span>
+                              {week.hasAnomaly && (
+                                <Badge 
+                                  variant="outline" 
+                                  className="h-5 px-1 mt-1 text-[10px] border-red-200 bg-red-50 text-red-700"
+                                >
+                                  <AlertCircle className="h-2.5 w-2.5 mr-0.5" /> 
+                                  Anomaly
+                                </Badge>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="w-64 p-3">
+                            <div className="space-y-1.5">
+                              <p className="font-medium text-sm">{week.week}: {formatCurrency(week.amount)}</p>
+                              <p className="text-xs text-muted-foreground">{week.date}</p>
+                              
+                              {/* Previous Period Comparison */}
+                              {comparisonMode === 'previous-period' && (
+                                <div className="pt-1 mt-1 border-t border-border/30">
+                                  <p className="text-xs font-medium flex items-center">
+                                    <ArrowRight className="h-3 w-3 mr-1 text-blue-500" />
+                                    Comparison to Previous Week:
+                                  </p>
+                                  <p className={`text-xs ${
+                                    index > 0 && (week.amount > spendData.weeklySpend[index-1].amount) 
+                                      ? 'text-red-500' 
+                                      : index > 0 ? 'text-green-500' : 'text-muted-foreground'
+                                  } flex items-center`}>
+                                    {index > 0 ? (
+                                      week.amount > spendData.weeklySpend[index-1].amount ? (
+                                        <>
+                                          <TrendingUp className="h-3 w-3 mr-1" />
+                                          {Math.round((week.amount - spendData.weeklySpend[index-1].amount) / spendData.weeklySpend[index-1].amount * 100)}% increase 
+                                          ({formatCurrency(week.amount - spendData.weeklySpend[index-1].amount)})
+                                        </>
+                                      ) : (
+                                        <>
+                                          <TrendingDown className="h-3 w-3 mr-1" />
+                                          {Math.round((spendData.weeklySpend[index-1].amount - week.amount) / spendData.weeklySpend[index-1].amount * 100)}% decrease 
+                                          ({formatCurrency(spendData.weeklySpend[index-1].amount - week.amount)})
+                                        </>
+                                      )
+                                    ) : (
+                                      <span>First week in period</span>
+                                    )}
+                                  </p>
                                 </div>
                               )}
                               
-                              <div 
-                                className={`bg-gradient-to-t from-primary/70 to-primary w-full 
-                                  rounded-t hover:brightness-110 transition-all duration-200 
-                                  ${week.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}
-                                  ${comparisonMode === 'budget' && week.amount > week.budget ? 'border-t-2 border-red-500' : ''}`} 
-                                style={{ 
-                                  height: `${(week.amount / maxWeeklyAmount) * 100}%`,
-                                  minHeight: "10px"
-                                }}
-                              ></div>
-                              {week.hasAnomaly && (
-                                <div 
-                                  className="absolute -top-2 -right-2 bg-red-500 rounded-full p-0.5 cursor-help" 
-                                  title={week.anomalyReason}
-                                >
-                                  <AlertCircle className="h-3.5 w-3.5 text-white" />
-                                </div>
-                              )}
-                              {implementedForecasts.includes(1) && index === 3 && (
-                                <div className="absolute -top-2 -left-2 bg-green-500 rounded-full p-0.5">
-                                  <Check className="h-3.5 w-3.5 text-white" />
-                                </div>
-                              )}
-                              {index > 0 && spendData.weeklySpend[index-1].amount < week.amount && (
-                                <div className="absolute -bottom-1 right-0 text-red-500">
-                                  <TrendingUp className="h-4 w-4" />
-                                </div>
-                              )}
-                              {index > 0 && spendData.weeklySpend[index-1].amount > week.amount && (
-                                <div className="absolute -bottom-1 right-0 text-green-500">
-                                  <TrendingDown className="h-4 w-4" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="mt-2 text-center" style={{ width: "80px" }}>
-                              <span className="block text-xs font-medium">{week.week}</span>
-                              <span className="block text-xs text-muted-foreground">
-                                {formatCurrency(week.amount)}
-                              </span>
+                              {/* Budget Comparison if in budget mode */}
                               {comparisonMode === 'budget' && (
-                                <span className={`block text-xs ${
-                                  week.amount > week.budget ? 'text-red-500' : 'text-green-500'
-                                }`}>
-                                  {week.amount > week.budget ? '+' : ''}
-                                  {Math.round((week.amount - week.budget) / week.budget * 100)}%
-                                </span>
-                              )}
-                              {week.hasAnomaly && resolvedAnomalies.includes(week.week === 'Week 4' ? 1 : (week.week === 'Week 7' ? 3 : 0)) && (
-                                <span className="text-xs text-green-500 flex items-center justify-center mt-1">
-                                  <Check className="h-3 w-3 mr-1" />
-                                  Resolved
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="w-64 p-3">
-                          <div className="space-y-1.5">
-                            <p className="font-medium text-sm">{week.week}: {formatCurrency(week.amount)}</p>
-                            <p className="text-xs text-muted-foreground">{week.date}</p>
-                            
-                            {/* Previous Period Comparison */}
-                            {comparisonMode === 'previous-period' && (
-                              <div className="pt-1 mt-1 border-t border-border/30">
-                                <p className="text-xs font-medium flex items-center">
-                                  <ArrowRight className="h-3 w-3 mr-1 text-blue-500" />
-                                  Comparison to Previous Week:
-                                </p>
-                                <p className={`text-xs ${
-                                  index > 0 && (week.amount > spendData.weeklySpend[index-1].amount) 
-                                    ? 'text-red-500' 
-                                    : index > 0 ? 'text-green-500' : 'text-muted-foreground'
-                                } flex items-center`}>
-                                  {index > 0 ? (
-                                    week.amount > spendData.weeklySpend[index-1].amount ? (
+                                <div className="pt-1 mt-1 border-t border-border/30">
+                                  <p className="text-xs font-medium flex items-center">
+                                    <BarChart3 className="h-3 w-3 mr-1 text-blue-500" />
+                                    Budget Performance:
+                                  </p>
+                                  <p className={`text-xs ${
+                                    week.amount > week.budget ? 'text-red-500' : 'text-green-500'
+                                  } flex items-center`}>
+                                    {week.amount > week.budget ? (
                                       <>
-                                        <TrendingUp className="h-3 w-3 mr-1" />
-                                        {Math.round((week.amount - spendData.weeklySpend[index-1].amount) / spendData.weeklySpend[index-1].amount * 100)}% increase 
-                                        ({formatCurrency(week.amount - spendData.weeklySpend[index-1].amount)})
+                                        <AlertCircle className="h-3 w-3 mr-1" />
+                                        {Math.round((week.amount - week.budget) / week.budget * 100)}% over budget 
+                                        ({formatCurrency(week.amount - week.budget)})
                                       </>
                                     ) : (
                                       <>
-                                        <TrendingDown className="h-3 w-3 mr-1" />
-                                        {Math.round((spendData.weeklySpend[index-1].amount - week.amount) / spendData.weeklySpend[index-1].amount * 100)}% decrease 
-                                        ({formatCurrency(spendData.weeklySpend[index-1].amount - week.amount)})
+                                        <Check className="h-3 w-3 mr-1" />
+                                        {Math.round((week.budget - week.amount) / week.budget * 100)}% under budget
+                                        ({formatCurrency(week.budget - week.amount)})
                                       </>
-                                    )
-                                  ) : (
-                                    <span>First week in period</span>
-                                  )}
-                                </p>
-                              </div>
-                            )}
-                            
-                            {/* Budget Comparison if in budget mode */}
-                            {comparisonMode === 'budget' && (
-                              <div className="pt-1 mt-1 border-t border-border/30">
-                                <p className="text-xs font-medium flex items-center">
-                                  <BarChart3 className="h-3 w-3 mr-1 text-blue-500" />
-                                  Budget Performance:
-                                </p>
-                                <p className={`text-xs ${
-                                  week.amount > week.budget ? 'text-red-500' : 'text-green-500'
-                                } flex items-center`}>
-                                  {week.amount > week.budget ? (
-                                    <>
-                                      <AlertCircle className="h-3 w-3 mr-1" />
-                                      {Math.round((week.amount - week.budget) / week.budget * 100)}% over budget 
-                                      ({formatCurrency(week.amount - week.budget)})
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Check className="h-3 w-3 mr-1" />
-                                      {Math.round((week.budget - week.amount) / week.budget * 100)}% under budget
-                                      ({formatCurrency(week.budget - week.amount)})
-                                    </>
-                                  )}
-                                </p>
-                              </div>
-                            )}
-                            
-                            {/* Anomaly Details with Explanation */}
-                            {week.hasAnomaly && (
-                              <div className="pt-1 mt-1 border-t border-border/30">
-                                <p className="text-xs font-medium text-red-500 flex items-center">
-                                  <AlertCircle className="h-3 w-3 mr-1" />
-                                  Anomaly Detected:
-                                </p>
-                                <p className="text-xs text-red-500/90 mt-1">
-                                  {week.anomalyReason || (week.week === 'Week 4' 
-                                    ? "125% increase from previous week. Unusually high spend in materials category." 
-                                    : "Unexpected 68% increase from average weekly spend. Labor costs significantly elevated.")}
-                                </p>
-                                <p className="text-xs flex items-center mt-1 text-muted-foreground">
-                                  <Info className="h-3 w-3 mr-1" />
-                                  Click for detailed analysis
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ))}
+                                    )}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {/* Anomaly Details with Explanation */}
+                              {week.hasAnomaly && (
+                                <div className="pt-1 mt-1 border-t border-border/30">
+                                  <p className="text-xs font-medium text-red-500 flex items-center">
+                                    <AlertCircle className="h-3 w-3 mr-1" />
+                                    Anomaly Detected:
+                                  </p>
+                                  <p className="text-xs text-red-500/90 mt-1">
+                                    {week.anomalyReason || (week.week === 'Week 4' 
+                                      ? "125% increase from previous week. Unusually high spend in materials category." 
+                                      : "Unexpected 68% increase from average weekly spend. Labor costs significantly elevated.")}
+                                  </p>
+                                  <p className="text-xs flex items-center mt-1 text-muted-foreground">
+                                    <Info className="h-3 w-3 mr-1" />
+                                    Click for detailed analysis
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
+                  </div>
                 </div>
               </div>
             </TabsContent>
@@ -758,15 +677,15 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   £0
                 </div>
                 
-                {/* View Detailed Breakdown Button for Monthly - moved to the right, above the graph */}
+                {/* View Details Button */}
                 <div className="absolute top-0 right-0">
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     size="sm" 
-                    className="text-xs h-6 bg-secondary/10 hover:bg-secondary/20 border-secondary/20 px-2"
+                    className="text-sm flex items-center gap-1.5"
                     onClick={() => openDetailedBreakdown('monthly')}
                   >
-                    <PieChart className="h-3 w-3 mr-1" />
+                    <Clock className="h-4 w-4" />
                     View Details
                   </Button>
                 </div>
@@ -780,204 +699,170 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
                 </div>
                 
-                {/* Trend Lines Visualization */}
-                {comparisonMode !== 'none' && (
-                  <div className="relative h-[200px] mt-6 mx-auto" style={{ maxWidth: "800px" }}>
-                    <svg width="100%" height="200" className="absolute top-0 left-0 z-0 overflow-visible">
-                      {/* Trend line for actual spend */}
+                {/* Line Chart Visualization - To match screenshot */}
+                <div className="relative h-[200px] mt-10 mx-auto" style={{ maxWidth: "800px" }}>
+                  <svg width="100%" height="200" className="overflow-visible">
+                    {/* Line chart for actual spend */}
+                    <polyline
+                      points={spendData.monthlySpend.map((month, i) => {
+                        const x = 45 + i * 120;
+                        const y = 200 - (month.amount / maxMonthlyAmount) * 180;
+                        return `${x},${y}`;
+                      }).join(' ')}
+                      fill="none"
+                      stroke="#8b5cf6"
+                      strokeWidth="2.5"
+                      className="opacity-90"
+                    />
+                    
+                    {/* Data points */}
+                    {spendData.monthlySpend.map((month, i) => {
+                      const x = 45 + i * 120;
+                      const y = 200 - (month.amount / maxMonthlyAmount) * 180;
+                      return (
+                        <g key={i}>
+                          <circle 
+                            cx={x} 
+                            cy={y} 
+                            r="4"
+                            className={`${month.hasAnomaly ? 'fill-red-500 stroke-white stroke-2' : 'fill-violet-500'}`}
+                          />
+                          {month.hasAnomaly && (
+                            <circle 
+                              cx={x} 
+                              cy={y} 
+                              r="8"
+                              className="fill-red-500 opacity-30 animate-pulse"
+                            />
+                          )}
+                        </g>
+                      );
+                    })}
+                    
+                    {/* Budget comparison line */}
+                    {comparisonMode === 'budget' && (
                       <polyline
                         points={spendData.monthlySpend.map((month, i) => {
-                          const x = 55 + i * 90;
-                          const y = 200 - (month.amount / maxMonthlyAmount) * 180;
+                          const x = 45 + i * 120;
+                          const y = 200 - (month.budget / maxMonthlyAmount) * 180;
                           return `${x},${y}`;
                         }).join(' ')}
                         fill="none"
-                        stroke="#7C3AED"
+                        stroke="#22c55e"
                         strokeWidth="2"
-                        strokeDasharray="3,2"
-                        className="opacity-60"
+                        strokeDasharray="4,2"
+                        className="opacity-70"
                       />
-                      
-                      {/* Trend line for budget when in budget comparison mode */}
-                      {comparisonMode === 'budget' && (
-                        <polyline
-                          points={spendData.monthlySpend.map((month, i) => {
-                            const x = 55 + i * 90;
-                            const y = 200 - (month.budget / maxMonthlyAmount) * 180;
-                            return `${x},${y}`;
-                          }).join(' ')}
-                          fill="none"
-                          stroke="#22C55E"
-                          strokeWidth="2"
-                          strokeDasharray="2,2"
-                          className="opacity-60"
-                        />
-                      )}
-                    </svg>
-                  </div>
-                )}
-                
-                {/* Chart bars - using fixed width for perfect column alignment */}
-                <div className="relative flex justify-center items-end h-[200px] mt-6 mx-auto" style={{ maxWidth: "800px" }}>
-                  {spendData.monthlySpend.map((month, index) => (
-                    <TooltipProvider key={index}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex flex-col items-center mx-2" style={{ width: "90px" }}>
-                            <div className="relative" style={{ width: "60px" }}>
-                              {/* Budget indicator in budget comparison mode */}
-                              {comparisonMode === 'budget' && (
-                                <div className="flex flex-col items-center">
-                                  <div 
-                                    className="absolute border-2 border-dashed border-green-500 w-full"
-                                    style={{ 
-                                      top: `${100 - (month.budget / maxMonthlyAmount) * 100}%`, 
-                                      height: '0px',
-                                      zIndex: 2
-                                    }}
-                                  ></div>
-                                  {/* Budget label */}
-                                  <span 
-                                    className="absolute text-[9px] font-medium text-green-600"
-                                    style={{ 
-                                      top: `${95 - (month.budget / maxMonthlyAmount) * 100}%`, 
-                                      right: '-35px',
-                                      zIndex: 2
-                                    }}
-                                  >
-                                    {formatCurrency(month.budget, { abbreviated: true })}
-                                  </span>
+                    )}
+                  </svg>
+                  
+                  {/* X-axis labels */}
+                  <div className="flex justify-between px-10 mt-4">
+                    {spendData.monthlySpend.map((month, index) => (
+                      <TooltipProvider key={index}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex flex-col items-center text-center" style={{ width: "100px" }}>
+                              <span className="text-xs font-medium">{month.month} {month.year}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {formatCurrency(month.amount, { abbreviated: true })}
+                              </span>
+                              {month.hasAnomaly && (
+                                <Badge 
+                                  variant="outline" 
+                                  className="h-5 px-1 mt-1 text-[10px] border-red-200 bg-red-50 text-red-700"
+                                >
+                                  <AlertCircle className="h-2.5 w-2.5 mr-0.5" /> 
+                                  Anomaly
+                                </Badge>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="w-64 p-3">
+                            <div className="space-y-1.5">
+                              <p className="font-medium text-sm">{month.month} {month.year}: {formatCurrency(month.amount)}</p>
+                              
+                              {/* Previous Period Comparison */}
+                              {month.change !== null && (
+                                <div className="pt-1">
+                                  <p className="text-xs font-medium flex items-center">
+                                    <ArrowRight className="h-3 w-3 mr-1 text-blue-500" />
+                                    Comparison to Previous Month:
+                                  </p>
+                                  <p className={`text-xs flex items-center ${
+                                    month.change > 0 ? 'text-red-500' : 
+                                    month.change < 0 ? 'text-green-500' : 'text-muted-foreground'
+                                  }`}>
+                                    {month.change > 0 ? (
+                                      <>
+                                        <TrendingUp className="h-3 w-3 mr-1" />
+                                        {month.change}% increase ({formatCurrency(month.amount * month.change / 100)})
+                                      </>
+                                    ) : month.change < 0 ? (
+                                      <>
+                                        <TrendingDown className="h-3 w-3 mr-1" />
+                                        {Math.abs(month.change)}% decrease ({formatCurrency(month.amount * Math.abs(month.change) / 100)})
+                                      </>
+                                    ) : (
+                                      <span>No change from previous month</span>
+                                    )}
+                                  </p>
                                 </div>
                               )}
                               
-                              <div 
-                                className={`bg-gradient-to-t from-secondary/70 to-secondary w-full 
-                                  rounded-t hover:brightness-110 transition-all duration-200 
-                                  ${month.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}
-                                  ${comparisonMode === 'budget' && month.amount > month.budget ? 'border-t-2 border-red-500' : ''}`}
-                                style={{ 
-                                  height: `${(month.amount / maxMonthlyAmount) * 100}%`,
-                                  minHeight: "10px"
-                                }}
-                              ></div>
+                              {/* Budget Comparison if in budget mode */}
+                              {comparisonMode === 'budget' && (
+                                <div className="pt-1 mt-1 border-t border-border/30">
+                                  <p className="text-xs font-medium flex items-center">
+                                    <BarChart3 className="h-3 w-3 mr-1 text-blue-500" />
+                                    Budget Performance:
+                                  </p>
+                                  <p className={`text-xs ${
+                                    month.amount > month.budget ? 'text-red-500' : 'text-green-500'
+                                  } flex items-center`}>
+                                    {month.amount > month.budget ? (
+                                      <>
+                                        <AlertCircle className="h-3 w-3 mr-1" />
+                                        {Math.round((month.amount - month.budget) / month.budget * 100)}% over budget
+                                        ({formatCurrency(month.amount - month.budget)})
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Check className="h-3 w-3 mr-1" />
+                                        {Math.round((month.budget - month.amount) / month.budget * 100)}% under budget
+                                        ({formatCurrency(month.budget - month.amount)})
+                                      </>
+                                    )}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {/* Anomaly Details with Explanation */}
                               {month.hasAnomaly && (
-                                <div className="absolute -top-2 -right-2 bg-red-500 rounded-full p-0.5">
-                                  <AlertCircle className="h-3.5 w-3.5 text-white" />
-                                </div>
-                              )}
-                              {implementedForecasts.includes(5) && index === 3 && (
-                                <div className="absolute -top-2 -left-2 bg-green-500 rounded-full p-0.5">
-                                  <Check className="h-3.5 w-3.5 text-white" />
-                                </div>
-                              )}
-                              {month.change !== null && month.change < 0 && (
-                                <div className="absolute -bottom-1 right-0 text-green-500">
-                                  <TrendingDown className="h-4 w-4" />
-                                </div>
-                              )}
-                              {month.change !== null && month.change > 0 && (
-                                <div className="absolute -bottom-1 right-0 text-red-500">
-                                  <TrendingUp className="h-4 w-4" />
+                                <div className="pt-1 mt-1 border-t border-border/30">
+                                  <p className="text-xs font-medium text-red-500 flex items-center">
+                                    <AlertCircle className="h-3 w-3 mr-1" />
+                                    Anomaly Detected:
+                                  </p>
+                                  <p className="text-xs text-red-500/90 mt-1">
+                                    {month.anomalyReason || (month.month === 'Jan' 
+                                      ? "Significant increase in materials category from seasonal average. Potential over-ordering detected." 
+                                      : month.month === 'Mar'
+                                      ? "Equipment rental costs 35% above forecast without corresponding project activity increase."
+                                      : "Unexpected expense pattern in transportation costs - 3x normal volume.")}
+                                  </p>
+                                  <p className="text-xs flex items-center mt-1 text-muted-foreground">
+                                    <Info className="h-3 w-3 mr-1" />
+                                    Click for AI analysis
+                                  </p>
                                 </div>
                               )}
                             </div>
-                            <div className="mt-3 text-center">
-                              <span className="block text-xs font-medium">{month.month}</span>
-                              <span className="block text-xs text-muted-foreground">
-                                {formatCurrency(month.amount)}
-                              </span>
-                              {month.change !== null && (
-                                <span className={`text-xs ${month.change > 0 ? 'text-red-500' : month.change < 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
-                                  {month.change > 0 ? '+' : ''}{month.change}%
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="w-64 p-3">
-                          <div className="space-y-1.5">
-                            <p className="font-medium text-sm">{month.month} {month.year}: {formatCurrency(month.amount)}</p>
-                            
-                            {/* Previous Period Comparison */}
-                            {month.change !== null && (
-                              <div className="pt-1">
-                                <p className="text-xs font-medium flex items-center">
-                                  <ArrowRight className="h-3 w-3 mr-1 text-blue-500" />
-                                  Comparison to Previous Month:
-                                </p>
-                                <p className={`text-xs flex items-center ${
-                                  month.change > 0 ? 'text-red-500' : 
-                                  month.change < 0 ? 'text-green-500' : 'text-muted-foreground'
-                                }`}>
-                                  {month.change > 0 ? (
-                                    <>
-                                      <TrendingUp className="h-3 w-3 mr-1" />
-                                      {month.change}% increase ({formatCurrency(month.amount * month.change / 100)})
-                                    </>
-                                  ) : month.change < 0 ? (
-                                    <>
-                                      <TrendingDown className="h-3 w-3 mr-1" />
-                                      {Math.abs(month.change)}% decrease ({formatCurrency(month.amount * Math.abs(month.change) / 100)})
-                                    </>
-                                  ) : (
-                                    <span>No change from previous month</span>
-                                  )}
-                                </p>
-                              </div>
-                            )}
-                            
-                            {/* Budget Comparison if in budget mode */}
-                            {comparisonMode === 'budget' && (
-                              <div className="pt-1 mt-1 border-t border-border/30">
-                                <p className="text-xs font-medium flex items-center">
-                                  <BarChart3 className="h-3 w-3 mr-1 text-blue-500" />
-                                  Budget Performance:
-                                </p>
-                                <p className={`text-xs ${
-                                  month.amount > month.budget ? 'text-red-500' : 'text-green-500'
-                                } flex items-center`}>
-                                  {month.amount > month.budget ? (
-                                    <>
-                                      <AlertCircle className="h-3 w-3 mr-1" />
-                                      {Math.round((month.amount - month.budget) / month.budget * 100)}% over budget
-                                      ({formatCurrency(month.amount - month.budget)})
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Check className="h-3 w-3 mr-1" />
-                                      {Math.round((month.budget - month.amount) / month.budget * 100)}% under budget
-                                      ({formatCurrency(month.budget - month.amount)})
-                                    </>
-                                  )}
-                                </p>
-                              </div>
-                            )}
-                            
-                            {/* Anomaly Details with Explanation */}
-                            {month.hasAnomaly && (
-                              <div className="pt-1 mt-1 border-t border-border/30">
-                                <p className="text-xs font-medium text-red-500 flex items-center">
-                                  <AlertCircle className="h-3 w-3 mr-1" />
-                                  Anomaly Detected:
-                                </p>
-                                <p className="text-xs text-red-500/90 mt-1">
-                                  {month.anomalyReason || (month.month === 'Jan' 
-                                    ? "Significant increase in materials category from seasonal average. Potential over-ordering detected." 
-                                    : month.month === 'Mar'
-                                    ? "Equipment rental costs 35% above forecast without corresponding project activity increase."
-                                    : "Unexpected expense pattern in transportation costs - 3x normal volume.")}
-                                </p>
-                                <p className="text-xs flex items-center mt-1 text-muted-foreground">
-                                  <Info className="h-3 w-3 mr-1" />
-                                  Click for AI analysis
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ))}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
+                  </div>
                 </div>
               </div>
             </TabsContent>
@@ -985,15 +870,15 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
             {/* Category Breakdown */}
             <TabsContent value="category" className="mt-0">
               <div className="relative mt-2 mb-2">
-                {/* View Detailed Breakdown Button for Category at the top right */}
+                {/* View Details Button */}
                 <div className="absolute top-0 right-0">
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     size="sm" 
-                    className="text-xs h-6 bg-primary/10 hover:bg-primary/20 border-primary/20 px-2"
+                    className="text-sm flex items-center gap-1.5"
                     onClick={() => openDetailedBreakdown('category')}
                   >
-                    <PieChart className="h-3 w-3 mr-1" />
+                    <PieChart className="h-4 w-4" />
                     View Details
                   </Button>
                 </div>
@@ -1494,6 +1379,76 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
               </div>
             </TabsContent>
           </Tabs>
+          
+          {/* PO Summary Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold">Recent Purchase Orders</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-2">
+                <div className="space-y-3">
+                  {[
+                    { reference: 'PO-2023-0009', supplier: 'TimberTech Solutions', amount: 22100, week: 'Week 4', status: 'completed' },
+                    { reference: 'PO-2023-0008', supplier: 'ConcreteWorks UK', amount: 15780, week: 'Week 2', status: 'pending approval' },
+                    { reference: 'PO-2023-0007', supplier: 'HeavyLift Equipment', amount: 18980, week: 'Week 7', status: 'ordered' },
+                    { reference: 'PO-2023-0006', supplier: 'MetalFraming Inc', amount: 11250, week: 'Week 6', status: 'draft' }
+                  ].map((po, i) => (
+                    <div key={i} className="flex items-center justify-between border-b pb-2">
+                      <div>
+                        <p className="font-medium text-sm">{po.reference}</p>
+                        <p className="text-sm text-muted-foreground">{po.supplier}</p>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="flex items-center mb-1">
+                          <Badge 
+                            className={`
+                              ${po.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                              po.status === 'draft' ? 'bg-blue-100 text-blue-800' : 
+                              po.status === 'pending approval' ? 'bg-amber-100 text-amber-800' : 
+                              'bg-purple-100 text-purple-800'}
+                            `}
+                          >
+                            {po.status.charAt(0).toUpperCase() + po.status.slice(1)}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center">
+                          <Badge variant="outline" className="mr-2">{po.week}</Badge>
+                          <span className="font-semibold">£{po.amount.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold">POs by Status</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between bg-green-50 p-3 rounded-md">
+                    <span className="font-medium">Completed</span>
+                    <Badge variant="outline" className="bg-green-100 text-green-800">5</Badge>
+                  </div>
+                  <div className="flex items-center justify-between bg-blue-50 p-3 rounded-md">
+                    <span className="font-medium">Approved</span>
+                    <Badge variant="outline" className="bg-blue-100 text-blue-800">1</Badge>
+                  </div>
+                  <div className="flex items-center justify-between bg-amber-50 p-3 rounded-md">
+                    <span className="font-medium">Pending Approval</span>
+                    <Badge variant="outline" className="bg-amber-100 text-amber-800">1</Badge>
+                  </div>
+                  <div className="flex items-center justify-between bg-slate-50 p-3 rounded-md">
+                    <span className="font-medium">Draft</span>
+                    <Badge variant="outline" className="bg-slate-100">1</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </CardContent>
       </Card>
 
