@@ -10,7 +10,7 @@ import {
   InsertSupplier,
   InsertNominalCode,
 } from "@shared/schema";
-import { eq, and, like, ilike, desc, asc } from "drizzle-orm";
+import { eq, and, like, ilike, desc, asc, sql } from "drizzle-orm";
 
 // Nominal Codes
 export const getNominalCodes = async (_req: Request, res: Response) => {
