@@ -187,11 +187,12 @@ export async function downloadReport(req: Request, res: Response): Promise<void>
     const { format } = req.params;
     
     if (format === 'pdf' || format === 'csv') {
-      // Use the standard export function but pass the format from URL params
-      await exportProcurementReport({
-        ...req, 
-        body: { ...req.body, format }
-      }, res);
+      // Create a modified request body with the format included
+      const modifiedBody = { ...req.body, format };
+      
+      // Call the main export function with the modified body
+      req.body = modifiedBody;
+      await exportProcurementReport(req, res);
     } else {
       res.status(400).json({ 
         error: "Invalid format. Use 'pdf' or 'csv'.",

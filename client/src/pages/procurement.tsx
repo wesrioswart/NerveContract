@@ -150,27 +150,22 @@ export default function Procurement() {
   const downloadFileFromServer = async (format: 'pdf' | 'csv'): Promise<void> => {
     // Find export button once to avoid repeated lookups
     const button = document.querySelector('[data-export-button]') as HTMLElement;
+    const buttonOriginalHTML = button?.innerHTML || '';
     
     try {
+      console.log(`Starting ${format} export...`);
+      
       // Show loading state
       if (button) {
         button.innerHTML = `${SVG_ICONS.loading} Generating ${format.toUpperCase()}...`;
       }
       
-      // Create a hidden iframe to handle the download
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-      
-      if (!iframe.contentDocument) {
-        throw new Error('Failed to create iframe document');
-      }
-      
-      // Create a form in the iframe
+      // Create a direct form submission approach (simpler and more reliable)
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = '/api/export/procurement-report';
       form.target = '_blank'; // Open in new tab
+      form.style.display = 'none';
       
       // Create form inputs with report parameters
       const formInputs: Array<{name: string, value: string}> = [
@@ -188,27 +183,21 @@ export default function Procurement() {
         form.appendChild(inputElement);
       });
       
-      // Append the form to the iframe and submit it
-      iframe.contentDocument.body.appendChild(form);
-      
-      // Add listener to detect error in iframe loading
-      iframe.onerror = () => {
-        throw new Error('Failed to load download frame');
-      };
-      
-      // Submit the form to trigger download
+      // Append form directly to document body and submit
+      document.body.appendChild(form);
+      console.log(`Submitting ${format} export form...`);
       form.submit();
       
       // Reset button after configured delay
       setTimeout(() => {
         if (button) {
-          button.innerHTML = `${SVG_ICONS.document} Export Full Report`;
+          button.innerHTML = buttonOriginalHTML;
         }
         
-        // Clean up the iframe after ensuring download has started
+        // Remove the form after a short delay
         setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, REPORT_CONFIG.cleanupTimeout);
+          document.body.removeChild(form);
+        }, 500);
       }, REPORT_CONFIG.resetTimeout);
     } catch (error) {
       console.error(`Error generating ${format} report:`, error);
@@ -232,7 +221,7 @@ export default function Procurement() {
       
       // Reset button
       if (button) {
-        button.innerHTML = `${SVG_ICONS.document} Export Full Report`;
+        button.innerHTML = buttonOriginalHTML;
       }
     }
   };
