@@ -26,6 +26,7 @@ import {
   ArrowRight,
   ArrowUp,
   ArrowDown,
+  ArrowLeftRight,
   Info,
   Download,
   HelpCircle,
@@ -35,7 +36,8 @@ import {
   ExternalLink,
   LayoutList,
   RotateCcw,
-  Table
+  Table,
+  LineChart
 } from "lucide-react";
 import { 
   Dialog, 
@@ -946,15 +948,61 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                             </div>
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent side="top" className="w-48 p-3">
+                        <TooltipContent side="top" className="w-64 p-3">
                           <div className="space-y-1.5">
                             <p className="font-medium text-sm">{week.week}: {formatCurrency(week.amount)}</p>
                             <p className="text-xs text-muted-foreground">{week.date}</p>
+                            
+                            {/* Previous Period Comparison */}
+                            {comparisonMode === 'previous-period' && (
+                              <div className="pt-1 mt-1 border-t border-border/30">
+                                <p className="text-xs font-medium flex items-center">
+                                  <ArrowRight className="h-3 w-3 mr-1 text-blue-500" />
+                                  Comparison to Previous Week:
+                                </p>
+                                <p className={`text-xs ${
+                                  index > 0 && (week.amount > spendData.weeklySpend[index-1].amount) 
+                                    ? 'text-red-500' 
+                                    : index > 0 ? 'text-green-500' : 'text-muted-foreground'
+                                } flex items-center`}>
+                                  {index > 0 ? (
+                                    week.amount > spendData.weeklySpend[index-1].amount ? (
+                                      <>
+                                        <TrendingUp className="h-3 w-3 mr-1" />
+                                        {Math.round((week.amount - spendData.weeklySpend[index-1].amount) / spendData.weeklySpend[index-1].amount * 100)}% increase 
+                                        ({formatCurrency(week.amount - spendData.weeklySpend[index-1].amount)})
+                                      </>
+                                    ) : (
+                                      <>
+                                        <TrendingDown className="h-3 w-3 mr-1" />
+                                        {Math.round((spendData.weeklySpend[index-1].amount - week.amount) / spendData.weeklySpend[index-1].amount * 100)}% decrease 
+                                        ({formatCurrency(spendData.weeklySpend[index-1].amount - week.amount)})
+                                      </>
+                                    )
+                                  ) : (
+                                    <span>First week in period</span>
+                                  )}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {/* Anomaly Details with Explanation */}
                             {week.hasAnomaly && (
-                              <p className="text-xs text-red-500 flex items-center mt-1">
-                                <AlertCircle className="h-3 w-3 mr-1" />
-                                Anomaly detected in this period
-                              </p>
+                              <div className="pt-1 mt-1 border-t border-border/30">
+                                <p className="text-xs font-medium text-red-500 flex items-center">
+                                  <AlertCircle className="h-3 w-3 mr-1" />
+                                  Anomaly Detected:
+                                </p>
+                                <p className="text-xs text-red-500/90 mt-1">
+                                  {week.week === 'Week 4' 
+                                    ? "125% increase from previous week. Unusually high spend in materials category." 
+                                    : "Unexpected 68% increase from average weekly spend. Labor costs significantly elevated."}
+                                </p>
+                                <p className="text-xs flex items-center mt-1 text-muted-foreground">
+                                  <Info className="h-3 w-3 mr-1" />
+                                  Click for detailed analysis
+                                </p>
+                              </div>
                             )}
                           </div>
                         </TooltipContent>
@@ -1058,27 +1106,82 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                             </div>
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent side="top" className="w-48 p-3">
+                        <TooltipContent side="top" className="w-64 p-3">
                           <div className="space-y-1.5">
                             <p className="font-medium text-sm">{month.month} {month.year}: {formatCurrency(month.amount)}</p>
+                            
+                            {/* Previous Period Comparison */}
                             {month.change !== null && (
-                              <p className={`text-xs flex items-center ${
-                                month.change > 0 ? 'text-red-500' : 
-                                month.change < 0 ? 'text-green-500' : 'text-muted-foreground'
-                              }`}>
-                                {month.change > 0 ? (
-                                  <TrendingUp className="h-3 w-3 mr-1" />
-                                ) : month.change < 0 ? (
-                                  <TrendingDown className="h-3 w-3 mr-1" />
-                                ) : null}
-                                {month.change > 0 ? '+' : ''}{month.change}% vs previous month
-                              </p>
+                              <div className="pt-1">
+                                <p className="text-xs font-medium flex items-center">
+                                  <ArrowRight className="h-3 w-3 mr-1 text-blue-500" />
+                                  Comparison to Previous Month:
+                                </p>
+                                <p className={`text-xs flex items-center ${
+                                  month.change > 0 ? 'text-red-500' : 
+                                  month.change < 0 ? 'text-green-500' : 'text-muted-foreground'
+                                }`}>
+                                  {month.change > 0 ? (
+                                    <>
+                                      <TrendingUp className="h-3 w-3 mr-1" />
+                                      {month.change}% increase ({formatCurrency(month.amount * month.change / 100)})
+                                    </>
+                                  ) : month.change < 0 ? (
+                                    <>
+                                      <TrendingDown className="h-3 w-3 mr-1" />
+                                      {Math.abs(month.change)}% decrease ({formatCurrency(month.amount * Math.abs(month.change) / 100)})
+                                    </>
+                                  ) : (
+                                    <span>No change from previous month</span>
+                                  )}
+                                </p>
+                              </div>
                             )}
+                            
+                            {/* Budget Comparison if in budget mode */}
+                            {comparisonMode === 'budget' && (
+                              <div className="pt-1 mt-1 border-t border-border/30">
+                                <p className="text-xs font-medium flex items-center">
+                                  <BarChart3 className="h-3 w-3 mr-1 text-blue-500" />
+                                  Budget Performance:
+                                </p>
+                                <p className={`text-xs ${
+                                  month.month === 'Mar' ? 'text-red-500' : 'text-green-500'
+                                } flex items-center`}>
+                                  {month.month === 'Mar' ? (
+                                    <>
+                                      <AlertCircle className="h-3 w-3 mr-1" />
+                                      8.5% over budget
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Check className="h-3 w-3 mr-1" />
+                                      {month.month === 'Jan' ? '3.2' : month.month === 'Feb' ? '4.7' : '2.1'}% under budget
+                                    </>
+                                  )}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {/* Anomaly Details with Explanation */}
                             {month.hasAnomaly && (
-                              <p className="text-xs text-red-500 flex items-center mt-1">
-                                <AlertCircle className="h-3 w-3 mr-1" />
-                                Anomaly detected in this period
-                              </p>
+                              <div className="pt-1 mt-1 border-t border-border/30">
+                                <p className="text-xs font-medium text-red-500 flex items-center">
+                                  <AlertCircle className="h-3 w-3 mr-1" />
+                                  Anomaly Detected:
+                                </p>
+                                <p className="text-xs text-red-500/90 mt-1">
+                                  {month.month === 'Jan' 
+                                    ? "Significant increase in materials category from seasonal average. Potential over-ordering detected." 
+                                    : month.month === 'Mar'
+                                    ? "Equipment rental costs 35% above forecast without corresponding project activity increase."
+                                    : "Unexpected expense pattern in transportation costs - 3x normal volume."}
+                                </p>
+                                <p className="text-xs flex items-center mt-1 text-muted-foreground">
+                                  <Info className="h-3 w-3 mr-1" />
+                                  Click for AI analysis
+                                </p>
+                              </div>
                             )}
                           </div>
                         </TooltipContent>
