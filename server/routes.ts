@@ -1309,10 +1309,9 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   // Export procurement reports endpoint
   app.post("/api/export/procurement-report", requireAuth, async (req: Request, res: Response) => {
     try {
-      const { reportType, dateRange } = req.body;
+      const { reportType, dateRange, format } = req.body;
       
-      // In a real implementation, this would generate a PDF based on the report type
-      // For now, we'll return JSON data that would be used to generate the PDF client-side
+      // Generate report data
       const reportData = {
         title: `Procurement ${reportType} Report`,
         generatedAt: new Date().toISOString(),
@@ -1401,7 +1400,311 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
           "Potential savings of £15,800 through supplier consolidation"
         ]
       };
+
+      // If format is CSV, generate and return CSV file
+      if (format === 'csv') {
+        const { stringify } = await import('csv-stringify/sync');
+        
+        // Set response headers for CSV download
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="procurement_report_${new Date().toISOString().split('T')[0]}.csv"`);
+        
+        // Create CSV content - Header
+        let rows = [
+          [`${reportData.title}`],
+          [`Generated: ${new Date(reportData.generatedAt).toLocaleString()}`],
+          [`Period: ${reportData.dateRange}`],
+          [],
+          [`Total Spend: £${(reportData.summary.totalSpend / 100).toFixed(2)}`],
+          []
+        ];
+        
+        // Projects section
+        rows.push(['Projects']);
+        rows.push(['Project', 'Spend (£)', '% of Total']);
+        reportData.summary.projects.forEach(project => {
+          rows.push([
+            project.name, 
+            `£${(project.spend / 100).toFixed(2)}`, 
+            `${project.percentageOfTotal}%`
+          ]);
+        });
+        rows.push([]);
+        
+        // GPSMACS Categories section
+        rows.push(['GPSMACS Categories']);
+        rows.push(['Code', 'Description', 'Spend (£)', '%']);
+        reportData.summary.gpsmacsCodes.forEach(code => {
+          rows.push([
+            code.code, 
+            code.name, 
+            `£${(code.spend / 100).toFixed(2)}`, 
+            `${code.percentage}%`
+          ]);
+        });
+        rows.push([]);
+        
+        // Top Suppliers section
+        rows.push(['Top Suppliers']);
+        rows.push(['Supplier', 'Spend (£)', 'PO Count', 'Avg. PO Value (£)', '% of Total']);
+        reportData.summary.topSuppliers.forEach(supplier => {
+          rows.push([
+            supplier.name, 
+            `£${(supplier.spend / 100).toFixed(2)}`, 
+            supplier.poCount, 
+            `£${(supplier.avgPoValue / 100).toFixed(2)}`, 
+            `${supplier.percentageOfTotal}%`
+          ]);
+        });
+        rows.push([]);
+        
+        // Monthly Trend section
+        rows.push(['Monthly Spend Trend']);
+        rows.push(['Month', 'Spend (£)']);
+        reportData.summary.monthlyTrend.forEach(month => {
+          rows.push([month.month, `£${(month.spend / 100).toFixed(2)}`]);
+        });
+        rows.push([]);
+        
+        // Key Insights section
+        rows.push(['Key Insights']);
+        reportData.insights.forEach(insight => {
+          rows.push([insight]);
+        });
+        
+        // Convert rows to CSV string and send as response
+        const csvContent = stringify(rows);
+        return res.send(csvContent);
+      } 
+      // If format is PDF, generate and return PDF file
+      else if (format === 'pdf') {
+        const PDFDocument = await import('pdfkit');
+        
+        // Create a new PDF document
+        const doc = new PDFDocument.default({ margin: 50 });
+        
+        // Set response headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="procurement_report_${new Date().toISOString().split('T')[0]}.pdf"`);
+        
+        // Pipe the PDF directly to the response
+        doc.pipe(res);
+        
+        // Add content to the PDF
+        // Header
+        doc.fontSize(20).text(reportData.title, { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(10).text(`Generated: ${new Date(reportData.generatedAt).toLocaleString()}`);
+        doc.fontSize(10).text(`Period: ${reportData.dateRange}`);
+        doc.moveDown();
+        doc.fontSize(12).text(`Total Spend: £${(reportData.summary.totalSpend / 100).toFixed(2)}`);
+        doc.moveDown();
+        
+        // Projects section
+        doc.fontSize(14).text('Projects', { underline: true });
+        doc.moveDown(0.5);
+        
+        // Create a projects table
+        const projectsTable = {
+          headers: ['Project', 'Spend (£)', '% of Total'],
+          rows: reportData.summary.projects.map(project => [
+            project.name,
+            `£${(project.spend / 100).toFixed(2)}`,
+            `${project.percentageOfTotal}%`
+          ])
+        };
+        
+        // Draw projects table
+        doc.fontSize(10);
+        const projectsTableTop = doc.y;
+        let projectsTableWidth = 400;
+        
+        // Draw headers
+        doc.font('Helvetica-Bold');
+        projectsTable.headers.forEach((header, i) => {
+          doc.text(header, 
+            50 + (i * (projectsTableWidth / projectsTable.headers.length)), 
+            projectsTableTop, 
+            { width: projectsTableWidth / projectsTable.headers.length, align: i === 0 ? 'left' : 'right' }
+          );
+        });
+        
+        // Draw rows
+        doc.font('Helvetica');
+        projectsTable.rows.forEach((row, rowIndex) => {
+          row.forEach((cell, cellIndex) => {
+            doc.text(
+              cell,
+              50 + (cellIndex * (projectsTableWidth / projectsTable.headers.length)),
+              projectsTableTop + 20 + (rowIndex * 20),
+              { width: projectsTableWidth / projectsTable.headers.length, align: cellIndex === 0 ? 'left' : 'right' }
+            );
+          });
+        });
+        
+        doc.y = projectsTableTop + 20 + (projectsTable.rows.length * 20) + 20;
+        
+        // GPSMACS Categories section
+        doc.fontSize(14).text('GPSMACS Categories', { underline: true });
+        doc.moveDown(0.5);
+        
+        // Create a GPSMACS categories table
+        const gpsmacsCategoriesTable = {
+          headers: ['Code', 'Description', 'Spend (£)', '%'],
+          rows: reportData.summary.gpsmacsCodes.map(code => [
+            code.code,
+            code.name,
+            `£${(code.spend / 100).toFixed(2)}`,
+            `${code.percentage}%`
+          ])
+        };
+        
+        // Draw GPSMACS categories table
+        doc.fontSize(10);
+        const gpsmacsCategoriesTableTop = doc.y;
+        let gpsmacsCategoriesTableWidth = 400;
+        
+        // Draw headers
+        doc.font('Helvetica-Bold');
+        gpsmacsCategoriesTable.headers.forEach((header, i) => {
+          doc.text(header, 
+            50 + (i * (gpsmacsCategoriesTableWidth / gpsmacsCategoriesTable.headers.length)), 
+            gpsmacsCategoriesTableTop, 
+            { width: gpsmacsCategoriesTableWidth / gpsmacsCategoriesTable.headers.length, align: i <= 1 ? 'left' : 'right' }
+          );
+        });
+        
+        // Draw rows
+        doc.font('Helvetica');
+        gpsmacsCategoriesTable.rows.forEach((row, rowIndex) => {
+          row.forEach((cell, cellIndex) => {
+            doc.text(
+              cell,
+              50 + (cellIndex * (gpsmacsCategoriesTableWidth / gpsmacsCategoriesTable.headers.length)),
+              gpsmacsCategoriesTableTop + 20 + (rowIndex * 20),
+              { width: gpsmacsCategoriesTableWidth / gpsmacsCategoriesTable.headers.length, align: cellIndex <= 1 ? 'left' : 'right' }
+            );
+          });
+        });
+        
+        doc.y = gpsmacsCategoriesTableTop + 20 + (gpsmacsCategoriesTable.rows.length * 20) + 20;
+        
+        // Add a new page if we're running out of space
+        if (doc.y > 650) {
+          doc.addPage();
+        }
+        
+        // Top Suppliers section
+        doc.fontSize(14).text('Top Suppliers', { underline: true });
+        doc.moveDown(0.5);
+        
+        // Create a suppliers table
+        const suppliersTable = {
+          headers: ['Supplier', 'Spend (£)', 'PO Count', 'Avg. PO Value', '% of Total'],
+          rows: reportData.summary.topSuppliers.map(supplier => [
+            supplier.name,
+            `£${(supplier.spend / 100).toFixed(2)}`,
+            supplier.poCount.toString(),
+            `£${(supplier.avgPoValue / 100).toFixed(2)}`,
+            `${supplier.percentageOfTotal}%`
+          ])
+        };
+        
+        // Draw suppliers table
+        doc.fontSize(10);
+        const suppliersTableTop = doc.y;
+        let suppliersTableWidth = 500;
+        
+        // Draw headers
+        doc.font('Helvetica-Bold');
+        suppliersTable.headers.forEach((header, i) => {
+          doc.text(header, 
+            50 + (i * (suppliersTableWidth / suppliersTable.headers.length)), 
+            suppliersTableTop, 
+            { width: suppliersTableWidth / suppliersTable.headers.length, align: i === 0 ? 'left' : 'right' }
+          );
+        });
+        
+        // Draw rows
+        doc.font('Helvetica');
+        suppliersTable.rows.forEach((row, rowIndex) => {
+          row.forEach((cell, cellIndex) => {
+            doc.text(
+              cell,
+              50 + (cellIndex * (suppliersTableWidth / suppliersTable.headers.length)),
+              suppliersTableTop + 20 + (rowIndex * 20),
+              { width: suppliersTableWidth / suppliersTable.headers.length, align: cellIndex === 0 ? 'left' : 'right' }
+            );
+          });
+        });
+        
+        doc.y = suppliersTableTop + 20 + (suppliersTable.rows.length * 20) + 20;
+        
+        // Add a new page if we're running out of space
+        if (doc.y > 650) {
+          doc.addPage();
+        }
+        
+        // Monthly Trend section
+        doc.fontSize(14).text('Monthly Spend Trend', { underline: true });
+        doc.moveDown(0.5);
+        
+        // Create a monthly trend table
+        const monthlyTrendTable = {
+          headers: ['Month', 'Spend (£)'],
+          rows: reportData.summary.monthlyTrend.map(month => [
+            month.month,
+            `£${(month.spend / 100).toFixed(2)}`
+          ])
+        };
+        
+        // Draw monthly trend table
+        doc.fontSize(10);
+        const monthlyTrendTableTop = doc.y;
+        let monthlyTrendTableWidth = 200;
+        
+        // Draw headers
+        doc.font('Helvetica-Bold');
+        monthlyTrendTable.headers.forEach((header, i) => {
+          doc.text(header, 
+            50 + (i * (monthlyTrendTableWidth / monthlyTrendTable.headers.length)), 
+            monthlyTrendTableTop, 
+            { width: monthlyTrendTableWidth / monthlyTrendTable.headers.length, align: i === 0 ? 'left' : 'right' }
+          );
+        });
+        
+        // Draw rows
+        doc.font('Helvetica');
+        monthlyTrendTable.rows.forEach((row, rowIndex) => {
+          row.forEach((cell, cellIndex) => {
+            doc.text(
+              cell,
+              50 + (cellIndex * (monthlyTrendTableWidth / monthlyTrendTable.headers.length)),
+              monthlyTrendTableTop + 20 + (rowIndex * 20),
+              { width: monthlyTrendTableWidth / monthlyTrendTable.headers.length, align: cellIndex === 0 ? 'left' : 'right' }
+            );
+          });
+        });
+        
+        doc.y = monthlyTrendTableTop + 20 + (monthlyTrendTable.rows.length * 20) + 20;
+        
+        // Key Insights section
+        doc.fontSize(14).text('Key Insights', { underline: true });
+        doc.moveDown(0.5);
+        
+        // List insights
+        doc.fontSize(10);
+        reportData.insights.forEach(insight => {
+          doc.text(`• ${insight}`);
+          doc.moveDown(0.5);
+        });
+        
+        // Finalize PDF
+        doc.end();
+        return;
+      }
       
+      // If no format specified, return JSON data
       res.json({ success: true, reportData });
     } catch (error) {
       console.error("Error generating procurement report:", error);
