@@ -935,16 +935,16 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
                 </div>
                 
-                {/* View Detailed Breakdown Button for Weekly - moved to bottom right */}
-                <div className="absolute bottom-[-32px] right-0">
+                {/* View Detailed Breakdown Button for Weekly - moved to the right, above the graph */}
+                <div className="absolute top-0 right-0">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="text-xs h-7 bg-primary/10 hover:bg-primary/20 border-primary/20 px-4"
+                    className="text-xs h-6 bg-primary/10 hover:bg-primary/20 border-primary/20 px-2"
                     onClick={() => openDetailedBreakdown('weekly')}
                   >
-                    <PieChart className="h-3 w-3 mr-2" />
-                    Detailed Breakdown
+                    <PieChart className="h-3 w-3 mr-1" />
+                    View Details
                   </Button>
                 </div>
                 
@@ -1029,16 +1029,16 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   £0
                 </div>
                 
-                {/* View Detailed Breakdown Button for Monthly - moved to bottom right */}
-                <div className="absolute bottom-[-32px] right-0">
+                {/* View Detailed Breakdown Button for Monthly - moved to the right, above the graph */}
+                <div className="absolute top-0 right-0">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="text-xs h-7 bg-secondary/10 hover:bg-secondary/20 border-secondary/20 px-4"
+                    className="text-xs h-6 bg-secondary/10 hover:bg-secondary/20 border-secondary/20 px-2"
                     onClick={() => openDetailedBreakdown('monthly')}
                   >
-                    <PieChart className="h-3 w-3 mr-2" />
-                    Detailed Breakdown
+                    <PieChart className="h-3 w-3 mr-1" />
+                    View Details
                   </Button>
                 </div>
                 
@@ -1135,17 +1135,17 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
             
             {/* Category Breakdown */}
             <TabsContent value="category" className="mt-0">
-              <div className="relative mt-4 mb-8">
-                {/* View Detailed Breakdown Button for Category - at the bottom right */}
-                <div className="absolute bottom-[-32px] right-0">
+              <div className="relative mt-2 mb-2">
+                {/* View Detailed Breakdown Button for Category at the top right */}
+                <div className="absolute top-0 right-0">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="text-xs h-7 bg-primary/10 hover:bg-primary/20 border-primary/20 px-4"
+                    className="text-xs h-6 bg-primary/10 hover:bg-primary/20 border-primary/20 px-2"
                     onClick={() => openDetailedBreakdown('category')}
                   >
-                    <PieChart className="h-3 w-3 mr-2" />
-                    Detailed Breakdown
+                    <PieChart className="h-3 w-3 mr-1" />
+                    View Details
                   </Button>
                 </div>
               </div>
@@ -1288,7 +1288,7 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
           </Tabs>
           
           {/* AI Insights Section */}
-          <div className="mt-6 pt-6 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="mt-12 pt-6 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Anomalies */}
             <div>
               <h3 className="text-sm font-medium mb-3 flex items-center">
