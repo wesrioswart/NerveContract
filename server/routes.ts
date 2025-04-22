@@ -16,7 +16,9 @@ import { EmailController } from "./controllers/email-controller";
 import { portfolioRouter } from "./routes/portfolio-routes";
 import { requireAuth, requireProjectAccess, hasProjectAccess } from "./middleware/auth-middleware";
 import { populateForm, compareProgrammes } from "./controllers/ai-assistant-controller";
-import { exportProcurementReport } from "./controllers/export-controller";
+import { exportProcurementReport, downloadReport } from "./controllers/export-controller";
+import path from "path";
+import fs from "fs";
 import multer from "multer";
 import passport from './auth/passport-config';
 import session from 'express-session';
@@ -1305,10 +1307,15 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     });
   });
   
-  // Simple direct export
+  // Export system with a two-step process:
+  // 1. First call returns a download URL
+  // 2. Second call to that URL streams the actual file
   
-  // Using a dedicated controller for direct download without temp files and redirects
+  // Step 1: Generate the report JSON with a download URL
   app.post("/api/export/procurement-report", requireAuth, exportProcurementReport);
+  
+  // Step 2: Download the actual file from the generated URL
+  app.get("/api/download/:format/:filename", requireAuth, downloadReport);
 
   // Z Clause Analysis Test route
   app.get("/api/test/z-clause-analysis", async (_req: Request, res: Response) => {

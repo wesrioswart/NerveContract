@@ -150,16 +150,13 @@ export default function Procurement() {
       const data = await response.json();
       
       if (!data.success || !data.downloadUrl) {
-        throw new Error('Failed to generate report download link');
+        throw new Error(`Failed to generate report: ${data.message || 'Unknown error'}`);
       }
       
-      // Step 2: Trigger the download via an anchor tag (safest approach)
-      const link = document.createElement('a');
-      link.href = data.downloadUrl;
-      link.download = format === 'pdf' ? 'procurement_report.pdf' : 'procurement_report.csv';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Step 2: Trigger the download by opening the URL in a new window/tab
+      // Using window.open ensures browser security policies are respected 
+      // while allowing for direct download
+      window.open(data.downloadUrl, '_blank');
       
       // Reset button after short delay
       setTimeout(() => {
