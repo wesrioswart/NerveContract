@@ -1305,6 +1305,109 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
       downloadUrl: `/api/downloads/${format}/compensation-events-${projectId}.${format}`
     });
   });
+  
+  // Export procurement reports endpoint
+  app.post("/api/export/procurement-report", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { reportType, dateRange } = req.body;
+      
+      // In a real implementation, this would generate a PDF based on the report type
+      // For now, we'll return JSON data that would be used to generate the PDF client-side
+      const reportData = {
+        title: `Procurement ${reportType} Report`,
+        generatedAt: new Date().toISOString(),
+        dateRange: dateRange || `${new Date().toLocaleDateString()} - ${new Date().toLocaleDateString()}`,
+        summary: {
+          totalSpend: 245210,
+          projects: [
+            { 
+              name: "Westfield Development",
+              spend: 122450,
+              percentageOfTotal: 49.8
+            },
+            { 
+              name: "Littlebrook",
+              spend: 75780,
+              percentageOfTotal: 30.9
+            },
+            { 
+              name: "Corys",
+              spend: 46980,
+              percentageOfTotal: 19.3
+            }
+          ],
+          gpsmacsCodes: [
+            {
+              code: "5000-5999",
+              name: "Materials",
+              spend: 103000,
+              percentage: 42
+            },
+            {
+              code: "6000-6999",
+              name: "Plant",
+              spend: 68700,
+              percentage: 28
+            },
+            {
+              code: "7000-7999",
+              name: "Tools",
+              spend: 44100,
+              percentage: 18
+            },
+            {
+              code: "8000-8999",
+              name: "PPE",
+              spend: 29410,
+              percentage: 12
+            }
+          ],
+          topSuppliers: [
+            {
+              name: "BuildMaster Supplies Ltd",
+              spend: 56780,
+              poCount: 4,
+              avgPoValue: 14195,
+              percentageOfTotal: 23.1
+            },
+            {
+              name: "Concrete Express",
+              spend: 42350,
+              poCount: 2,
+              avgPoValue: 21175,
+              percentageOfTotal: 17.2
+            },
+            {
+              name: "FastTrack Equipment Hire",
+              spend: 38450,
+              poCount: 3,
+              avgPoValue: 12817,
+              percentageOfTotal: 15.6
+            }
+          ],
+          monthlyTrend: [
+            { month: "Jan", spend: 42300 },
+            { month: "Feb", spend: 36800 },
+            { month: "Mar", spend: 51200 },
+            { month: "Apr", spend: 38900 }
+          ]
+        },
+        insights: [
+          "56% of spend is concentrated with the top 3 suppliers",
+          "Materials represent the highest category of spend at 42%",
+          "Average PO approval time is 1.8 days",
+          "Average delivery time is 5.4 days",
+          "GPSMACS-compliant supplier spend has increased by 14%",
+          "Potential savings of £15,800 through supplier consolidation"
+        ]
+      };
+      
+      res.json({ success: true, reportData });
+    } catch (error) {
+      console.error("Error generating procurement report:", error);
+      res.status(500).json({ error: "Failed to generate procurement report" });
+    }
+  });
 
   // Z Clause Analysis Test route
   app.get("/api/test/z-clause-analysis", async (_req: Request, res: Response) => {

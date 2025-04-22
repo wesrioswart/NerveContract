@@ -695,12 +695,167 @@ export default function Procurement() {
           
           {/* Export Options */}
           <div className="flex justify-center gap-4 mt-4">
-            <Button variant="outline" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={async () => {
+                try {
+                  // Show loading state
+                  const button = document.querySelector('[data-export-button]');
+                  if (button) {
+                    button.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating...';
+                  }
+                  
+                  const response = await fetch('/api/export/procurement-report', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      reportType: 'Detailed Breakdown',
+                      dateRange: 'Jan 2023 - Apr 2023'
+                    }),
+                  });
+                  
+                  const data = await response.json();
+                  
+                  if (!data.success) {
+                    throw new Error('Failed to generate report');
+                  }
+                  
+                  // Create a PDF client-side using html2pdf
+                  const { default: html2pdf } = await import('html2pdf.js');
+                  
+                  // Create HTML content for the PDF
+                  const reportHtml = `
+                    <div style="font-family: Arial, sans-serif; padding: 20px;">
+                      <h1 style="color: #333;">${data.reportData.title}</h1>
+                      <p>Generated: ${new Date(data.reportData.generatedAt).toLocaleString()}</p>
+                      <p>Period: ${data.reportData.dateRange}</p>
+                      
+                      <h2 style="margin-top: 20px; color: #555;">Summary</h2>
+                      <p>Total Spend: £${(data.reportData.summary.totalSpend / 100).toFixed(2)}</p>
+                      
+                      <h3 style="margin-top: 15px; color: #666;">Projects</h3>
+                      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <tr style="background-color: #f2f2f2;">
+                          <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Project</th>
+                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
+                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">% of Total</th>
+                        </tr>
+                        ${data.reportData.summary.projects.map(project => `
+                          <tr>
+                            <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${project.name}</td>
+                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(project.spend / 100).toFixed(2)}</td>
+                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${project.percentageOfTotal}%</td>
+                          </tr>
+                        `).join('')}
+                      </table>
+                      
+                      <h3 style="margin-top: 15px; color: #666;">GPSMACS Categories</h3>
+                      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <tr style="background-color: #f2f2f2;">
+                          <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Code</th>
+                          <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Description</th>
+                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
+                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">%</th>
+                        </tr>
+                        ${data.reportData.summary.gpsmacsCodes.map(code => `
+                          <tr>
+                            <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${code.code}</td>
+                            <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${code.name}</td>
+                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(code.spend / 100).toFixed(2)}</td>
+                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${code.percentage}%</td>
+                          </tr>
+                        `).join('')}
+                      </table>
+                      
+                      <h3 style="margin-top: 15px; color: #666;">Top Suppliers</h3>
+                      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <tr style="background-color: #f2f2f2;">
+                          <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Supplier</th>
+                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
+                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">PO Count</th>
+                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Avg. PO Value (£)</th>
+                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">% of Total</th>
+                        </tr>
+                        ${data.reportData.summary.topSuppliers.map(supplier => `
+                          <tr>
+                            <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${supplier.name}</td>
+                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(supplier.spend / 100).toFixed(2)}</td>
+                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${supplier.poCount}</td>
+                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(supplier.avgPoValue / 100).toFixed(2)}</td>
+                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${supplier.percentageOfTotal}%</td>
+                          </tr>
+                        `).join('')}
+                      </table>
+                      
+                      <h3 style="margin-top: 15px; color: #666;">Monthly Spend Trend</h3>
+                      <table style="width: 50%; border-collapse: collapse; margin-bottom: 20px;">
+                        <tr style="background-color: #f2f2f2;">
+                          <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Month</th>
+                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
+                        </tr>
+                        ${data.reportData.summary.monthlyTrend.map(month => `
+                          <tr>
+                            <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${month.month}</td>
+                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(month.spend / 100).toFixed(2)}</td>
+                          </tr>
+                        `).join('')}
+                      </table>
+                      
+                      <h2 style="margin-top: 20px; color: #555;">Key Insights</h2>
+                      <ul>
+                        ${data.reportData.insights.map(insight => `
+                          <li style="margin-bottom: 5px;">${insight}</li>
+                        `).join('')}
+                      </ul>
+                    </div>
+                  `;
+                  
+                  // Configure html2pdf options
+                  const options = {
+                    margin: 10,
+                    filename: `procurement_report_${new Date().toISOString().slice(0, 10)}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                  };
+                  
+                  // Generate and download the PDF
+                  const element = document.createElement('div');
+                  element.innerHTML = reportHtml;
+                  document.body.appendChild(element);
+                  
+                  await html2pdf()
+                    .from(element)
+                    .set(options)
+                    .save();
+                    
+                  document.body.removeChild(element);
+                  
+                  // Reset button
+                  if (button) {
+                    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
+                  }
+                } catch (error) {
+                  console.error('Error generating report:', error);
+                  alert('Failed to generate report. Please try again later.');
+                  
+                  // Reset button
+                  const button = document.querySelector('[data-export-button]');
+                  if (button) {
+                    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
+                  }
+                }
+              }}
+              data-export-button
+            >
+              <FileText className="h-4 w-4 mr-2" />
               Export Full Report
             </Button>
             <Button variant="outline" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
+              <BarChart3 className="h-4 w-4 mr-2" />
               Configure Dashboard
             </Button>
           </div>
