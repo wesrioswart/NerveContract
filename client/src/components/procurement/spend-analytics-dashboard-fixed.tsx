@@ -935,15 +935,15 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
                 </div>
                 
-                {/* View Detailed Breakdown Button for Weekly */}
-                <div className="absolute top-0 right-0">
+                {/* View Detailed Breakdown Button for Weekly - moved to bottom */}
+                <div className="absolute bottom-[-50px] left-1/2 transform -translate-x-1/2">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="text-xs h-7 bg-primary/10 hover:bg-primary/20 border-primary/20"
+                    className="text-xs h-8 bg-primary/10 hover:bg-primary/20 border-primary/20 px-5"
                     onClick={() => openDetailedBreakdown('weekly')}
                   >
-                    <PieChart className="h-3 w-3 mr-1" />
+                    <PieChart className="h-3.5 w-3.5 mr-2" />
                     Detailed Breakdown
                   </Button>
                 </div>
@@ -1029,15 +1029,15 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   £0
                 </div>
                 
-                {/* View Detailed Breakdown Button for Monthly */}
-                <div className="absolute top-0 right-0">
+                {/* View Detailed Breakdown Button for Monthly - moved to bottom */}
+                <div className="absolute bottom-[-50px] left-1/2 transform -translate-x-1/2">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="text-xs h-7 bg-secondary/10 hover:bg-secondary/20 border-secondary/20"
+                    className="text-xs h-8 bg-secondary/10 hover:bg-secondary/20 border-secondary/20 px-5"
                     onClick={() => openDetailedBreakdown('monthly')}
                   >
-                    <PieChart className="h-3 w-3 mr-1" />
+                    <PieChart className="h-3.5 w-3.5 mr-2" />
                     Detailed Breakdown
                   </Button>
                 </div>
@@ -1135,16 +1135,16 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
             
             {/* Category Breakdown */}
             <TabsContent value="category" className="mt-0">
-              <div className="relative">
-                {/* View Detailed Breakdown Button for Category */}
-                <div className="absolute top-0 right-0">
+              <div className="relative mt-4 mb-12">
+                {/* View Detailed Breakdown Button for Category - at the bottom */}
+                <div className="absolute bottom-[-50px] left-1/2 transform -translate-x-1/2">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="text-xs h-7 bg-primary/10 hover:bg-primary/20 border-primary/20"
+                    className="text-xs h-8 bg-primary/10 hover:bg-primary/20 border-primary/20 px-5"
                     onClick={() => openDetailedBreakdown('category')}
                   >
-                    <PieChart className="h-3 w-3 mr-1" />
+                    <PieChart className="h-3.5 w-3.5 mr-2" />
                     Detailed Breakdown
                   </Button>
                 </div>
