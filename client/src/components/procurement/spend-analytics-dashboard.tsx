@@ -617,6 +617,19 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                   <div className="h-px bg-muted/30 w-full"></div>
                 </div>
                 
+                {/* View Detailed Breakdown Button for Weekly */}
+                <div className="absolute top-0 right-0">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-xs h-7"
+                    onClick={() => openDetailedBreakdown('weekly')}
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    Details
+                  </Button>
+                </div>
+                
                 {/* Chart bars */}
                 <div className="flex justify-between items-end h-[175px] px-6 mt-6">
                   {spendData.weeklySpend.map((week, index) => (
@@ -669,6 +682,19 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                 </div>
                 <div className="absolute bottom-0 left-0 text-xs text-muted-foreground">
                   £0
+                </div>
+                
+                {/* View Detailed Breakdown Button for Monthly */}
+                <div className="absolute top-0 right-0">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-xs h-7"
+                    onClick={() => openDetailedBreakdown('monthly')}
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    Details
+                  </Button>
                 </div>
                 
                 {/* Light grid lines */}
@@ -736,6 +762,20 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
             
             {/* Category Breakdown */}
             <TabsContent value="category" className="mt-0">
+              <div className="relative">
+                {/* View Detailed Breakdown Button for Category */}
+                <div className="absolute top-0 right-0">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-xs h-7"
+                    onClick={() => openDetailedBreakdown('category')}
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    Details
+                  </Button>
+                </div>
+              </div>
               {viewMode === 'chart' ? (
                 <div className="space-y-4 pt-3 px-1">
                   {filteredCategories.map((category, index) => (
@@ -998,7 +1038,12 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
             <Info className="h-3.5 w-3.5 mr-1.5" />
             Last updated: 22 April 2025
           </div>
-          <Button variant="outline" size="sm" className="text-xs">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs"
+            onClick={() => openDetailedBreakdown('category')}
+          >
             <PieChart className="h-3.5 w-3.5 mr-1.5" />
             View Detailed Breakdown
           </Button>
