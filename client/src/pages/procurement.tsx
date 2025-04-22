@@ -305,89 +305,19 @@ export default function Procurement() {
           )}
         </TabsContent>
 
-        {/* Purchase Orders Tab */}
+        {/* AI-enhanced Requisition Tab */}
         <TabsContent value="create-requisition" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Create New Requisition</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Project Code</label>
-                    <Input placeholder="e.g. C-121 Corys waste facility" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Nominal Code</label>
-                    <Input placeholder="e.g. 5399" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Classification</label>
-                    <Input placeholder="e.g. OTHER SITE CONSUMABLES" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Item Description</label>
-                    <Input placeholder="Detailed description of required items" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Delivery/Collection</label>
-                    <select className="w-full p-2 rounded-md border">
-                      <option value="delivery">Delivery</option>
-                      <option value="collection">Collection</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Hire Duration (if applicable)</label>
-                    <Input placeholder="e.g. 2 weeks or N/A" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Estimated Cost</label>
-                    <Input placeholder="£0.00 + VAT" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Supplier</label>
-                    <Input placeholder="e.g. Thurrock Engineering" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Contact Details</label>
-                    <Input placeholder="e.g. Ross Fullbrook <email@example.com>" />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Delivery Date</label>
-                      <Input placeholder="e.g. 15/05/2025" />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Delivery Address</label>
-                      <Input placeholder="Site address" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-6 flex justify-end space-x-3">
-                <Button variant="outline">Save Draft</Button>
-                <Button onClick={() => setIsNewPOModalOpen(true)}>Submit Requisition</Button>
-              </div>
-            </CardContent>
-          </Card>
+          <AIRequisitionForm 
+            onSubmit={(data) => {
+              console.log('Requisition data:', data);
+              // In a real application, this would submit to the backend
+              setIsNewPOModalOpen(true);
+            }}
+          />
           
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Nominal Code Lookup</CardTitle>
+              <CardTitle className="text-sm font-medium">GPSMACS Code Reference</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="relative">

@@ -209,7 +209,7 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                     <div className="flex items-center">
                       <Badge variant={
                         anomaly.severity === 'high' ? 'destructive' : 
-                        anomaly.severity === 'medium' ? 'warning' : 'outline'
+                        anomaly.severity === 'medium' ? 'secondary' : 'outline'
                       }>
                         {anomaly.severity}
                       </Badge>
