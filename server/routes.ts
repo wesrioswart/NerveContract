@@ -1616,6 +1616,7 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   app.get("/api/supplier-invoices", procurementController.getSupplierInvoices);
   
   // Purchase Orders
+  app.get("/api/procurement/dashboard", requireAuth, procurementController.getProcurementDashboard);
   app.get("/api/purchase-orders", requireAuth, procurementController.getPurchaseOrders);
   app.get("/api/purchase-orders/:id", requireAuth, procurementController.getPurchaseOrder);
   app.post("/api/purchase-orders", requireAuth, procurementController.createPurchaseOrder);

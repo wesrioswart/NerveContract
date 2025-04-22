@@ -477,6 +477,68 @@ export const getSupplierPerformance = async (_req: Request, res: Response) => {
   }
 };
 
+// Procurement Dashboard
+export const getProcurementDashboard = async (_req: Request, res: Response) => {
+  try {
+    // Get total count of purchase orders
+    const [totalPOs] = await db
+      .select({ count: sql<number>`count(*)::integer`.as('count') })
+      .from(purchaseOrders);
+    
+    // Get count of pending orders
+    const [pendingPOs] = await db
+      .select({ count: sql<number>`count(*)::integer`.as('count') })
+      .from(purchaseOrders)
+      .where(eq(purchaseOrders.status, "pending_approval"));
+    
+    // Get total value of all purchase orders
+    const [totalValue] = await db
+      .select({ sum: sql<number>`coalesce(sum(${purchaseOrders.totalCost}), 0)::integer`.as('sum') })
+      .from(purchaseOrders);
+    
+    // Get supplier count
+    const [supplierCount] = await db
+      .select({ count: sql<number>`count(*)::integer`.as('count') })
+      .from(suppliers);
+    
+    // Get recent purchase orders
+    const recentPOs = await db
+      .select({
+        id: purchaseOrders.id,
+        reference: purchaseOrders.reference,
+        supplierName: suppliers.name,
+        totalCost: purchaseOrders.totalCost,
+        status: purchaseOrders.status,
+        createdAt: purchaseOrders.createdAt
+      })
+      .from(purchaseOrders)
+      .leftJoin(suppliers, eq(purchaseOrders.supplierId, suppliers.id))
+      .orderBy(desc(purchaseOrders.createdAt))
+      .limit(10);
+    
+    // Get POs by status
+    const posByStatus = await db
+      .select({
+        status: purchaseOrders.status,
+        count: sql<number>`count(*)::integer`.as('count')
+      })
+      .from(purchaseOrders)
+      .groupBy(purchaseOrders.status);
+    
+    res.json({
+      totalPOs: totalPOs.count || 0,
+      pendingPOs: pendingPOs.count || 0,
+      totalValue: totalValue.sum || 0,
+      supplierCount: supplierCount.count || 0,
+      recentPOs,
+      posByStatus
+    });
+  } catch (error) {
+    console.error("Error fetching procurement dashboard:", error);
+    res.status(500).json({ error: "Failed to fetch procurement dashboard" });
+  }
+};
+
 // Supplier Invoices
 export const getSupplierInvoices = async (_req: Request, res: Response) => {
   try {
