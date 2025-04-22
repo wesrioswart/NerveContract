@@ -637,20 +637,38 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="flex flex-col items-center group">
-                            <div 
-                              className={`bg-gradient-to-t from-primary/80 to-primary w-10 
-                                rounded-t-sm hover:brightness-110 transition-all duration-200 
-                                group-hover:shadow-md ${week.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-1' : ''}`} 
-                              style={{ 
-                                height: `${(week.amount / maxWeeklyAmount) * 100}%`,
-                                minHeight: "10px"
-                              }}
-                            ></div>
+                            <div className="relative">
+                              <div 
+                                className={`bg-gradient-to-t from-primary/70 to-primary w-12 
+                                  rounded-t hover:brightness-110 transition-all duration-200 
+                                  group-hover:shadow-lg ${week.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}`} 
+                                style={{ 
+                                  height: `${(week.amount / maxWeeklyAmount) * 100}%`,
+                                  minHeight: "10px"
+                                }}
+                              ></div>
+                              {week.hasAnomaly && (
+                                <div className="absolute -top-2 -right-2 bg-red-500 rounded-full p-0.5">
+                                  <AlertCircle className="h-3.5 w-3.5 text-white" />
+                                </div>
+                              )}
+                              {implementedForecasts.includes(1) && index === 3 && (
+                                <div className="absolute -top-2 -left-2 bg-green-500 rounded-full p-0.5">
+                                  <Check className="h-3.5 w-3.5 text-white" />
+                                </div>
+                              )}
+                            </div>
                             <div className="mt-2 text-center">
                               <span className="block text-xs font-medium">{week.week}</span>
                               <span className="block text-xs text-muted-foreground">
                                 {formatCurrency(week.amount)}
                               </span>
+                              {week.hasAnomaly && resolvedAnomalies.includes(week.week === 'Week 4' ? 1 : (week.week === 'Week 7' ? 3 : 0)) && (
+                                <span className="text-xs text-green-500 flex items-center justify-center mt-1">
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Resolved
+                                </span>
+                              )}
                             </div>
                           </div>
                         </TooltipTrigger>
@@ -712,20 +730,47 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="flex flex-col items-center group">
-                            <div 
-                              className={`bg-gradient-to-t from-secondary/80 to-secondary w-16 
-                                rounded-t-sm hover:brightness-110 transition-all duration-200 
-                                group-hover:shadow-md ${month.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-1' : ''}`}
-                              style={{ 
-                                height: `${(month.amount / maxMonthlyAmount) * 100}%`,
-                                minHeight: "10px"
-                              }}
-                            ></div>
-                            <div className="mt-2 text-center">
+                            <div className="relative">
+                              <div 
+                                className={`bg-gradient-to-t from-secondary/70 to-secondary w-16 
+                                  rounded-t hover:brightness-110 transition-all duration-200 
+                                  group-hover:shadow-lg ${month.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
+                                style={{ 
+                                  height: `${(month.amount / maxMonthlyAmount) * 100}%`,
+                                  minHeight: "10px"
+                                }}
+                              ></div>
+                              {month.hasAnomaly && (
+                                <div className="absolute -top-2 -right-2 bg-red-500 rounded-full p-0.5">
+                                  <AlertCircle className="h-3.5 w-3.5 text-white" />
+                                </div>
+                              )}
+                              {implementedForecasts.includes(5) && index === 3 && (
+                                <div className="absolute -top-2 -left-2 bg-green-500 rounded-full p-0.5">
+                                  <Check className="h-3.5 w-3.5 text-white" />
+                                </div>
+                              )}
+                              {month.change !== null && month.change < 0 && (
+                                <div className="absolute -bottom-1 right-0 text-green-500">
+                                  <TrendingDown className="h-4 w-4" />
+                                </div>
+                              )}
+                              {month.change !== null && month.change > 0 && (
+                                <div className="absolute -bottom-1 right-0 text-red-500">
+                                  <TrendingUp className="h-4 w-4" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-3 text-center">
                               <span className="block text-xs font-medium">{month.month}</span>
                               <span className="block text-xs text-muted-foreground">
                                 {formatCurrency(month.amount)}
                               </span>
+                              {month.change !== null && (
+                                <span className={`text-xs ${month.change > 0 ? 'text-red-500' : month.change < 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
+                                  {month.change > 0 ? '+' : ''}{month.change}%
+                                </span>
+                              )}
                             </div>
                           </div>
                         </TooltipTrigger>
@@ -782,40 +827,69 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                     <TooltipProvider key={index}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="space-y-1.5 cursor-pointer">
+                          <div className="space-y-2 cursor-pointer p-2 hover:bg-muted/30 rounded-lg transition-colors duration-200">
                             <div className="flex justify-between items-center">
                               <div className="flex items-center">
-                                <div className={`w-3 h-3 rounded-sm 
-                                  ${index === 0 ? 'bg-blue-500' : 
-                                    index === 1 ? 'bg-green-500' : 
-                                    index === 2 ? 'bg-amber-500' : 
-                                    index === 3 ? 'bg-purple-500' : 'bg-gray-500'} 
-                                  mr-2`}
-                                ></div>
+                                <div className={`w-4 h-4 rounded-md flex items-center justify-center
+                                  ${index === 0 ? 'bg-gradient-to-br from-blue-400 to-blue-600' : 
+                                    index === 1 ? 'bg-gradient-to-br from-green-400 to-green-600' : 
+                                    index === 2 ? 'bg-gradient-to-br from-amber-400 to-amber-600' : 
+                                    index === 3 ? 'bg-gradient-to-br from-purple-400 to-purple-600' : 
+                                    'bg-gradient-to-br from-gray-400 to-gray-600'} 
+                                  mr-2 text-white shadow-sm`}
+                                >
+                                  {index === 0 && <BarChart3 className="h-2.5 w-2.5" />}
+                                  {index === 1 && <DollarSign className="h-2.5 w-2.5" />}
+                                  {index === 2 && <Calendar className="h-2.5 w-2.5" />}
+                                  {index === 3 && <AlertCircle className="h-2.5 w-2.5" />}
+                                  {index > 3 && <ArrowRight className="h-2.5 w-2.5" />}
+                                </div>
                                 <span className="text-sm font-medium">{category.category}</span>
+                                {category.hasAnomaly && (
+                                  <Badge variant="destructive" className="ml-2 h-5 text-[10px]">
+                                    <AlertCircle className="h-2.5 w-2.5 mr-0.5" />
+                                    Anomaly
+                                  </Badge>
+                                )}
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <TrendIcon trend={category.trend} />
                                 <span className="text-sm font-medium">{formatCurrency(category.amount)}</span>
                               </div>
                             </div>
-                            <div className="bg-muted h-2 w-full rounded-full overflow-hidden">
-                              <div 
-                                className={`h-2 rounded-full
-                                  ${index === 0 ? 'bg-blue-500' : 
-                                    index === 1 ? 'bg-green-500' : 
-                                    index === 2 ? 'bg-amber-500' : 
-                                    index === 3 ? 'bg-purple-500' : 'bg-gray-500'}`
-                                }
-                                style={{ width: `${category.percentage}%` }}
-                              />
+                            
+                            <div className="relative">
+                              <div className="bg-muted h-2.5 w-full rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-2.5 rounded-full
+                                    ${index === 0 ? 'bg-gradient-to-r from-blue-400 to-blue-600' : 
+                                      index === 1 ? 'bg-gradient-to-r from-green-400 to-green-600' : 
+                                      index === 2 ? 'bg-gradient-to-r from-amber-400 to-amber-600' : 
+                                      index === 3 ? 'bg-gradient-to-r from-purple-400 to-purple-600' : 
+                                      'bg-gradient-to-r from-gray-400 to-gray-600'}`
+                                  }
+                                  style={{ width: `${category.percentage}%` }}
+                                />
+                              </div>
+                              
+                              {implementedForecasts.includes(2) && index === 0 && (
+                                <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-0.5 shadow-sm">
+                                  <Check className="h-3 w-3 text-white" />
+                                </div>
+                              )}
                             </div>
+                            
                             <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground">{category.percentage}% of total</span>
+                              <div className="flex items-center">
+                                <span className="font-medium">
+                                  {category.percentage}%
+                                </span>
+                                <span className="text-muted-foreground ml-1">of total spend</span>
+                              </div>
                               <span className={`
                                 ${category.changePercent > 0 ? 'text-red-500' : 
                                   category.changePercent < 0 ? 'text-green-500' : 'text-muted-foreground'}
-                                flex items-center gap-1
+                                flex items-center gap-1 font-medium
                               `}>
                                 {category.changePercent > 0 ? <TrendingUp className="h-3 w-3" /> : 
                                 category.changePercent < 0 ? <TrendingDown className="h-3 w-3" /> : null}
