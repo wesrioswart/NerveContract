@@ -4,6 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { 
   AlertCircle, 
   TrendingUp, 
@@ -14,13 +23,16 @@ import {
   Lightbulb, 
   Calendar,
   ArrowRight,
+  ArrowUp,
+  ArrowDown,
   Info,
   Download,
   HelpCircle,
   Filter,
   BellRing,
   Check,
-  ExternalLink
+  ExternalLink,
+  LayoutList
 } from "lucide-react";
 import { 
   Dialog, 
@@ -175,9 +187,77 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
   const [forecastDialogOpen, setForecastDialogOpen] = useState(false);
   const [selectedForecast, setSelectedForecast] = useState<typeof spendData.aiForecasts[0] | null>(null);
   
+  // Filter panel
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  
+  // Date range filtering
+  const [startDate, setStartDate] = useState<string>("2025-01-01");
+  const [endDate, setEndDate] = useState<string>("2025-04-30");
+  const [dateFilterActive, setDateFilterActive] = useState(false);
+  
+  // Category filtering
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    spendData.categoryBreakdown.map(cat => cat.category)
+  );
+  
+  // View mode for data visualization
+  const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
+  
+  // Sort options
+  const [sortField, setSortField] = useState<'amount' | 'percentage' | 'name' | 'trend'>('amount');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  
+  // Filter by threshold
+  const [thresholdValue, setThresholdValue] = useState<number>(0);
+  const [thresholdType, setThresholdType] = useState<'above' | 'below'>('above');
+  
+  // Export options
+  const [exportFormat, setExportFormat] = useState<'csv' | 'pdf' | 'excel'>('csv');
+  const [exportInProgress, setExportInProgress] = useState(false);
+  
+  // Comparison mode
+  const [comparisonMode, setComparisonMode] = useState<'previous-period' | 'budget' | 'none'>('none');
+  
   // Calculate maximum values for chart scaling
   const maxWeeklyAmount = Math.max(...spendData.weeklySpend.map(w => w.amount));
   const maxMonthlyAmount = Math.max(...spendData.monthlySpend.map(m => m.amount));
+  
+  // Filter and sort data based on current selections
+  const filteredCategories = spendData.categoryBreakdown
+    .filter(cat => selectedCategories.includes(cat.category))
+    .filter(cat => {
+      if (thresholdType === 'above') return cat.amount >= thresholdValue;
+      return cat.amount <= thresholdValue;
+    })
+    .sort((a, b) => {
+      if (sortField === 'amount') {
+        return sortDirection === 'asc' ? a.amount - b.amount : b.amount - a.amount;
+      } else if (sortField === 'percentage') {
+        return sortDirection === 'asc' ? a.percentage - b.percentage : b.percentage - a.percentage;
+      } else if (sortField === 'name') {
+        return sortDirection === 'asc' 
+          ? a.category.localeCompare(b.category) 
+          : b.category.localeCompare(a.category);
+      } else {
+        // Sort by trend (up, stable, down)
+        const trendOrder = { up: 0, stable: 1, down: 2 };
+        const aOrder = trendOrder[a.trend as keyof typeof trendOrder];
+        const bOrder = trendOrder[b.trend as keyof typeof trendOrder];
+        return sortDirection === 'asc' ? aOrder - bOrder : bOrder - aOrder;
+      }
+    });
+  
+  // Simulate generating a forecast report
+  const generateForecastReport = () => {
+    setExportInProgress(true);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      setExportInProgress(false);
+      // Show success message or trigger download
+      alert("Forecast report generated successfully!");
+    }, 1500);
+  };
   
   // Open anomaly details dialog
   const openAnomalyDetails = (anomaly: typeof spendData.anomalies[0]) => {
@@ -189,6 +269,26 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
   const openForecastDetails = (forecast: typeof spendData.aiForecasts[0]) => {
     setSelectedForecast(forecast);
     setForecastDialogOpen(true);
+  };
+  
+  // Handle taking action on an anomaly
+  const handleAnomalyAction = (anomalyId: number) => {
+    // Simulate API call to mark anomaly as being addressed
+    console.log(`Taking action on anomaly ${anomalyId}`);
+    setAnomalyDialogOpen(false);
+    
+    // Show success message
+    alert(`Action started for anomaly #${anomalyId}. A notification has been sent to the procurement team.`);
+  };
+  
+  // Handle implementing a forecast recommendation
+  const handleImplementForecast = (forecastId: number) => {
+    // Simulate API call to implement forecast recommendation
+    console.log(`Implementing forecast ${forecastId}`);
+    setForecastDialogOpen(false);
+    
+    // Show success message
+    alert(`Implementation plan for forecast #${forecastId} has been created and assigned to the procurement team.`);
   };
   
   return (
@@ -207,8 +307,178 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
               </CardDescription>
             </div>
             
-            <Tabs defaultValue="weekly" className="w-full md:w-[400px] mt-4 md:mt-0">
-              <TabsList className="grid grid-cols-3">
+            <div className="flex items-center gap-2 mt-4 md:mt-0">
+              {/* Data view toggle */}
+              <div className="flex items-center bg-muted/40 rounded-md p-0.5 border border-muted">
+                <Button
+                  variant={viewMode === 'chart' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="text-xs h-7 px-2"
+                  onClick={() => setViewMode('chart')}
+                >
+                  <BarChart3 className="h-3.5 w-3.5 mr-1" />
+                  Chart
+                </Button>
+                <Button
+                  variant={viewMode === 'table' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="text-xs h-7 px-2"
+                  onClick={() => setViewMode('table')}
+                >
+                  <LayoutList className="h-3.5 w-3.5 mr-1" />
+                  Table
+                </Button>
+              </div>
+              
+              {/* Filter button */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs h-8"
+                onClick={() => setFiltersOpen(!filtersOpen)}
+              >
+                <Filter className="h-3.5 w-3.5 mr-1.5" />
+                Filters
+                {dateFilterActive || selectedCategories.length !== spendData.categoryBreakdown.length ? (
+                  <Badge className="ml-1.5 bg-primary h-4 w-4 p-0 flex items-center justify-center text-[10px]">
+                    {(dateFilterActive ? 1 : 0) + (selectedCategories.length !== spendData.categoryBreakdown.length ? 1 : 0)}
+                  </Badge>
+                ) : null}
+              </Button>
+            </div>
+          </div>
+          
+          {/* Filter panel */}
+          {filtersOpen && (
+            <div className="mt-4 p-3 bg-muted/20 rounded-md border border-muted/50 animate-in fade-in duration-200">
+              <div className="text-sm font-medium mb-2 flex items-center justify-between">
+                <span>Filters</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 px-2 text-xs"
+                  onClick={() => {
+                    setDateFilterActive(false);
+                    setSelectedCategories(spendData.categoryBreakdown.map(cat => cat.category));
+                    setThresholdValue(0);
+                    setThresholdType('above');
+                  }}
+                >
+                  Reset filters
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Date range filter */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center">
+                    <Checkbox 
+                      id="date-filter" 
+                      checked={dateFilterActive}
+                      onCheckedChange={(checked) => setDateFilterActive(checked === true)}
+                    />
+                    <label htmlFor="date-filter" className="text-xs ml-2 cursor-pointer">
+                      Date range
+                    </label>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="w-1/2">
+                      <Input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        disabled={!dateFilterActive}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="w-1/2">
+                      <Input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        disabled={!dateFilterActive}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Category filter */}
+                <div className="space-y-1.5">
+                  <label className="text-xs">Categories</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {spendData.categoryBreakdown.map((category, index) => (
+                      <Badge 
+                        key={index}
+                        variant={selectedCategories.includes(category.category) ? "default" : "outline"}
+                        className="cursor-pointer text-xs py-0.5"
+                        onClick={() => {
+                          if (selectedCategories.includes(category.category)) {
+                            // Don't allow deselecting the last category
+                            if (selectedCategories.length > 1) {
+                              setSelectedCategories(prev => prev.filter(cat => cat !== category.category));
+                            }
+                          } else {
+                            setSelectedCategories(prev => [...prev, category.category]);
+                          }
+                        }}
+                      >
+                        {category.category}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Threshold filter */}
+                <div className="space-y-1.5">
+                  <label className="text-xs">Amount threshold</label>
+                  <div className="flex gap-2">
+                    <Select 
+                      value={thresholdType} 
+                      onValueChange={(value) => setThresholdType(value as 'above' | 'below')}
+                    >
+                      <SelectTrigger className="h-8 text-xs w-24">
+                        <SelectValue placeholder="Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="above">Above</SelectItem>
+                        <SelectItem value="below">Below</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="number"
+                      value={thresholdValue}
+                      onChange={(e) => setThresholdValue(parseInt(e.target.value) || 0)}
+                      className="h-8 text-xs"
+                      placeholder="Amount threshold"
+                    />
+                  </div>
+                </div>
+                
+                {/* Comparison mode */}
+                <div className="space-y-1.5">
+                  <label className="text-xs">Comparison</label>
+                  <Select 
+                    value={comparisonMode} 
+                    onValueChange={(value) => setComparisonMode(value as 'previous-period' | 'budget' | 'none')}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Comparison mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No comparison</SelectItem>
+                      <SelectItem value="previous-period">vs. Previous period</SelectItem>
+                      <SelectItem value="budget">vs. Budget</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Tabs for different views */}
+          <div className="mt-4">
+            <Tabs defaultValue="weekly" className="w-full">
+              <TabsList className="grid grid-cols-3 w-full md:w-[400px]">
                 <TabsTrigger value="weekly" className="flex items-center gap-1.5 text-xs">
                   <Calendar className="h-3.5 w-3.5" />
                   Weekly
@@ -360,73 +630,259 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
             
             {/* Category Breakdown */}
             <TabsContent value="category" className="mt-0">
-              <div className="space-y-4 pt-3 px-1">
-                {spendData.categoryBreakdown.map((category, index) => (
-                  <TooltipProvider key={index}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="space-y-1.5 cursor-pointer">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center">
-                              <div className={`w-3 h-3 rounded-sm 
-                                ${index === 0 ? 'bg-blue-500' : 
-                                  index === 1 ? 'bg-green-500' : 
-                                  index === 2 ? 'bg-amber-500' : 
-                                  index === 3 ? 'bg-purple-500' : 'bg-gray-500'} 
-                                mr-2`}
-                              ></div>
-                              <span className="text-sm font-medium">{category.category}</span>
+              {viewMode === 'chart' ? (
+                <div className="space-y-4 pt-3 px-1">
+                  {filteredCategories.map((category, index) => (
+                    <TooltipProvider key={index}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="space-y-1.5 cursor-pointer">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <div className={`w-3 h-3 rounded-sm 
+                                  ${index === 0 ? 'bg-blue-500' : 
+                                    index === 1 ? 'bg-green-500' : 
+                                    index === 2 ? 'bg-amber-500' : 
+                                    index === 3 ? 'bg-purple-500' : 'bg-gray-500'} 
+                                  mr-2`}
+                                ></div>
+                                <span className="text-sm font-medium">{category.category}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <TrendIcon trend={category.trend} />
+                                <span className="text-sm font-medium">{formatCurrency(category.amount)}</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                              <TrendIcon trend={category.trend} />
-                              <span className="text-sm font-medium">{formatCurrency(category.amount)}</span>
+                            <div className="bg-muted h-2 w-full rounded-full overflow-hidden">
+                              <div 
+                                className={`h-2 rounded-full
+                                  ${index === 0 ? 'bg-blue-500' : 
+                                    index === 1 ? 'bg-green-500' : 
+                                    index === 2 ? 'bg-amber-500' : 
+                                    index === 3 ? 'bg-purple-500' : 'bg-gray-500'}`
+                                }
+                                style={{ width: `${category.percentage}%` }}
+                              />
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">{category.percentage}% of total</span>
+                              <span className={`
+                                ${category.changePercent > 0 ? 'text-red-500' : 
+                                  category.changePercent < 0 ? 'text-green-500' : 'text-muted-foreground'}
+                                flex items-center gap-1
+                              `}>
+                                {category.changePercent > 0 ? <TrendingUp className="h-3 w-3" /> : 
+                                category.changePercent < 0 ? <TrendingDown className="h-3 w-3" /> : null}
+                                {category.changePercent > 0 ? '+' : ''}{category.changePercent}%
+                              </span>
                             </div>
                           </div>
-                          <Progress 
-                            value={category.percentage} 
-                            className="h-2" 
-                            indicatorClassName={
-                              index === 0 ? 'bg-blue-500' : 
-                              index === 1 ? 'bg-green-500' : 
-                              index === 2 ? 'bg-amber-500' : 
-                              index === 3 ? 'bg-purple-500' : 'bg-gray-500'
-                            }
-                          />
-                          <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">{category.percentage}% of total</span>
-                            <span className={`
-                              ${category.changePercent > 0 ? 'text-red-500' : 
-                                category.changePercent < 0 ? 'text-green-500' : 'text-muted-foreground'}
-                              flex items-center gap-1
-                            `}>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="w-60 p-3">
+                          <div className="space-y-1.5">
+                            <p className="font-medium text-sm">{category.category}</p>
+                            <p className="text-xs">Total spend: {formatCurrency(category.amount)}</p>
+                            <p className="text-xs">Percentage of total: {category.percentage}%</p>
+                            <p className={`text-xs flex items-center gap-1.5 ${
+                              category.changePercent > 0 ? 'text-red-500' : 
+                              category.changePercent < 0 ? 'text-green-500' : 'text-muted-foreground'
+                            }`}>
                               {category.changePercent > 0 ? <TrendingUp className="h-3 w-3" /> : 
-                               category.changePercent < 0 ? <TrendingDown className="h-3 w-3" /> : null}
-                              {category.changePercent > 0 ? '+' : ''}{category.changePercent}%
-                            </span>
+                              category.changePercent < 0 ? <TrendingDown className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
+                              {category.trend === 'up' ? 'Increasing' : 
+                              category.trend === 'down' ? 'Decreasing' : 'Stable'} trend
+                              ({category.changePercent > 0 ? '+' : ''}{category.changePercent}% vs previous period)
+                            </p>
                           </div>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="w-60 p-3">
-                        <div className="space-y-1.5">
-                          <p className="font-medium text-sm">{category.category}</p>
-                          <p className="text-xs">Total spend: {formatCurrency(category.amount)}</p>
-                          <p className="text-xs">Percentage of total: {category.percentage}%</p>
-                          <p className={`text-xs flex items-center gap-1.5 ${
-                            category.changePercent > 0 ? 'text-red-500' : 
-                            category.changePercent < 0 ? 'text-green-500' : 'text-muted-foreground'
-                          }`}>
-                            {category.changePercent > 0 ? <TrendingUp className="h-3 w-3" /> : 
-                             category.changePercent < 0 ? <TrendingDown className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
-                            {category.trend === 'up' ? 'Increasing' : 
-                             category.trend === 'down' ? 'Decreasing' : 'Stable'} trend
-                            ({category.changePercent > 0 ? '+' : ''}{category.changePercent}% vs previous period)
-                          </p>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ))}
-              </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ))}
+                </div>
+              ) : (
+                <div className="pt-3">
+                  <div className="border rounded-md overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th 
+                            className="px-4 py-3 text-left font-medium text-sm cursor-pointer hover:bg-muted/80 transition-colors" 
+                            onClick={() => {
+                              if (sortField === 'name') {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField('name');
+                                setSortDirection('asc');
+                              }
+                            }}
+                          >
+                            <div className="flex items-center">
+                              Category
+                              {sortField === 'name' && (
+                                sortDirection === 'asc' ? 
+                                <ArrowUp className="h-3.5 w-3.5 ml-1" /> : 
+                                <ArrowDown className="h-3.5 w-3.5 ml-1" />
+                              )}
+                            </div>
+                          </th>
+                          <th 
+                            className="px-4 py-3 text-left font-medium text-sm cursor-pointer hover:bg-muted/80 transition-colors" 
+                            onClick={() => {
+                              if (sortField === 'amount') {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField('amount');
+                                setSortDirection('desc');
+                              }
+                            }}
+                          >
+                            <div className="flex items-center">
+                              Amount
+                              {sortField === 'amount' && (
+                                sortDirection === 'asc' ? 
+                                <ArrowUp className="h-3.5 w-3.5 ml-1" /> : 
+                                <ArrowDown className="h-3.5 w-3.5 ml-1" />
+                              )}
+                            </div>
+                          </th>
+                          <th 
+                            className="px-4 py-3 text-left font-medium text-sm cursor-pointer hover:bg-muted/80 transition-colors" 
+                            onClick={() => {
+                              if (sortField === 'percentage') {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField('percentage');
+                                setSortDirection('desc');
+                              }
+                            }}
+                          >
+                            <div className="flex items-center">
+                              % of Total
+                              {sortField === 'percentage' && (
+                                sortDirection === 'asc' ? 
+                                <ArrowUp className="h-3.5 w-3.5 ml-1" /> : 
+                                <ArrowDown className="h-3.5 w-3.5 ml-1" />
+                              )}
+                            </div>
+                          </th>
+                          <th 
+                            className="px-4 py-3 text-left font-medium text-sm cursor-pointer hover:bg-muted/80 transition-colors"
+                            onClick={() => {
+                              if (sortField === 'trend') {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField('trend');
+                                setSortDirection('asc');
+                              }
+                            }}
+                          >
+                            <div className="flex items-center">
+                              Trend
+                              {sortField === 'trend' && (
+                                sortDirection === 'asc' ? 
+                                <ArrowUp className="h-3.5 w-3.5 ml-1" /> : 
+                                <ArrowDown className="h-3.5 w-3.5 ml-1" />
+                              )}
+                            </div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredCategories.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">
+                              No data found matching the current filters
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredCategories.map((category, index) => (
+                            <tr 
+                              key={index} 
+                              className={`hover:bg-muted/20 ${index % 2 === 0 ? 'bg-white' : 'bg-muted/10'}`}
+                            >
+                              <td className="px-4 py-3 border-t">
+                                {category.category}
+                              </td>
+                              <td className="px-4 py-3 border-t font-medium">
+                                {formatCurrency(category.amount)}
+                              </td>
+                              <td className="px-4 py-3 border-t">
+                                <div className="flex items-center">
+                                  <div className="bg-muted h-1.5 w-12 rounded-full overflow-hidden mr-2">
+                                    <div 
+                                      className={`h-1.5 rounded-full
+                                      ${index === 0 ? 'bg-blue-500' : 
+                                        index === 1 ? 'bg-green-500' : 
+                                        index === 2 ? 'bg-amber-500' : 
+                                        index === 3 ? 'bg-purple-500' : 'bg-gray-500'}`
+                                      }
+                                      style={{ width: `${category.percentage}%` }}
+                                    />
+                                  </div>
+                                  <span>{category.percentage}%</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 border-t">
+                                <div className="flex items-center">
+                                  <TrendIcon trend={category.trend} className="mr-1.5" />
+                                  <span className={
+                                    category.changePercent > 0 ? 'text-red-500' : 
+                                    category.changePercent < 0 ? 'text-green-500' : 'text-muted-foreground'
+                                  }>
+                                    {category.changePercent > 0 ? '+' : ''}{category.changePercent}%
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
+                    <div>
+                      Showing {filteredCategories.length} of {spendData.categoryBreakdown.length} categories
+                    </div>
+                    <div className="flex items-center">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-xs h-7 px-2 flex gap-1"
+                        onClick={() => {
+                          // Create a CSV 
+                          const headers = ['Category', 'Amount', 'Percentage', 'Trend', 'Change'];
+                          const rows = filteredCategories.map(cat => [
+                            cat.category,
+                            formatCurrency(cat.amount),
+                            `${cat.percentage}%`,
+                            cat.trend,
+                            `${cat.changePercent > 0 ? '+' : ''}${cat.changePercent}%`
+                          ]);
+                          
+                          // Create CSV content
+                          const csvContent = [
+                            headers.join(','),
+                            ...rows.map(row => row.join(','))
+                          ].join('\n');
+                          
+                          // Create download
+                          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                          const url = URL.createObjectURL(blob);
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.setAttribute('download', 'spend-analysis-data.csv');
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Export CSV
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
