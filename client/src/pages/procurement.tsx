@@ -125,150 +125,56 @@ export default function Procurement() {
     return `£${(value / 100).toFixed(2)}`;
   };
 
-  // Function to handle report export as PDF
-  const exportReportAsPDF = async () => {
+  // Function to download file from server
+  const downloadFileFromServer = async (format: string) => {
     try {
       // Show loading state
       const button = document.querySelector('[data-export-button]');
       if (button) {
-        button.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating PDF...';
+        button.innerHTML = `<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating ${format.toUpperCase()}...`;
       }
       
-      const response = await fetch('/api/export/procurement-report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reportType: 'Detailed Breakdown',
-          dateRange: 'Jan 2023 - Apr 2023'
-        }),
-      });
+      // Create an iframe to handle the file download
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
       
-      const data = await response.json();
+      // Create a form within the iframe to submit as POST
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/api/export/procurement-report';
+      form.target = '_blank'; // This opens in a new tab/window which browsers are less likely to block
       
-      if (!data.success) {
-        throw new Error('Failed to generate report');
-      }
-      
-      // Create a PDF client-side using html2pdf
-      const { default: html2pdf } = await import('html2pdf.js');
-      
-      // Create HTML content for the PDF
-      const reportHtml = `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h1 style="color: #333;">${data.reportData.title}</h1>
-          <p>Generated: ${new Date(data.reportData.generatedAt).toLocaleString()}</p>
-          <p>Period: ${data.reportData.dateRange}</p>
-          
-          <h2 style="margin-top: 20px; color: #555;">Summary</h2>
-          <p>Total Spend: £${(data.reportData.summary.totalSpend / 100).toFixed(2)}</p>
-          
-          <h3 style="margin-top: 15px; color: #666;">Projects</h3>
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr style="background-color: #f2f2f2;">
-              <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Project</th>
-              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
-              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">% of Total</th>
-            </tr>
-            ${data.reportData.summary.projects.map((project: any) => `
-              <tr>
-                <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${project.name}</td>
-                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(project.spend / 100).toFixed(2)}</td>
-                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${project.percentageOfTotal}%</td>
-              </tr>
-            `).join('')}
-          </table>
-          
-          <h3 style="margin-top: 15px; color: #666;">GPSMACS Categories</h3>
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr style="background-color: #f2f2f2;">
-              <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Code</th>
-              <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Description</th>
-              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
-              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">%</th>
-            </tr>
-            ${data.reportData.summary.gpsmacsCodes.map((code: any) => `
-              <tr>
-                <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${code.code}</td>
-                <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${code.name}</td>
-                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(code.spend / 100).toFixed(2)}</td>
-                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${code.percentage}%</td>
-              </tr>
-            `).join('')}
-          </table>
-          
-          <h3 style="margin-top: 15px; color: #666;">Top Suppliers</h3>
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr style="background-color: #f2f2f2;">
-              <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Supplier</th>
-              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
-              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">PO Count</th>
-              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Avg. PO Value (£)</th>
-              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">% of Total</th>
-            </tr>
-            ${data.reportData.summary.topSuppliers.map((supplier: any) => `
-              <tr>
-                <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${supplier.name}</td>
-                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(supplier.spend / 100).toFixed(2)}</td>
-                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${supplier.poCount}</td>
-                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(supplier.avgPoValue / 100).toFixed(2)}</td>
-                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${supplier.percentageOfTotal}%</td>
-              </tr>
-            `).join('')}
-          </table>
-          
-          <h3 style="margin-top: 15px; color: #666;">Monthly Spend Trend</h3>
-          <table style="width: 50%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr style="background-color: #f2f2f2;">
-              <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Month</th>
-              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
-            </tr>
-            ${data.reportData.summary.monthlyTrend.map((month: any) => `
-              <tr>
-                <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${month.month}</td>
-                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(month.spend / 100).toFixed(2)}</td>
-              </tr>
-            `).join('')}
-          </table>
-          
-          <h2 style="margin-top: 20px; color: #555;">Key Insights</h2>
-          <ul>
-            ${data.reportData.insights.map((insight: any) => `
-              <li style="margin-bottom: 5px;">${insight}</li>
-            `).join('')}
-          </ul>
-        </div>
-      `;
-      
-      // Configure html2pdf options
-      const options = {
-        margin: 10,
-        filename: `procurement_report_${new Date().toISOString().slice(0, 10)}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      // Add the data as hidden form fields
+      const addHiddenField = (name: string, value: string) => {
+        const hiddenField = document.createElement('input');
+        hiddenField.type = 'hidden';
+        hiddenField.name = name;
+        hiddenField.value = value;
+        form.appendChild(hiddenField);
       };
       
-      // Generate and download the PDF
-      const element = document.createElement('div');
-      element.innerHTML = reportHtml;
-      document.body.appendChild(element);
+      addHiddenField('reportType', 'Detailed Breakdown');
+      addHiddenField('dateRange', 'Jan 2023 - Apr 2023');
+      addHiddenField('format', format);
       
-      await html2pdf()
-        .from(element)
-        .set(options)
-        .save();
+      // Add the form to the document body and submit it
+      document.body.appendChild(form);
+      form.submit();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
         
-      document.body.removeChild(element);
-      
-      // Reset button
-      if (button) {
-        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
-      }
+        // Reset button
+        if (button) {
+          button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
+        }
+      }, 2000);
     } catch (error) {
-      console.error('Error generating PDF report:', error);
-      alert('Failed to generate PDF report. Please try again later.');
+      console.error(`Error generating ${format} report:`, error);
+      alert(`Failed to generate ${format} report. Please try again later.`);
       
       // Reset button
       const button = document.querySelector('[data-export-button]');
@@ -277,107 +183,15 @@ export default function Procurement() {
       }
     }
   };
-
-  // Function to handle report export as CSV
+  
+  // Function to handle PDF export
+  const exportReportAsPDF = async () => {
+    await downloadFileFromServer('pdf');
+  };
+  
+  // Function to handle CSV export
   const exportReportAsCSV = async () => {
-    try {
-      // Show loading state
-      const button = document.querySelector('[data-export-button]');
-      if (button) {
-        button.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating CSV...';
-      }
-      
-      const response = await fetch('/api/export/procurement-report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reportType: 'Detailed Breakdown',
-          dateRange: 'Jan 2023 - Apr 2023'
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error('Failed to generate report');
-      }
-      
-      // Create CSV content
-      let csvContent = "data:text/csv;charset=utf-8,";
-      
-      // Add header
-      csvContent += `"${data.reportData.title}"\r\n`;
-      csvContent += `"Generated","${new Date(data.reportData.generatedAt).toLocaleString()}"\r\n`;
-      csvContent += `"Period","${data.reportData.dateRange}"\r\n\r\n`;
-      csvContent += `"Total Spend","£${(data.reportData.summary.totalSpend / 100).toFixed(2)}"\r\n\r\n`;
-      
-      // Projects section
-      csvContent += `"Projects"\r\n`;
-      csvContent += `"Project","Spend (£)","% of Total"\r\n`;
-      data.reportData.summary.projects.forEach((project: any) => {
-        csvContent += `"${project.name}","£${(project.spend / 100).toFixed(2)}","${project.percentageOfTotal}%"\r\n`;
-      });
-      csvContent += "\r\n";
-      
-      // GPSMACS Categories section
-      csvContent += `"GPSMACS Categories"\r\n`;
-      csvContent += `"Code","Description","Spend (£)","%"\r\n`;
-      data.reportData.summary.gpsmacsCodes.forEach((code: any) => {
-        csvContent += `"${code.code}","${code.name}","£${(code.spend / 100).toFixed(2)}","${code.percentage}%"\r\n`;
-      });
-      csvContent += "\r\n";
-      
-      // Top Suppliers section
-      csvContent += `"Top Suppliers"\r\n`;
-      csvContent += `"Supplier","Spend (£)","PO Count","Avg. PO Value (£)","% of Total"\r\n`;
-      data.reportData.summary.topSuppliers.forEach((supplier: any) => {
-        csvContent += `"${supplier.name}","£${(supplier.spend / 100).toFixed(2)}","${supplier.poCount}","£${(supplier.avgPoValue / 100).toFixed(2)}","${supplier.percentageOfTotal}%"\r\n`;
-      });
-      csvContent += "\r\n";
-      
-      // Monthly Trend section
-      csvContent += `"Monthly Spend Trend"\r\n`;
-      csvContent += `"Month","Spend (£)"\r\n`;
-      data.reportData.summary.monthlyTrend.forEach((month: any) => {
-        csvContent += `"${month.month}","£${(month.spend / 100).toFixed(2)}"\r\n`;
-      });
-      csvContent += "\r\n";
-      
-      // Key Insights section
-      csvContent += `"Key Insights"\r\n`;
-      data.reportData.insights.forEach((insight: any) => {
-        csvContent += `"${insight}"\r\n`;
-      });
-      
-      // Create download link
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `procurement_report_${new Date().toISOString().slice(0, 10)}.csv`);
-      document.body.appendChild(link);
-      
-      // Trigger download
-      link.click();
-      
-      // Clean up
-      document.body.removeChild(link);
-      
-      // Reset button
-      if (button) {
-        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
-      }
-    } catch (error) {
-      console.error('Error generating CSV report:', error);
-      alert('Failed to generate CSV report. Please try again later.');
-      
-      // Reset button
-      const button = document.querySelector('[data-export-button]');
-      if (button) {
-        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
-      }
-    }
+    await downloadFileFromServer('csv');
   };
 
   // Check if user is not authenticated
