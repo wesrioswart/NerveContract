@@ -1306,12 +1306,23 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     });
   });
   
-  // Export procurement reports endpoint
+  // In-memory storage for generated files with access tokens
+  const generatedReports = new Map();
+
+  // Generate token for file access
+  function generateToken() {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  }
+
+  // Request file generation API
   app.post("/api/export/procurement-report", requireAuth, async (req: Request, res: Response) => {
     try {
       const { reportType, dateRange, format } = req.body;
       
-      // Generate report data
+      // Generate token for this report
+      const token = generateToken();
+      
+      // Schedule report generation (async)
       const reportData = {
         title: `Procurement ${reportType} Report`,
         generatedAt: new Date().toISOString(),
@@ -1400,14 +1411,57 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
           "Potential savings of £15,800 through supplier consolidation"
         ]
       };
-
-      // If format is CSV, generate and return CSV file
+      
+      // Store filename and format for download
+      const filename = `procurement_report_${new Date().toISOString().split('T')[0]}`;
+      const reportInfo = {
+        filename,
+        format,
+        reportData,
+        expiry: Date.now() + (15 * 60 * 1000) // 15 minute expiry
+      };
+      
+      generatedReports.set(token, reportInfo);
+      
+      // Return token for client to use
+      res.json({ 
+        success: true, 
+        downloadUrl: `/api/download/report/${token}`,
+        format
+      });
+    } catch (error) {
+      console.error("Error generating procurement report:", error);
+      res.status(500).json({ error: "Failed to generate procurement report" });
+    }
+  });
+  
+  // Actual download endpoint
+  app.get("/api/download/report/:token", async (req: Request, res: Response) => {
+    try {
+      const { token } = req.params;
+      
+      // Check if token exists and is valid
+      if (!generatedReports.has(token)) {
+        return res.status(404).send('Report not found or expired. Please generate a new report.');
+      }
+      
+      const reportInfo = generatedReports.get(token);
+      
+      // Check if report has expired
+      if (reportInfo.expiry < Date.now()) {
+        generatedReports.delete(token);
+        return res.status(404).send('Report has expired. Please generate a new report.');
+      }
+      
+      const { filename, format, reportData } = reportInfo;
+      
+      // Generate CSV
       if (format === 'csv') {
         const { stringify } = await import('csv-stringify/sync');
         
         // Set response headers for CSV download
         res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="procurement_report_${new Date().toISOString().split('T')[0]}.csv"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
         
         // Create CSV content - Header
         let rows = [
@@ -1474,18 +1528,23 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
         
         // Convert rows to CSV string and send as response
         const csvContent = stringify(rows);
-        return res.send(csvContent);
+        res.write(csvContent);
+        res.end();
+        
+        // Clean up after successful download
+        generatedReports.delete(token);
+        return;
       } 
-      // If format is PDF, generate and return PDF file
+      // Generate PDF  
       else if (format === 'pdf') {
         const PDFDocument = await import('pdfkit');
         
-        // Create a new PDF document
-        const doc = new PDFDocument.default({ margin: 50 });
-        
         // Set response headers for PDF download
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="procurement_report_${new Date().toISOString().split('T')[0]}.pdf"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}.pdf"`);
+        
+        // Create a new PDF document
+        const doc = new PDFDocument.default({ margin: 50 });
         
         // Pipe the PDF directly to the response
         doc.pipe(res);
@@ -1699,16 +1758,17 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
           doc.moveDown(0.5);
         });
         
-        // Finalize PDF
+        // Finalize PDF and cleanup
         doc.end();
+        generatedReports.delete(token);
         return;
       }
       
-      // If no format specified, return JSON data
-      res.json({ success: true, reportData });
+      // Format not recognized
+      res.status(400).json({ error: "Invalid format specified" });
     } catch (error) {
-      console.error("Error generating procurement report:", error);
-      res.status(500).json({ error: "Failed to generate procurement report" });
+      console.error("Error downloading report:", error);
+      res.status(500).send('An error occurred during report download. Please try again.');
     }
   });
 

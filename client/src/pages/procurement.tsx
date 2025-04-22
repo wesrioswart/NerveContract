@@ -125,7 +125,7 @@ export default function Procurement() {
     return `£${(value / 100).toFixed(2)}`;
   };
 
-  // Function to download file from server
+  // Function to download file from server using the new token approach
   const downloadFileFromServer = async (format: string) => {
     try {
       // Show loading state
@@ -134,40 +134,30 @@ export default function Procurement() {
         button.innerHTML = `<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating ${format.toUpperCase()}...`;
       }
       
-      // Create an iframe to handle the file download
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
+      // Step 1: Request a token for the report
+      const response = await fetch('/api/export/procurement-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reportType: 'Detailed Breakdown',
+          dateRange: 'Jan 2023 - Apr 2023',
+          format
+        })
+      });
       
-      // Create a form within the iframe to submit as POST
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = '/api/export/procurement-report';
-      form.target = '_blank'; // This opens in a new tab/window which browsers are less likely to block
+      const data = await response.json();
       
-      // Add the data as hidden form fields
-      const addHiddenField = (name: string, value: string) => {
-        const hiddenField = document.createElement('input');
-        hiddenField.type = 'hidden';
-        hiddenField.name = name;
-        hiddenField.value = value;
-        form.appendChild(hiddenField);
-      };
+      if (!data.success || !data.downloadUrl) {
+        throw new Error('Failed to generate report download link');
+      }
       
-      addHiddenField('reportType', 'Detailed Breakdown');
-      addHiddenField('dateRange', 'Jan 2023 - Apr 2023');
-      addHiddenField('format', format);
+      // Step 2: Open the download URL in a new window
+      window.open(data.downloadUrl, '_blank');
       
-      // Add the form to the document body and submit it
-      document.body.appendChild(form);
-      form.submit();
-      
-      // Clean up
+      // Reset button after short delay
       setTimeout(() => {
-        document.body.removeChild(form);
-        document.body.removeChild(iframe);
-        
-        // Reset button
         if (button) {
           button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
         }
