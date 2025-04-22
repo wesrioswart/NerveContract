@@ -104,7 +104,7 @@ export default function BatchInventoryOperationsModal({
     onSuccess: () => {
       toast({
         title: "Batch operation completed",
-        description: `Successfully processed ${form.getValues().items.length} items`,
+        description: `Successfully processed ${form.getValues().items?.length || 0} items`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/inventory/items'] });
       queryClient.invalidateQueries({ queryKey: ['/api/inventory/dashboard'] });
@@ -125,7 +125,7 @@ export default function BatchInventoryOperationsModal({
   };
 
   const removeItemRow = (index: number) => {
-    const currentItems = form.getValues().items;
+    const currentItems = form.getValues().items || [];
     form.setValue('items', currentItems.filter((_, i) => i !== index));
   };
 
@@ -445,7 +445,7 @@ export default function BatchInventoryOperationsModal({
                           variant="ghost"
                           size="icon"
                           onClick={() => removeItemRow(index)}
-                          disabled={form.getValues().items.length <= 1}
+                          disabled={(form.getValues().items?.length || 0) <= 1}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
