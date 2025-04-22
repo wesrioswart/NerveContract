@@ -949,15 +949,15 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                 </div>
                 
                 {/* Chart bars */}
-                <div className="flex justify-between items-end h-[200px] px-6 mt-6">
+                <div className="grid grid-cols-8 gap-1 items-end h-[200px] px-6 mt-6">
                   {spendData.weeklySpend.map((week, index) => (
                     <TooltipProvider key={index}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex flex-col items-center group">
-                            <div className="relative">
+                          <div className="flex flex-col items-center group w-full">
+                            <div className="relative w-full max-w-[60px] mx-auto">
                               <div 
-                                className={`bg-gradient-to-t from-primary/70 to-primary w-12 
+                                className={`bg-gradient-to-t from-primary/70 to-primary w-full 
                                   rounded-t hover:brightness-110 transition-all duration-200 
                                   group-hover:shadow-lg ${week.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}`} 
                                 style={{ 
@@ -1052,15 +1052,15 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                 </div>
                 
                 {/* Chart bars */}
-                <div className="flex justify-between items-end h-[200px] px-6 mt-6">
+                <div className="grid grid-cols-6 gap-1 items-end h-[200px] px-6 mt-6">
                   {spendData.monthlySpend.map((month, index) => (
                     <TooltipProvider key={index}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex flex-col items-center group">
-                            <div className="relative">
+                          <div className="flex flex-col items-center group w-full">
+                            <div className="relative w-full max-w-[70px] mx-auto">
                               <div 
-                                className={`bg-gradient-to-t from-secondary/70 to-secondary w-16 
+                                className={`bg-gradient-to-t from-secondary/70 to-secondary w-full 
                                   rounded-t hover:brightness-110 transition-all duration-200 
                                   group-hover:shadow-lg ${month.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
                                 style={{ 
