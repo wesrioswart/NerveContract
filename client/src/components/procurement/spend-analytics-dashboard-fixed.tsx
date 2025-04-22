@@ -184,8 +184,13 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
   const [implementedForecasts, setImplementedForecasts] = useState<number[]>([]);
   
   // Calculate maximum values for chart scaling
-  const maxWeeklyAmount = Math.max(...spendData.weeklySpend.map(w => w.amount));
-  const maxMonthlyAmount = Math.max(...spendData.monthlySpend.map(m => m.amount));
+  // Add a small buffer (10%) to the max value to ensure tallest bar doesn't touch the top
+  const rawMaxWeeklyAmount = Math.max(...spendData.weeklySpend.map(w => w.amount));
+  const rawMaxMonthlyAmount = Math.max(...spendData.monthlySpend.map(m => m.amount));
+  
+  // Improved calculation to ensure bars are proportionally accurate
+  const maxWeeklyAmount = Math.ceil(rawMaxWeeklyAmount * 1.1 / 5000) * 5000;
+  const maxMonthlyAmount = Math.ceil(rawMaxMonthlyAmount * 1.1 / 10000) * 10000;
   
   // Filter and sort data based on current selections
   const filteredCategories = spendData.categoryBreakdown
@@ -437,21 +442,31 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
           <Tabs defaultValue="weekly">
             {/* Weekly Spend Chart */}
             <TabsContent value="weekly" className="mt-0">
-              <div className="relative h-[220px]">
-                {/* Y-axis labels */}
+              <div className="relative h-[250px]">
+                {/* Y-axis labels with intermediate values */}
                 <div className="absolute top-0 left-0 text-xs text-muted-foreground">
                   {formatCurrency(maxWeeklyAmount)}
+                </div>
+                <div className="absolute top-1/4 left-0 text-xs text-muted-foreground">
+                  {formatCurrency(maxWeeklyAmount * 0.75)}
+                </div>
+                <div className="absolute top-1/2 left-0 text-xs text-muted-foreground">
+                  {formatCurrency(maxWeeklyAmount * 0.5)}
+                </div>
+                <div className="absolute top-3/4 left-0 text-xs text-muted-foreground">
+                  {formatCurrency(maxWeeklyAmount * 0.25)}
                 </div>
                 <div className="absolute bottom-0 left-0 text-xs text-muted-foreground">
                   £0
                 </div>
                 
-                {/* Light grid lines */}
+                {/* Light grid lines that match the value points */}
                 <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
                   <div className="h-px bg-muted/30 w-full"></div>
-                  <div className="h-px bg-muted/30 w-full"></div>
-                  <div className="h-px bg-muted/30 w-full"></div>
-                  <div className="h-px bg-muted/30 w-full"></div>
+                  <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
+                  <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
+                  <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
+                  <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
                 </div>
                 
                 {/* View Detailed Breakdown Button for Weekly */}
@@ -468,7 +483,7 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                 </div>
                 
                 {/* Chart bars */}
-                <div className="flex justify-between items-end h-[175px] px-6 mt-6">
+                <div className="flex justify-between items-end h-[200px] px-6 mt-6">
                   {spendData.weeklySpend.map((week, index) => (
                     <TooltipProvider key={index}>
                       <Tooltip>
@@ -530,10 +545,19 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
             
             {/* Monthly Spend Chart */}
             <TabsContent value="monthly" className="mt-0">
-              <div className="relative h-[220px]">
-                {/* Y-axis labels */}
+              <div className="relative h-[250px]">
+                {/* Y-axis labels with intermediate values */}
                 <div className="absolute top-0 left-0 text-xs text-muted-foreground">
                   {formatCurrency(maxMonthlyAmount)}
+                </div>
+                <div className="absolute top-1/4 left-0 text-xs text-muted-foreground">
+                  {formatCurrency(maxMonthlyAmount * 0.75)}
+                </div>
+                <div className="absolute top-1/2 left-0 text-xs text-muted-foreground">
+                  {formatCurrency(maxMonthlyAmount * 0.5)}
+                </div>
+                <div className="absolute top-3/4 left-0 text-xs text-muted-foreground">
+                  {formatCurrency(maxMonthlyAmount * 0.25)}
                 </div>
                 <div className="absolute bottom-0 left-0 text-xs text-muted-foreground">
                   £0
@@ -552,12 +576,13 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   </Button>
                 </div>
                 
-                {/* Light grid lines */}
+                {/* Light grid lines that match the value points */}
                 <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
                   <div className="h-px bg-muted/30 w-full"></div>
-                  <div className="h-px bg-muted/30 w-full"></div>
-                  <div className="h-px bg-muted/30 w-full"></div>
-                  <div className="h-px bg-muted/30 w-full"></div>
+                  <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
+                  <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
+                  <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
+                  <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
                 </div>
                 
                 {/* Chart bars */}
