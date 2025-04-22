@@ -184,8 +184,22 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                 variant="outline" 
                 className="text-xs"
                 onClick={() => {
-                  // Navigate to detailed breakdown view
-                  window.location.href = '/procurement?tab=detailed-breakdown';
+                  // Set URL parameter and trigger tab change through parent component
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'detailed-breakdown');
+                  window.history.pushState({}, '', url);
+                  
+                  // Dispatch a custom event that the parent component can listen for
+                  const tabChangeEvent = new CustomEvent('tabChange', { 
+                    detail: { tab: 'detailed-breakdown' } 
+                  });
+                  window.dispatchEvent(tabChangeEvent);
+                  
+                  // Additionally, click the detailed-breakdown tab directly for older browsers that might not support CustomEvent
+                  const detailedTab = document.querySelector('[value="detailed-breakdown"]');
+                  if (detailedTab) {
+                    (detailedTab as HTMLElement).click();
+                  }
                 }}
               >
                 <PieChart className="h-3.5 w-3.5 mr-1.5" />

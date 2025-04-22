@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +73,27 @@ export default function Procurement() {
 
   // State for tab
   const [activeTab, setActiveTab] = useState<string>("dashboard");
+  
+  // Effect to handle tab change from URL parameters and custom events
+  useEffect(() => {
+    // Check URL parameters for tab selection
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+    
+    // Listen for custom tab change events from child components
+    const handleTabChange = (event: CustomEvent) => {
+      setActiveTab(event.detail.tab);
+    };
+    
+    window.addEventListener('tabChange', handleTabChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('tabChange', handleTabChange as EventListener);
+    };
+  }, []);
   
   // State for search
   const [poSearchQuery, setPoSearchQuery] = useState<string>("");
