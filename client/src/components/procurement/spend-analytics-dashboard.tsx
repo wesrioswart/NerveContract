@@ -1016,15 +1016,25 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                       <Badge variant="outline" className="text-xs whitespace-nowrap">
                         {forecast.confidence}% confidence
                       </Badge>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-xs h-7 px-2.5 mt-1.5"
-                        onClick={() => openForecastDetails(forecast)}
-                      >
-                        Details
-                        <ExternalLink className="h-3 w-3 ml-1" />
-                      </Button>
+                      <div className="flex gap-1 mt-1.5">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-xs h-7 px-2.5"
+                          onClick={() => handleImplementForecast(forecast.id)}
+                        >
+                          Implement
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-xs h-7 px-2.5"
+                          onClick={() => openForecastDetails(forecast)}
+                        >
+                          Details
+                          <ExternalLink className="h-3 w-3 ml-1" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1032,9 +1042,23 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
             </div>
           </CardContent>
           <CardFooter className="bg-muted/20 py-3">
-            <Button variant="outline" className="w-full text-sm gap-1.5">
-              <DollarSign className="h-4 w-4" />
-              Generate Detailed Forecast Report
+            <Button 
+              variant="outline" 
+              className="w-full text-sm gap-1.5"
+              onClick={() => generateForecastReport()}
+              disabled={exportInProgress}
+            >
+              {exportInProgress ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  Generating Report...
+                </>
+              ) : (
+                <>
+                  <DollarSign className="h-4 w-4" />
+                  Generate Detailed Forecast Report
+                </>
+              )}
             </Button>
           </CardFooter>
         </Card>
@@ -1080,7 +1104,12 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                     {formatCurrency(code.spend)}
                   </div>
                 </div>
-                <Progress value={code.percentage} className="h-1.5" />
+                <div className="bg-muted h-1.5 w-full rounded-full overflow-hidden">
+                  <div 
+                    className="h-1.5 bg-blue-500 rounded-full" 
+                    style={{ width: `${code.percentage}%` }} 
+                  />
+                </div>
                 <div className="flex justify-between mt-0.5">
                   <span className="text-xs text-muted-foreground">{code.percentage}% of total</span>
                   {code.code === 'P.03.04.01' && (
@@ -1157,7 +1186,11 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                 <BellRing className="h-4 w-4" />
                 Remind Later
               </Button>
-              <Button size="sm" className="gap-1.5">
+              <Button 
+                size="sm" 
+                className="gap-1.5"
+                onClick={() => handleAnomalyAction(selectedAnomaly.id)}
+              >
                 <Check className="h-4 w-4" />
                 Take Action
               </Button>
@@ -1213,7 +1246,11 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                 <Download className="h-4 w-4" />
                 Generate Report
               </Button>
-              <Button size="sm" className="gap-1.5">
+              <Button 
+                size="sm" 
+                className="gap-1.5"
+                onClick={() => handleImplementForecast(selectedForecast.id)}
+              >
                 <Check className="h-4 w-4" />
                 Implement
               </Button>
