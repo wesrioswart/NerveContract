@@ -215,6 +215,10 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf' | 'excel'>('csv');
   const [exportInProgress, setExportInProgress] = useState(false);
   
+  // Implementation tracking
+  const [implementedForecasts, setImplementedForecasts] = useState<number[]>([]);
+  const [resolvedAnomalies, setResolvedAnomalies] = useState<number[]>([]);
+  
   // Comparison mode
   const [comparisonMode, setComparisonMode] = useState<'previous-period' | 'budget' | 'none'>('none');
   
@@ -273,6 +277,9 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
   
   // Handle taking action on an anomaly
   const handleAnomalyAction = (anomalyId: number) => {
+    // Track this anomaly as being resolved
+    setResolvedAnomalies(prev => [...prev, anomalyId]);
+    
     // Simulate API call to mark anomaly as being addressed
     console.log(`Taking action on anomaly ${anomalyId}`);
     setAnomalyDialogOpen(false);
@@ -283,6 +290,9 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
   
   // Handle implementing a forecast recommendation
   const handleImplementForecast = (forecastId: number) => {
+    // Track this forecast as being implemented
+    setImplementedForecasts(prev => [...prev, forecastId]);
+    
     // Simulate API call to implement forecast recommendation
     console.log(`Implementing forecast ${forecastId}`);
     setForecastDialogOpen(false);
@@ -1002,43 +1012,59 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
           </CardHeader>
           <CardContent className="pt-4">
             <div className="space-y-4">
-              {spendData.aiForecasts.map((forecast) => (
-                <div 
-                  key={forecast.id} 
-                  className="p-3.5 bg-muted/30 rounded-lg relative group overflow-hidden hover:bg-muted/40 transition-colors duration-200"
-                >
-                  {/* Gradient overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
-                  <div className="flex justify-between">
-                    <div className="text-sm pr-2">{forecast.description}</div>
-                    <div className="flex flex-col items-end ml-2">
-                      <Badge variant="outline" className="text-xs whitespace-nowrap">
-                        {forecast.confidence}% confidence
+              {spendData.aiForecasts.map((forecast) => {
+                const isImplemented = implementedForecasts.includes(forecast.id);
+                return (
+                  <div 
+                    key={forecast.id} 
+                    className={`p-3.5 rounded-lg relative group overflow-hidden transition-colors duration-200 ${
+                      isImplemented 
+                        ? 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900' 
+                        : 'bg-muted/30 hover:bg-muted/40'
+                    }`}
+                  >
+                    {/* Gradient overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                    {/* Implementation status badge */}
+                    {isImplemented && (
+                      <Badge className="absolute top-2 right-2 bg-green-500 hover:bg-green-600 text-[10px] px-1.5">
+                        <Check className="h-2.5 w-2.5 mr-0.5" />
+                        Implemented
                       </Badge>
-                      <div className="flex gap-1 mt-1.5">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-xs h-7 px-2.5"
-                          onClick={() => handleImplementForecast(forecast.id)}
-                        >
-                          Implement
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-xs h-7 px-2.5"
-                          onClick={() => openForecastDetails(forecast)}
-                        >
-                          Details
-                          <ExternalLink className="h-3 w-3 ml-1" />
-                        </Button>
+                    )}
+                    
+                    <div className="flex justify-between">
+                      <div className="text-sm pr-2">{forecast.description}</div>
+                      <div className="flex flex-col items-end ml-2">
+                        <Badge variant="outline" className="text-xs whitespace-nowrap">
+                          {forecast.confidence}% confidence
+                        </Badge>
+                        <div className="flex gap-1 mt-1.5">
+                          <Button 
+                            variant={isImplemented ? "outline" : "ghost"}
+                            size="sm" 
+                            className="text-xs h-7 px-2.5"
+                            onClick={() => handleImplementForecast(forecast.id)}
+                            disabled={isImplemented}
+                          >
+                            {isImplemented ? 'Implemented' : 'Implement'}
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-xs h-7 px-2.5"
+                            onClick={() => openForecastDetails(forecast)}
+                          >
+                            Details
+                            <ExternalLink className="h-3 w-3 ml-1" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
           <CardFooter className="bg-muted/20 py-3">
@@ -1149,15 +1175,24 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-3">
-              <div className="pb-3 border-b">
-                <Badge variant={
-                  selectedAnomaly.severity === 'high' ? 'destructive' : 
-                  selectedAnomaly.severity === 'medium' ? 'secondary' : 'outline'
-                }>
-                  {selectedAnomaly.severity} priority
-                </Badge>
-                <h3 className="text-base font-semibold mt-2">{selectedAnomaly.description}</h3>
-                <p className="text-sm mt-1 text-muted-foreground">Amount: {formatCurrency(selectedAnomaly.amount)}</p>
+              <div className="pb-3 border-b flex items-start justify-between">
+                <div>
+                  <Badge variant={
+                    selectedAnomaly.severity === 'high' ? 'destructive' : 
+                    selectedAnomaly.severity === 'medium' ? 'secondary' : 'outline'
+                  }>
+                    {selectedAnomaly.severity} priority
+                  </Badge>
+                  <h3 className="text-base font-semibold mt-2">{selectedAnomaly.description}</h3>
+                  <p className="text-sm mt-1 text-muted-foreground">Amount: {formatCurrency(selectedAnomaly.amount)}</p>
+                </div>
+                
+                {resolvedAnomalies.includes(selectedAnomaly.id) && (
+                  <Badge className="bg-green-500 hover:bg-green-600">
+                    <Check className="h-3 w-3 mr-1" />
+                    Resolved
+                  </Badge>
+                )}
               </div>
               
               <div>
@@ -1190,9 +1225,19 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                 size="sm" 
                 className="gap-1.5"
                 onClick={() => handleAnomalyAction(selectedAnomaly.id)}
+                disabled={resolvedAnomalies.includes(selectedAnomaly.id)}
               >
-                <Check className="h-4 w-4" />
-                Take Action
+                {resolvedAnomalies.includes(selectedAnomaly.id) ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Resolved
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Take Action
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1213,11 +1258,19 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-3">
-              <div className="pb-3 border-b">
-                <Badge variant="outline">
-                  {selectedForecast.confidence}% confidence
-                </Badge>
-                <h3 className="text-base font-semibold mt-2">{selectedForecast.description}</h3>
+              <div className="pb-3 border-b flex items-start justify-between">
+                <div>
+                  <Badge variant="outline">
+                    {selectedForecast.confidence}% confidence
+                  </Badge>
+                  <h3 className="text-base font-semibold mt-2">{selectedForecast.description}</h3>
+                </div>
+                {implementedForecasts.includes(selectedForecast.id) && (
+                  <Badge className="bg-green-500 hover:bg-green-600">
+                    <Check className="h-3 w-3 mr-1" />
+                    Implemented
+                  </Badge>
+                )}
               </div>
               
               <div>
@@ -1250,9 +1303,19 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                 size="sm" 
                 className="gap-1.5"
                 onClick={() => handleImplementForecast(selectedForecast.id)}
+                disabled={implementedForecasts.includes(selectedForecast.id)}
               >
-                <Check className="h-4 w-4" />
-                Implement
+                {implementedForecasts.includes(selectedForecast.id) ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Implemented
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Implement
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
