@@ -937,46 +937,77 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
           </CardHeader>
           <CardContent className="pt-4">
             <div className="space-y-4">
-              {spendData.anomalies.map((anomaly) => (
-                <div 
-                  key={anomaly.id} 
-                  className="flex items-start justify-between border-b pb-3 last:border-b-0"
-                >
-                  <div>
-                    <div className="flex items-center">
-                      <Badge variant={
-                        anomaly.severity === 'high' ? 'destructive' : 
-                        anomaly.severity === 'medium' ? 'secondary' : 'outline'
-                      } className="text-xs">
-                        {anomaly.severity}
-                      </Badge>
+              {spendData.anomalies.map((anomaly) => {
+                const isResolved = resolvedAnomalies.includes(anomaly.id);
+                return (
+                  <div 
+                    key={anomaly.id} 
+                    className={`flex items-start justify-between border-b pb-3 last:border-b-0 ${
+                      isResolved ? 'bg-green-50 dark:bg-green-950/30 rounded-md px-3 py-2 -mx-3 -my-2' : ''
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center">
+                        <Badge variant={
+                          isResolved ? 'outline' :
+                          anomaly.severity === 'high' ? 'destructive' : 
+                          anomaly.severity === 'medium' ? 'secondary' : 'outline'
+                        } className="text-xs">
+                          {isResolved ? 'Resolved' : anomaly.severity}
+                        </Badge>
+                        
+                        {isResolved && (
+                          <span className="text-xs text-green-600 dark:text-green-400 ml-2 flex items-center">
+                            <Check className="h-3 w-3 mr-0.5" />
+                            Action taken
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1.5 text-sm">
+                        {anomaly.description}
+                      </div>
                     </div>
-                    <div className="mt-1.5 text-sm">
-                      {anomaly.description}
+                    <div className="flex flex-col items-end">
+                      <div className="text-sm font-medium flex items-center">
+                        {formatCurrency(anomaly.amount)}
+                      </div>
+                      <div className="flex mt-1 gap-1">
+                        {!isResolved && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-xs h-7 px-2.5"
+                            onClick={() => handleAnomalyAction(anomaly.id)}
+                          >
+                            Resolve
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-xs h-7 px-2.5"
+                          onClick={() => openAnomalyDetails(anomaly)}
+                        >
+                          Details
+                          <ExternalLink className="h-3 w-3 ml-1" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end">
-                    <div className="text-sm font-medium">
-                      {formatCurrency(anomaly.amount)}
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-xs h-7 px-2.5 mt-1"
-                      onClick={() => openAnomalyDetails(anomaly)}
-                    >
-                      Details
-                      <ExternalLink className="h-3 w-3 ml-1" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
           <CardFooter className="bg-muted/20 py-3 flex justify-between items-center">
             <div className="flex items-center text-xs text-muted-foreground">
               <AlertCircle className="h-3.5 w-3.5 mr-1.5 text-red-500" />
-              {spendData.anomalies.length} anomalies detected
+              {spendData.anomalies.length - resolvedAnomalies.length} active anomalies
+              {resolvedAnomalies.length > 0 && (
+                <span className="ml-2 flex items-center text-green-600 dark:text-green-400">
+                  <Check className="h-3 w-3 mr-0.5" />
+                  {resolvedAnomalies.length} resolved
+                </span>
+              )}
             </div>
             <Button variant="outline" size="sm" className="text-xs">
               <Filter className="h-3.5 w-3.5 mr-1.5" />
@@ -1068,24 +1099,38 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
             </div>
           </CardContent>
           <CardFooter className="bg-muted/20 py-3">
-            <Button 
-              variant="outline" 
-              className="w-full text-sm gap-1.5"
-              onClick={() => generateForecastReport()}
-              disabled={exportInProgress}
-            >
-              {exportInProgress ? (
-                <>
-                  <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  Generating Report...
-                </>
-              ) : (
-                <>
-                  <DollarSign className="h-4 w-4" />
-                  Generate Detailed Forecast Report
-                </>
-              )}
-            </Button>
+            <div className="w-full space-y-2">
+              <div className="flex items-center justify-center text-xs mb-1 text-muted-foreground">
+                <Lightbulb className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
+                {implementedForecasts.length > 0 ? (
+                  <span>
+                    {implementedForecasts.length} of {spendData.aiForecasts.length} forecasts implemented
+                  </span>
+                ) : (
+                  <span>
+                    {spendData.aiForecasts.length} forecasts available
+                  </span>
+                )}
+              </div>
+              <Button 
+                variant="outline" 
+                className="w-full text-sm gap-1.5"
+                onClick={() => generateForecastReport()}
+                disabled={exportInProgress}
+              >
+                {exportInProgress ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    Generating Report...
+                  </>
+                ) : (
+                  <>
+                    <DollarSign className="h-4 w-4" />
+                    Generate Detailed Forecast Report
+                  </>
+                )}
+              </Button>
+            </div>
           </CardFooter>
         </Card>
       </div>
