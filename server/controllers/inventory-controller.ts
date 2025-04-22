@@ -391,6 +391,7 @@ export const getInventoryDashboard = async (_req: Request, res: Response) => {
       .groupBy(stockLevels.itemId);
     
     const items = await db.select().from(inventoryItems);
+    const locations = await db.select().from(inventoryLocations);
     
     // Create a map for quick lookup
     const stockMap = new Map(lowStockQuery.map(s => [s.itemId, s.totalStock]));
@@ -439,13 +440,74 @@ export const getInventoryDashboard = async (_req: Request, res: Response) => {
       .leftJoin(stockLevels, eq(inventoryItems.id, stockLevels.itemId))
       .groupBy(inventoryItems.category);
     
+    // Get stock level trend data (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const stockTrends = await db
+      .select({
+        day: sql<string>`date_trunc('day', ${stockTransactions.transactionDate})`.as('day'),
+        netChange: sql<number>`sum(
+          CASE 
+            WHEN ${stockTransactions.type} = 'purchase' OR ${stockTransactions.type} = 'return' THEN ${stockTransactions.quantity}
+            WHEN ${stockTransactions.type} = 'issue' THEN -${stockTransactions.quantity}
+            WHEN ${stockTransactions.type} = 'adjustment' THEN ${stockTransactions.quantity}
+            WHEN ${stockTransactions.type} = 'stocktake' THEN 0
+            ELSE 0
+          END
+        )`.as('net_change')
+      })
+      .from(stockTransactions)
+      .where(gte(stockTransactions.transactionDate, thirtyDaysAgo))
+      .groupBy(sql`date_trunc('day', ${stockTransactions.transactionDate})`)
+      .orderBy(asc(sql`date_trunc('day', ${stockTransactions.transactionDate})`));
+    
+    // Process trend data to include all days in the 30-day period
+    const trendDataMap = new Map();
+    const today = new Date();
+    for (let i = 0; i < 30; i++) {
+      const date = new Date();
+      date.setDate(today.getDate() - 29 + i);
+      const formattedDate = date.toISOString().split('T')[0];
+      trendDataMap.set(formattedDate, { date: formattedDate, netChange: 0 });
+    }
+    
+    // Add actual values to the map
+    stockTrends.forEach(trend => {
+      const formattedDate = new Date(trend.day).toISOString().split('T')[0];
+      if (trendDataMap.has(formattedDate)) {
+        trendDataMap.set(formattedDate, { 
+          date: formattedDate, 
+          netChange: trend.netChange 
+        });
+      }
+    });
+    
+    // Convert map to array sorted by date
+    const trendData = Array.from(trendDataMap.values()).sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    
+    // Calculate transaction counts by type (for pie chart)
+    const transactionByType = await db
+      .select({
+        type: stockTransactions.type,
+        count: sql<number>`count(*)`.as('count')
+      })
+      .from(stockTransactions)
+      .where(gte(stockTransactions.transactionDate, thirtyDaysAgo))
+      .groupBy(stockTransactions.type);
+    
     res.json({
       lowStockCount: lowStockItems.length,
       lowStockItems: lowStockItems.slice(0, 5), // Just return top 5 for dashboard
       totalItems: items.length,
+      totalLocations: locations.length,
       totalValue,
       recentTransactions: formattedTransactions,
-      stockByCategory
+      stockByCategory,
+      stockTrends: trendData,
+      transactionByType
     });
   } catch (error) {
     console.error("Error fetching inventory dashboard:", error);

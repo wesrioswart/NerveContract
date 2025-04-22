@@ -12,7 +12,12 @@ import {
 } from "@/components/ui/table";
 import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Package, Search, Plus, Warehouse, ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, ShieldAlert } from "lucide-react";
+import { 
+  Loader2, Package, Search, Plus, Warehouse, 
+  ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, 
+  ShieldAlert, BarChart3, PieChart, TrendingUp,
+  DollarSign
+} from "lucide-react";
 import PageHeader from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -23,6 +28,12 @@ import StockTransactionModal from "@/components/inventory/stock-transaction-moda
 import ViewInventoryItemModal from "@/components/inventory/view-inventory-item-modal";
 import ViewInventoryLocationModal from "@/components/inventory/view-inventory-location-modal";
 import { useUser } from "@/contexts/user-context";
+import { 
+  AreaChart, Area, LineChart, Line, BarChart, Bar, 
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
+  ResponsiveContainer, PieChart as RPieChart, Pie, 
+  Sector, Cell 
+} from 'recharts';
 
 interface StockLevel {
   locationId: number;
@@ -35,17 +46,39 @@ export interface InventoryDashboard {
   totalItems: number;
   totalLocations: number;
   totalStock: number;
-  lowStockItems: number;
+  totalValue?: number;
+  lowStockCount: number;
+  lowStockItems: {
+    id: number;
+    name: string;
+    code: string;
+    category: string;
+    reorderPoint: number;
+    unit: string;
+    totalStock?: number;
+  }[];
   itemsByCategory: {
     category: string;
     count: number;
+    totalStock?: number;
+    totalValue?: number;
   }[];
   recentTransactions: {
     id: number;
     type: 'purchase' | 'issue' | 'return' | 'transfer' | 'adjustment' | 'stocktake';
     itemName: string;
+    itemCode?: string;
     quantity: number;
+    fromLocationName?: string;
     date: string;
+  }[];
+  stockTrends?: {
+    date: string;
+    netChange: number;
+  }[];
+  transactionByType?: {
+    type: string;
+    count: number;
   }[];
 }
 
@@ -188,9 +221,9 @@ export default function Inventory() {
                     <Package className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardData.totalItems || 0}</div>
+                    <div className="text-2xl font-bold">{dashboardData?.totalItems || 0}</div>
                     <p className="text-xs text-muted-foreground">
-                      across {dashboardData.itemsByCategory?.length || 0} categories
+                      across {dashboardData?.itemsByCategory?.length || 0} categories
                     </p>
                   </CardContent>
                 </Card>
@@ -201,7 +234,7 @@ export default function Inventory() {
                     <Warehouse className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardData.totalLocations || 0}</div>
+                    <div className="text-2xl font-bold">{dashboardData?.totalLocations || 0}</div>
                     <p className="text-xs text-muted-foreground">
                       across different sites and yards
                     </p>
@@ -214,25 +247,25 @@ export default function Inventory() {
                     <Package className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardData.totalStock || 0}</div>
+                    <div className="text-2xl font-bold">{dashboardData?.totalStock || 0}</div>
                     <p className="text-xs text-muted-foreground">
                       units across all inventory items
                     </p>
                   </CardContent>
                 </Card>
                 
-                <Card className={(dashboardData.lowStockItems || 0) > 0 ? "border-amber-300" : ""}>
+                <Card className={(dashboardData?.lowStockCount || 0) > 0 ? "border-amber-300" : ""}>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
                     <Package className={cn(
                       "h-4 w-4",
-                      (dashboardData.lowStockItems || 0) > 0 ? "text-amber-500" : "text-muted-foreground"
+                      (dashboardData?.lowStockCount || 0) > 0 ? "text-amber-500" : "text-muted-foreground"
                     )} />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardData.lowStockItems || 0}</div>
+                    <div className="text-2xl font-bold">{dashboardData?.lowStockCount || 0}</div>
                     <p className="text-xs text-muted-foreground">
-                      {(dashboardData.lowStockItems || 0) > 0 
+                      {(dashboardData?.lowStockCount || 0) > 0 
                         ? "items below reorder point" 
                         : "all items are in stock"}
                     </p>
@@ -240,7 +273,117 @@ export default function Inventory() {
                 </Card>
               </div>
 
+              {/* Stock Trend Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Stock Level Trends (30 Days)
+                  </CardTitle>
+                  <CardDescription>
+                    Net change in stock levels over the last 30 days
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {dashboardData?.stockTrends && dashboardData.stockTrends.length > 0 ? (
+                    <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart
+                          data={dashboardData.stockTrends}
+                          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                        >
+                          <defs>
+                            <linearGradient id="stockTrend" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis 
+                            dataKey="date" 
+                            tickFormatter={(value) => {
+                              const date = new Date(value);
+                              return `${date.getDate()}/${date.getMonth() + 1}`;
+                            }}
+                            tick={{ fontSize: 12 }}
+                          />
+                          <YAxis tick={{ fontSize: 12 }} />
+                          <Tooltip
+                            formatter={(value) => [`${value} units`, 'Net Change']}
+                            labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="netChange" 
+                            stroke="hsl(var(--primary))" 
+                            fillOpacity={1} 
+                            fill="url(#stockTrend)" 
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                      No trend data available
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Transaction Analysis and Recent Transactions */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Transaction Type Analysis */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <PieChart className="h-5 w-5 text-primary" />
+                      Transactions by Type
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {dashboardData?.transactionByType && dashboardData.transactionByType.length > 0 ? (
+                      <div className="h-[220px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RPieChart>
+                            <Pie
+                              data={dashboardData.transactionByType}
+                              dataKey="count"
+                              nameKey="type"
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={2}
+                              label={({type, percent}) => `${type} (${(percent * 100).toFixed(0)}%)`}
+                              labelLine={false}
+                            >
+                              {dashboardData.transactionByType.map((entry, index) => {
+                                const COLORS = [
+                                  'hsl(var(--primary))', 
+                                  'hsl(var(--secondary))', 
+                                  '#ff9800', 
+                                  '#e91e63', 
+                                  '#673ab7'
+                                ];
+                                return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
+                              })}
+                            </Pie>
+                            <Tooltip 
+                              formatter={(value) => [`${value} transactions`, 'Count']}
+                              labelFormatter={(label) => label}
+                            />
+                          </RPieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-[220px] text-muted-foreground">
+                        No transaction data available
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Recent Transactions */}
                 <Card className="md:col-span-2">
                   <CardHeader>
                     <CardTitle className="text-lg">Recent Transactions</CardTitle>
@@ -274,28 +417,67 @@ export default function Inventory() {
                     )}
                   </CardContent>
                 </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Items by Category</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {dashboardData.itemsByCategory?.map(category => (
-                        <div key={category.category} className="flex items-center justify-between">
-                          <div className="font-medium">{category.category}</div>
-                          <Badge variant="outline">{category.count}</Badge>
-                        </div>
-                      )) || (
-                        <div className="text-center py-4 text-muted-foreground">
-                          No categories available
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
 
+              {/* Category Analysis */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Inventory by Category
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {dashboardData.itemsByCategory && dashboardData.itemsByCategory.length > 0 ? (
+                    <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={dashboardData.itemsByCategory}
+                          margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis 
+                            dataKey="category" 
+                            tick={{ fontSize: 12 }}
+                            angle={-45}
+                            textAnchor="end"
+                          />
+                          <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+                          <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+                          <Tooltip
+                            formatter={(value, name) => {
+                              if (name === 'count') return [`${value} items`, 'Item Count'];
+                              if (name === 'totalStock') return [`${value} units`, 'Total Stock'];
+                              return [value, name];
+                            }}
+                          />
+                          <Legend />
+                          <Bar 
+                            yAxisId="left"
+                            dataKey="count" 
+                            name="Item Count"
+                            fill="hsl(var(--primary))" 
+                            radius={[4, 4, 0, 0]}
+                          />
+                          <Bar 
+                            yAxisId="right"
+                            dataKey="totalStock" 
+                            name="Total Stock"
+                            fill="hsl(var(--secondary))" 
+                            radius={[4, 4, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                      No category data available
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Action Buttons */}
               <div className="flex items-center justify-center gap-4">
                 <Button 
                   variant="default" 
