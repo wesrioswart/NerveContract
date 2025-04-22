@@ -32,7 +32,8 @@ import {
   BellRing,
   Check,
   ExternalLink,
-  LayoutList
+  LayoutList,
+  RotateCcw
 } from "lucide-react";
 import { 
   Dialog, 
@@ -243,6 +244,9 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
   const [forecastDialogOpen, setForecastDialogOpen] = useState(false);
   const [selectedForecast, setSelectedForecast] = useState<typeof spendData.aiForecasts[0] | null>(null);
   
+  const [detailedBreakdownOpen, setDetailedBreakdownOpen] = useState(false);
+  const [breakdownType, setBreakdownType] = useState<'weekly' | 'monthly' | 'category'>('monthly');
+  
   // Filter panel
   const [filtersOpen, setFiltersOpen] = useState(false);
   
@@ -344,6 +348,18 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
     alert(`Action started for anomaly #${anomalyId}. A notification has been sent to the procurement team.`);
   };
   
+  // Handle undoing a resolved anomaly
+  const handleUndoAnomalyResolution = (anomalyId: number) => {
+    // Remove this anomaly from the resolved list
+    setResolvedAnomalies(prev => prev.filter(id => id !== anomalyId));
+    
+    // Simulate API call to mark anomaly as unresolved
+    console.log(`Marking anomaly ${anomalyId} as unresolved`);
+    
+    // Show success message
+    alert(`Anomaly #${anomalyId} has been marked as unresolved and returned to active status.`);
+  };
+  
   // Handle implementing a forecast recommendation
   const handleImplementForecast = (forecastId: number) => {
     // Track this forecast as being implemented
@@ -355,6 +371,24 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
     
     // Show success message
     alert(`Implementation plan for forecast #${forecastId} has been created and assigned to the procurement team.`);
+  };
+  
+  // Handle undoing an implemented forecast
+  const handleUndoForecastImplementation = (forecastId: number) => {
+    // Remove this forecast from the implemented list
+    setImplementedForecasts(prev => prev.filter(id => id !== forecastId));
+    
+    // Simulate API call to mark forecast as not implemented
+    console.log(`Marking forecast ${forecastId} as not implemented`);
+    
+    // Show success message
+    alert(`Forecast #${forecastId} implementation has been reversed and returned to pending status.`);
+  };
+  
+  // Open detailed breakdown modal
+  const openDetailedBreakdown = (type: 'weekly' | 'monthly' | 'category') => {
+    setBreakdownType(type);
+    setDetailedBreakdownOpen(true);
   };
   
   return (
@@ -1028,7 +1062,17 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                         {formatCurrency(anomaly.amount)}
                       </div>
                       <div className="flex mt-1 gap-1">
-                        {!isResolved && (
+                        {isResolved ? (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-xs h-7 px-2.5"
+                            onClick={() => handleUndoAnomalyResolution(anomaly.id)}
+                          >
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            Undo
+                          </Button>
+                        ) : (
                           <Button 
                             variant="ghost" 
                             size="sm" 
@@ -1128,15 +1172,26 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                           {forecast.confidence}% confidence
                         </Badge>
                         <div className="flex gap-1 mt-1.5">
-                          <Button 
-                            variant={isImplemented ? "outline" : "ghost"}
-                            size="sm" 
-                            className="text-xs h-7 px-2.5"
-                            onClick={() => handleImplementForecast(forecast.id)}
-                            disabled={isImplemented}
-                          >
-                            {isImplemented ? 'Implemented' : 'Implement'}
-                          </Button>
+                          {isImplemented ? (
+                            <Button 
+                              variant="outline"
+                              size="sm" 
+                              className="text-xs h-7 px-2.5"
+                              onClick={() => handleUndoForecastImplementation(forecast.id)}
+                            >
+                              <RotateCcw className="h-3 w-3 mr-1" />
+                              Undo
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="ghost"
+                              size="sm" 
+                              className="text-xs h-7 px-2.5"
+                              onClick={() => handleImplementForecast(forecast.id)}
+                            >
+                              Implement
+                            </Button>
+                          )}
                           <Button 
                             variant="ghost" 
                             size="sm" 
@@ -1322,24 +1377,27 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                 <BellRing className="h-4 w-4" />
                 Remind Later
               </Button>
-              <Button 
-                size="sm" 
-                className="gap-1.5"
-                onClick={() => handleAnomalyAction(selectedAnomaly.id)}
-                disabled={resolvedAnomalies.includes(selectedAnomaly.id)}
-              >
-                {resolvedAnomalies.includes(selectedAnomaly.id) ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    Resolved
-                  </>
-                ) : (
-                  <>
-                    <Check className="h-4 w-4" />
-                    Take Action
-                  </>
-                )}
-              </Button>
+              
+              {resolvedAnomalies.includes(selectedAnomaly.id) ? (
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => handleUndoAnomalyResolution(selectedAnomaly.id)}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Undo Resolution
+                </Button>
+              ) : (
+                <Button 
+                  size="sm" 
+                  className="gap-1.5"
+                  onClick={() => handleAnomalyAction(selectedAnomaly.id)}
+                >
+                  <Check className="h-4 w-4" />
+                  Take Action
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         )}
@@ -1400,24 +1458,27 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                 <Download className="h-4 w-4" />
                 Generate Report
               </Button>
-              <Button 
-                size="sm" 
-                className="gap-1.5"
-                onClick={() => handleImplementForecast(selectedForecast.id)}
-                disabled={implementedForecasts.includes(selectedForecast.id)}
-              >
-                {implementedForecasts.includes(selectedForecast.id) ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    Implemented
-                  </>
-                ) : (
-                  <>
-                    <Check className="h-4 w-4" />
-                    Implement
-                  </>
-                )}
-              </Button>
+              
+              {implementedForecasts.includes(selectedForecast.id) ? (
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => handleUndoForecastImplementation(selectedForecast.id)}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Undo Implementation
+                </Button>
+              ) : (
+                <Button 
+                  size="sm" 
+                  className="gap-1.5"
+                  onClick={() => handleImplementForecast(selectedForecast.id)}
+                >
+                  <Check className="h-4 w-4" />
+                  Implement
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         )}
