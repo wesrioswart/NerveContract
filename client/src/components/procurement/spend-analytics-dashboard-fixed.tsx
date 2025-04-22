@@ -60,21 +60,21 @@ import {
 // Enhanced data structure with more detailed information to better demonstrate functionality
 const spendData = {
   weeklySpend: [
-    { week: 'Week 1', amount: 12450, date: '01 Apr - 07 Apr' },
-    { week: 'Week 2', amount: 15780, date: '08 Apr - 14 Apr' },
-    { week: 'Week 3', amount: 9800, date: '15 Apr - 21 Apr' },
-    { week: 'Week 4', amount: 22100, date: '22 Apr - 28 Apr', hasAnomaly: true },
-    { week: 'Week 5', amount: 10350, date: '29 Apr - 05 May' },
-    { week: 'Week 6', amount: 11250, date: '06 May - 12 May' },
-    { week: 'Week 7', amount: 18980, date: '13 May - 19 May', hasAnomaly: true },
-    { week: 'Week 8', amount: 14670, date: '20 May - 26 May' }
+    { week: 'Week 1', amount: 12450, date: '01 Apr - 07 Apr', budget: 12000 },
+    { week: 'Week 2', amount: 15780, date: '08 Apr - 14 Apr', budget: 14500 },
+    { week: 'Week 3', amount: 9800, date: '15 Apr - 21 Apr', budget: 13000 },
+    { week: 'Week 4', amount: 22100, date: '22 Apr - 28 Apr', hasAnomaly: true, budget: 12800, anomalyReason: 'Unexpected emergency site works and duplicate material orders identified' },
+    { week: 'Week 5', amount: 10350, date: '29 Apr - 05 May', budget: 12500 },
+    { week: 'Week 6', amount: 11250, date: '06 May - 12 May', budget: 12000 },
+    { week: 'Week 7', amount: 18980, date: '13 May - 19 May', hasAnomaly: true, budget: 13200, anomalyReason: 'Unplanned equipment rental extension and labor overtime costs' },
+    { week: 'Week 8', amount: 14670, date: '20 May - 26 May', budget: 14800 }
   ],
   monthlySpend: [
-    { month: 'Jan', year: 2025, amount: 92450, change: null },
-    { month: 'Feb', year: 2025, amount: 86700, change: -6.2 },
-    { month: 'Mar', year: 2025, amount: 105800, change: 22.0, hasAnomaly: true },
-    { month: 'Apr', year: 2025, amount: 94300, change: -10.9 },
-    { month: 'May', year: 2025, amount: 97500, change: 3.4 }
+    { month: 'Jan', year: 2025, amount: 92450, change: null, budget: 88000 },
+    { month: 'Feb', year: 2025, amount: 86700, change: -6.2, budget: 90000 },
+    { month: 'Mar', year: 2025, amount: 105800, change: 22.0, hasAnomaly: true, budget: 92000, anomalyReason: 'Significant increase in material costs and unexpected equipment repairs' },
+    { month: 'Apr', year: 2025, amount: 94300, change: -10.9, budget: 95000 },
+    { month: 'May', year: 2025, amount: 97500, change: 3.4, budget: 94000 }
   ],
   categoryBreakdown: [
     { category: 'Materials', amount: 243500, percentage: 42.3, trend: 'up' },
@@ -909,7 +909,44 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   </Button>
                 </div>
                 
-                {/* Chart bars - using table layout for perfect column alignment */}
+                {/* Trend Lines Visualization */}
+                {comparisonMode !== 'none' && (
+                  <div className="relative h-[200px] mt-6 mx-auto" style={{ maxWidth: "800px" }}>
+                    <svg width="100%" height="200" className="absolute top-0 left-0 z-0 overflow-visible">
+                      {/* Trend line for actual spend */}
+                      <polyline
+                        points={spendData.weeklySpend.map((week, i) => {
+                          const x = 45 + i * 80;
+                          const y = 200 - (week.amount / maxWeeklyAmount) * 180;
+                          return `${x},${y}`;
+                        }).join(' ')}
+                        fill="none"
+                        stroke="#7C3AED"
+                        strokeWidth="2"
+                        strokeDasharray="3,2"
+                        className="opacity-60"
+                      />
+                      
+                      {/* Trend line for budget when in budget comparison mode */}
+                      {comparisonMode === 'budget' && (
+                        <polyline
+                          points={spendData.weeklySpend.map((week, i) => {
+                            const x = 45 + i * 80;
+                            const y = 200 - (week.budget / maxWeeklyAmount) * 180;
+                            return `${x},${y}`;
+                          }).join(' ')}
+                          fill="none"
+                          stroke="#22C55E"
+                          strokeWidth="2"
+                          strokeDasharray="2,2"
+                          className="opacity-60"
+                        />
+                      )}
+                    </svg>
+                  </div>
+                )}
+                
+                {/* Chart bars */}
                 <div className="relative flex justify-center items-end h-[200px] mt-6 mx-auto" style={{ maxWidth: "800px" }}>
                   {spendData.weeklySpend.map((week, index) => (
                     <TooltipProvider key={index}>
@@ -917,17 +954,46 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                         <TooltipTrigger asChild>
                           <div className="flex flex-col items-center mx-2" style={{ width: "80px" }}>
                             <div className="relative" style={{ width: "50px" }}>
+                              {/* Budget indicator in budget comparison mode */}
+                              {comparisonMode === 'budget' && (
+                                <div className="flex flex-col items-center">
+                                  <div 
+                                    className="absolute border-2 border-dashed border-green-500 w-full"
+                                    style={{ 
+                                      top: `${100 - (week.budget / maxWeeklyAmount) * 100}%`, 
+                                      height: '0px',
+                                      zIndex: 2
+                                    }}
+                                  ></div>
+                                  {/* Budget label */}
+                                  <span 
+                                    className="absolute text-[9px] font-medium text-green-600"
+                                    style={{ 
+                                      top: `${95 - (week.budget / maxWeeklyAmount) * 100}%`, 
+                                      right: '-30px',
+                                      zIndex: 2
+                                    }}
+                                  >
+                                    {formatCurrency(week.budget, { abbreviated: true })}
+                                  </span>
+                                </div>
+                              )}
+                              
                               <div 
                                 className={`bg-gradient-to-t from-primary/70 to-primary w-full 
                                   rounded-t hover:brightness-110 transition-all duration-200 
-                                  ${week.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}`} 
+                                  ${week.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}
+                                  ${comparisonMode === 'budget' && week.amount > week.budget ? 'border-t-2 border-red-500' : ''}`} 
                                 style={{ 
                                   height: `${(week.amount / maxWeeklyAmount) * 100}%`,
                                   minHeight: "10px"
                                 }}
                               ></div>
                               {week.hasAnomaly && (
-                                <div className="absolute -top-2 -right-2 bg-red-500 rounded-full p-0.5">
+                                <div 
+                                  className="absolute -top-2 -right-2 bg-red-500 rounded-full p-0.5 cursor-help" 
+                                  title={week.anomalyReason}
+                                >
                                   <AlertCircle className="h-3.5 w-3.5 text-white" />
                                 </div>
                               )}
@@ -942,6 +1008,14 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                               <span className="block text-xs text-muted-foreground">
                                 {formatCurrency(week.amount)}
                               </span>
+                              {comparisonMode === 'budget' && (
+                                <span className={`block text-xs ${
+                                  week.amount > week.budget ? 'text-red-500' : 'text-green-500'
+                                }`}>
+                                  {week.amount > week.budget ? '+' : ''}
+                                  {Math.round((week.amount - week.budget) / week.budget * 100)}%
+                                </span>
+                              )}
                               {week.hasAnomaly && resolvedAnomalies.includes(week.week === 'Week 4' ? 1 : (week.week === 'Week 7' ? 3 : 0)) && (
                                 <span className="text-xs text-green-500 flex items-center justify-center mt-1">
                                   <Check className="h-3 w-3 mr-1" />
@@ -997,9 +1071,9 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                                   Anomaly Detected:
                                 </p>
                                 <p className="text-xs text-red-500/90 mt-1">
-                                  {week.week === 'Week 4' 
+                                  {week.anomalyReason || (week.week === 'Week 4' 
                                     ? "125% increase from previous week. Unusually high spend in materials category." 
-                                    : "Unexpected 68% increase from average weekly spend. Labor costs significantly elevated."}
+                                    : "Unexpected 68% increase from average weekly spend. Labor costs significantly elevated.")}
                                 </p>
                                 <p className="text-xs flex items-center mt-1 text-muted-foreground">
                                   <Info className="h-3 w-3 mr-1" />
@@ -1058,6 +1132,43 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
                 </div>
                 
+                {/* Trend Lines Visualization */}
+                {comparisonMode !== 'none' && (
+                  <div className="relative h-[200px] mt-6 mx-auto" style={{ maxWidth: "800px" }}>
+                    <svg width="100%" height="200" className="absolute top-0 left-0 z-0 overflow-visible">
+                      {/* Trend line for actual spend */}
+                      <polyline
+                        points={spendData.monthlySpend.map((month, i) => {
+                          const x = 55 + i * 90;
+                          const y = 200 - (month.amount / maxMonthlyAmount) * 180;
+                          return `${x},${y}`;
+                        }).join(' ')}
+                        fill="none"
+                        stroke="#7C3AED"
+                        strokeWidth="2"
+                        strokeDasharray="3,2"
+                        className="opacity-60"
+                      />
+                      
+                      {/* Trend line for budget when in budget comparison mode */}
+                      {comparisonMode === 'budget' && (
+                        <polyline
+                          points={spendData.monthlySpend.map((month, i) => {
+                            const x = 55 + i * 90;
+                            const y = 200 - (month.budget / maxMonthlyAmount) * 180;
+                            return `${x},${y}`;
+                          }).join(' ')}
+                          fill="none"
+                          stroke="#22C55E"
+                          strokeWidth="2"
+                          strokeDasharray="2,2"
+                          className="opacity-60"
+                        />
+                      )}
+                    </svg>
+                  </div>
+                )}
+                
                 {/* Chart bars - using fixed width for perfect column alignment */}
                 <div className="relative flex justify-center items-end h-[200px] mt-6 mx-auto" style={{ maxWidth: "800px" }}>
                   {spendData.monthlySpend.map((month, index) => (
@@ -1066,10 +1177,36 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                         <TooltipTrigger asChild>
                           <div className="flex flex-col items-center mx-2" style={{ width: "90px" }}>
                             <div className="relative" style={{ width: "60px" }}>
+                              {/* Budget indicator in budget comparison mode */}
+                              {comparisonMode === 'budget' && (
+                                <div className="flex flex-col items-center">
+                                  <div 
+                                    className="absolute border-2 border-dashed border-green-500 w-full"
+                                    style={{ 
+                                      top: `${100 - (month.budget / maxMonthlyAmount) * 100}%`, 
+                                      height: '0px',
+                                      zIndex: 2
+                                    }}
+                                  ></div>
+                                  {/* Budget label */}
+                                  <span 
+                                    className="absolute text-[9px] font-medium text-green-600"
+                                    style={{ 
+                                      top: `${95 - (month.budget / maxMonthlyAmount) * 100}%`, 
+                                      right: '-35px',
+                                      zIndex: 2
+                                    }}
+                                  >
+                                    {formatCurrency(month.budget, { abbreviated: true })}
+                                  </span>
+                                </div>
+                              )}
+                              
                               <div 
                                 className={`bg-gradient-to-t from-secondary/70 to-secondary w-full 
                                   rounded-t hover:brightness-110 transition-all duration-200 
-                                  ${month.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
+                                  ${month.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}
+                                  ${comparisonMode === 'budget' && month.amount > month.budget ? 'border-t-2 border-red-500' : ''}`}
                                 style={{ 
                                   height: `${(month.amount / maxMonthlyAmount) * 100}%`,
                                   minHeight: "10px"
