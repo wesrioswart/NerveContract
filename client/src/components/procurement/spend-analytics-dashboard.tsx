@@ -687,9 +687,9 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                         <TooltipTrigger asChild>
                           <div className="flex flex-col items-center group">
                             <div 
-                              className="bg-gradient-to-t from-secondary/80 to-secondary w-16 
+                              className={`bg-gradient-to-t from-secondary/80 to-secondary w-16 
                                 rounded-t-sm hover:brightness-110 transition-all duration-200 
-                                group-hover:shadow-md" 
+                                group-hover:shadow-md ${month.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-1' : ''}`}
                               style={{ 
                                 height: `${(month.amount / maxMonthlyAmount) * 100}%`,
                                 minHeight: "10px"
@@ -717,6 +717,12 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
                                   <TrendingDown className="h-3 w-3 mr-1" />
                                 ) : null}
                                 {month.change > 0 ? '+' : ''}{month.change}% vs previous month
+                              </p>
+                            )}
+                            {month.hasAnomaly && (
+                              <p className="text-xs text-red-500 flex items-center mt-1">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                Anomaly detected in this period
                               </p>
                             )}
                           </div>
@@ -1482,6 +1488,248 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
             </DialogFooter>
           </DialogContent>
         )}
+      </Dialog>
+
+      {/* Detailed Breakdown Modal */}
+      <Dialog open={detailedBreakdownOpen} onOpenChange={setDetailedBreakdownOpen}>
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              {breakdownType === 'weekly' && (
+                <>
+                  <Calendar className="h-5 w-5 text-primary mr-2" />
+                  Weekly Spend Detailed Breakdown
+                </>
+              )}
+              {breakdownType === 'monthly' && (
+                <>
+                  <Calendar className="h-5 w-5 text-secondary mr-2" />
+                  Monthly Spend Detailed Breakdown
+                </>
+              )}
+              {breakdownType === 'category' && (
+                <>
+                  <PieChart className="h-5 w-5 text-primary mr-2" />
+                  Category Spend Detailed Breakdown
+                </>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              Comprehensive analysis of procurement spend patterns
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Tabs defaultValue="data" className="w-full">
+              <TabsList className="grid grid-cols-3 mb-4">
+                <TabsTrigger value="data">Data Table</TabsTrigger>
+                <TabsTrigger value="chart">Enhanced Chart</TabsTrigger>
+                <TabsTrigger value="insights">AI Insights</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="data" className="space-y-4">
+                <div className="border rounded-md overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-medium">
+                          {breakdownType === 'weekly' ? 'Week' : 
+                           breakdownType === 'monthly' ? 'Month' : 'Category'}
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium">Amount</th>
+                        <th className="px-4 py-3 text-left font-medium">
+                          {breakdownType === 'weekly' || breakdownType === 'monthly' ? 'Date Range' : '% of Total'}
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium">Change</th>
+                        <th className="px-4 py-3 text-left font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {breakdownType === 'weekly' && spendData.weeklySpend.map((item, index) => (
+                        <tr key={index} className={`${index % 2 === 0 ? 'bg-white' : 'bg-muted/10'}`}>
+                          <td className="px-4 py-3 border-t">{item.week}</td>
+                          <td className="px-4 py-3 border-t font-medium">{formatCurrency(item.amount)}</td>
+                          <td className="px-4 py-3 border-t">{item.date}</td>
+                          <td className="px-4 py-3 border-t">
+                            {index > 0 ? (
+                              <span className={`inline-flex items-center ${
+                                item.amount > spendData.weeklySpend[index-1].amount ? 'text-red-500' : 'text-green-500'
+                              }`}>
+                                {item.amount > spendData.weeklySpend[index-1].amount ? (
+                                  <><TrendingUp className="h-3.5 w-3.5 mr-1" />+{(((item.amount - spendData.weeklySpend[index-1].amount) / spendData.weeklySpend[index-1].amount) * 100).toFixed(1)}%</>
+                                ) : (
+                                  <><TrendingDown className="h-3.5 w-3.5 mr-1" />{(((item.amount - spendData.weeklySpend[index-1].amount) / spendData.weeklySpend[index-1].amount) * 100).toFixed(1)}%</>
+                                )}
+                              </span>
+                            ) : '-'}
+                          </td>
+                          <td className="px-4 py-3 border-t">
+                            {item.hasAnomaly ? (
+                              <Badge variant="destructive" className="text-xs">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                Anomaly
+                              </Badge>
+                            ) : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                      
+                      {breakdownType === 'monthly' && spendData.monthlySpend.map((item, index) => (
+                        <tr key={index} className={`${index % 2 === 0 ? 'bg-white' : 'bg-muted/10'}`}>
+                          <td className="px-4 py-3 border-t">{item.month} {item.year}</td>
+                          <td className="px-4 py-3 border-t font-medium">{formatCurrency(item.amount)}</td>
+                          <td className="px-4 py-3 border-t">Full month</td>
+                          <td className="px-4 py-3 border-t">
+                            {item.change !== null ? (
+                              <span className={`inline-flex items-center ${
+                                item.change > 0 ? 'text-red-500' : 'text-green-500'
+                              }`}>
+                                {item.change > 0 ? (
+                                  <><TrendingUp className="h-3.5 w-3.5 mr-1" />+{item.change}%</>
+                                ) : (
+                                  <><TrendingDown className="h-3.5 w-3.5 mr-1" />{item.change}%</>
+                                )}
+                              </span>
+                            ) : '-'}
+                          </td>
+                          <td className="px-4 py-3 border-t">
+                            {item.hasAnomaly ? (
+                              <Badge variant="destructive" className="text-xs">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                Anomaly
+                              </Badge>
+                            ) : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                      
+                      {breakdownType === 'category' && spendData.categoryBreakdown.map((item, index) => (
+                        <tr key={index} className={`${index % 2 === 0 ? 'bg-white' : 'bg-muted/10'}`}>
+                          <td className="px-4 py-3 border-t">{item.category}</td>
+                          <td className="px-4 py-3 border-t font-medium">{formatCurrency(item.amount)}</td>
+                          <td className="px-4 py-3 border-t">{item.percentage}%</td>
+                          <td className="px-4 py-3 border-t">
+                            <span className={`inline-flex items-center ${
+                              item.changePercent > 0 ? 'text-red-500' : 
+                              item.changePercent < 0 ? 'text-green-500' : 'text-muted-foreground'
+                            }`}>
+                              {item.changePercent > 0 ? (
+                                <><TrendingUp className="h-3.5 w-3.5 mr-1" />+{item.changePercent}%</>
+                              ) : item.changePercent < 0 ? (
+                                <><TrendingDown className="h-3.5 w-3.5 mr-1" />{item.changePercent}%</>
+                              ) : (
+                                <><ArrowRight className="h-3.5 w-3.5 mr-1" />0%</>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 border-t">
+                            {item.hasAnomaly ? (
+                              <Badge variant="destructive" className="text-xs">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                Anomaly
+                              </Badge>
+                            ) : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="chart" className="space-y-4">
+                <div className="bg-muted/20 p-4 rounded-md border">
+                  <div className="h-[300px] flex items-center justify-center">
+                    <p className="text-muted-foreground">Enhanced chart visualization would appear here</p>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="insights" className="space-y-4">
+                <div className="bg-gradient-to-r from-amber-500/5 to-amber-500/10 p-4 rounded-md border">
+                  <div className="flex items-start gap-3 mb-4">
+                    <Lightbulb className="h-6 w-6 text-amber-500 mt-0.5" />
+                    <div>
+                      <h3 className="text-base font-medium mb-1">AI Spend Pattern Analysis</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {breakdownType === 'weekly' && 'Weekly spend patterns show fluctuations with peak spending in Week 4.'}
+                        {breakdownType === 'monthly' && 'Monthly spend analysis shows increasing trend with a peak in April 2025.'}
+                        {breakdownType === 'category' && 'Materials and Plant Hire dominate spend, representing 62% of total procurement.'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="text-sm font-medium mb-2">Key Observations:</h4>
+                    <ul className="space-y-2">
+                      {breakdownType === 'weekly' && (
+                        <>
+                          <li className="text-sm flex items-start">
+                            <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 mr-2 shrink-0" />
+                            <span>Weekly spend anomalies detected in Week 4 and Week 7 indicate possible procurement policy issues</span>
+                          </li>
+                          <li className="text-sm flex items-start">
+                            <TrendingUp className="h-4 w-4 text-primary mt-0.5 mr-2 shrink-0" />
+                            <span>Plant hire spend shows 22% variance from standard rates in Week 4</span>
+                          </li>
+                          <li className="text-sm flex items-start">
+                            <DollarSign className="h-4 w-4 text-green-500 mt-0.5 mr-2 shrink-0" />
+                            <span>Opportunity to reduce weekly spend by approximately £3,400 through improved scheduling</span>
+                          </li>
+                        </>
+                      )}
+                      
+                      {breakdownType === 'monthly' && (
+                        <>
+                          <li className="text-sm flex items-start">
+                            <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 mr-2 shrink-0" />
+                            <span>April 2025 shows 15% increase over baseline with anomalous spending pattern</span>
+                          </li>
+                          <li className="text-sm flex items-start">
+                            <TrendingUp className="h-4 w-4 text-primary mt-0.5 mr-2 shrink-0" />
+                            <span>February-March transition shows 39.3% increase - likely due to project phase shift</span>
+                          </li>
+                          <li className="text-sm flex items-start">
+                            <DollarSign className="h-4 w-4 text-green-500 mt-0.5 mr-2 shrink-0" />
+                            <span>May shows promising 23.3% reduction - suggests effectiveness of recent cost controls</span>
+                          </li>
+                        </>
+                      )}
+                      
+                      {breakdownType === 'category' && (
+                        <>
+                          <li className="text-sm flex items-start">
+                            <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 mr-2 shrink-0" />
+                            <span>PPE & Safety spending shows concerning 12.5% increase without corresponding staffing changes</span>
+                          </li>
+                          <li className="text-sm flex items-start">
+                            <TrendingUp className="h-4 w-4 text-primary mt-0.5 mr-2 shrink-0" />
+                            <span>Materials spending consistently trending upward at 8.2%, above market rate increases of 5.4%</span>
+                          </li>
+                          <li className="text-sm flex items-start">
+                            <DollarSign className="h-4 w-4 text-green-500 mt-0.5 mr-2 shrink-0" />
+                            <span>Plant Hire shows promising 5.3% decrease, suggesting optimization efforts are effective</span>
+                          </li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+          
+          <DialogFooter className="space-x-2">
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <Download className="h-4 w-4" />
+              Export Data
+            </Button>
+            <Button size="sm" className="gap-1.5">
+              <Check className="h-4 w-4" />
+              Apply Filters
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
     </div>
   );
