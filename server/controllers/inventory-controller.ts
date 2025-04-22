@@ -514,3 +514,132 @@ export const getInventoryDashboard = async (_req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch inventory dashboard" });
   }
 };
+
+// Batch Inventory Operations
+import { z } from "zod";
+
+const batchOperationSchema = z.object({
+  type: z.enum(['purchase', 'issue', 'adjustment']),
+  locationId: z.number().min(1, "Please select a location"),
+  notes: z.string().optional(),
+  items: z.array(
+    z.object({
+      itemId: z.number().min(1, "Item is required"),
+      quantity: z.number().min(1, "Quantity must be at least 1"),
+    })
+  ).min(1, "At least one item is required"),
+});
+
+export const processBatchTransactions = async (req: Request, res: Response) => {
+  try {
+    const validationResult = batchOperationSchema.safeParse(req.body);
+    
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid request data", 
+        details: validationResult.error.format() 
+      });
+    }
+    
+    const { type, locationId, notes, items } = validationResult.data;
+    
+    // Verify that all items exist
+    const itemIds = items.map(item => item.itemId);
+    const existingItems = await db
+      .select({ id: inventoryItems.id })
+      .from(inventoryItems)
+      .where(sql`${inventoryItems.id} IN ${itemIds}`);
+    
+    const existingItemIds = existingItems.map(item => item.id);
+    const missingItemIds = itemIds.filter(id => !existingItemIds.includes(id));
+    
+    if (missingItemIds.length > 0) {
+      return res.status(400).json({ 
+        error: "Some items do not exist", 
+        missingItemIds 
+      });
+    }
+    
+    // Verify location exists
+    const existingLocation = await db
+      .select({ id: inventoryLocations.id })
+      .from(inventoryLocations)
+      .where(eq(inventoryLocations.id, locationId))
+      .limit(1);
+    
+    if (existingLocation.length === 0) {
+      return res.status(400).json({ error: "Location does not exist" });
+    }
+    
+    // Start a transaction
+    await db.transaction(async (tx) => {
+      const now = new Date();
+      
+      // Process each item
+      for (const item of items) {
+        const { itemId, quantity } = item;
+        
+        // Add transaction record
+        await tx.insert(stockTransactions).values({
+          type,
+          itemId,
+          quantity,
+          fromLocationId: type === 'issue' ? locationId : null,
+          toLocationId: type === 'purchase' ? locationId : null,
+          notes,
+          transactionDate: now,
+          userId: req.user?.id || null,
+        });
+        
+        // Update stock levels
+        const stockLevel = await tx
+          .select()
+          .from(stockLevels)
+          .where(and(
+            eq(stockLevels.itemId, itemId),
+            eq(stockLevels.locationId, locationId)
+          ))
+          .limit(1);
+        
+        if (stockLevel.length > 0) {
+          // Update existing stock level
+          let newQuantity = stockLevel[0].quantity;
+          
+          if (type === 'purchase') {
+            newQuantity += quantity;
+          } else if (type === 'issue') {
+            newQuantity -= quantity;
+            // Prevent negative stock
+            if (newQuantity < 0) {
+              newQuantity = 0;
+            }
+          } else if (type === 'adjustment') {
+            newQuantity = quantity; // Direct set for adjustments
+          }
+          
+          await tx
+            .update(stockLevels)
+            .set({ quantity: newQuantity, updatedAt: now })
+            .where(eq(stockLevels.id, stockLevel[0].id));
+        } else if (type === 'purchase' || type === 'adjustment') {
+          // Create new stock level for purchases and adjustments
+          await tx.insert(stockLevels).values({
+            itemId,
+            locationId,
+            quantity,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+      }
+    });
+    
+    res.status(200).json({ 
+      success: true, 
+      message: `Successfully processed ${items.length} items in batch ${type} operation` 
+    });
+  } catch (error) {
+    console.error("Error processing batch transactions:", error);
+    res.status(500).json({ error: "Failed to process batch transactions" });
+  }
+};
