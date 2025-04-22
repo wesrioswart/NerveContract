@@ -149,7 +149,7 @@ export default function ViewInventoryItemModal({ open, onClose, itemId }: ViewIn
           <Card>
             <CardContent className="pt-6">
               <h3 className="font-semibold text-sm mb-1">Locations</h3>
-              <p className="text-2xl font-bold">{item.stockLevels.length}</p>
+              <p className="text-2xl font-bold">{item.stockLevels?.length || 0}</p>
               <p className="text-xs text-muted-foreground">
                 Storage locations
               </p>
@@ -170,11 +170,11 @@ export default function ViewInventoryItemModal({ open, onClose, itemId }: ViewIn
         </div>
 
         {/* Stock Levels */}
-        {item.stockLevels.length > 0 && (
+        {item.stockLevels?.length > 0 && (
           <div className="mb-6">
             <h3 className="font-semibold mb-3">Stock Levels by Location</h3>
             <div className="space-y-3">
-              {item.stockLevels.map((level) => (
+              {item.stockLevels?.map((level) => (
                 <div key={level.id}>
                   <div className="flex justify-between items-center mb-1">
                     <div>
@@ -191,11 +191,11 @@ export default function ViewInventoryItemModal({ open, onClose, itemId }: ViewIn
         )}
 
         {/* Recent Transactions */}
-        {item.recentTransactions.length > 0 && (
+        {item.recentTransactions?.length > 0 && (
           <div>
             <h3 className="font-semibold mb-3">Recent Transactions</h3>
             <div className="border rounded-md divide-y">
-              {item.recentTransactions.map((transaction) => (
+              {item.recentTransactions?.map((transaction) => (
                 <div key={transaction.id} className="p-3">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-2">
