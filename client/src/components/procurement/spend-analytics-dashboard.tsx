@@ -180,7 +180,14 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
           </CardHeader>
           <CardContent>
             <div className="pt-4">
-              <Button variant="outline" className="text-xs">
+              <Button 
+                variant="outline" 
+                className="text-xs"
+                onClick={() => {
+                  // Navigate to detailed breakdown view
+                  window.location.href = '/procurement?tab=detailed-breakdown';
+                }}
+              >
                 <PieChart className="h-3.5 w-3.5 mr-1.5" />
                 View Detailed Breakdown
               </Button>

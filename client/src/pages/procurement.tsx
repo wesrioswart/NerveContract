@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import PageHeader from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Search, Plus, Building, ClipboardList, ShoppingCart, ShieldAlert } from "lucide-react";
+import { Loader2, Search, Plus, Building, ClipboardList, ShoppingCart, ShieldAlert, AlertCircle, TrendingUp, Lightbulb, Clock, FileText, BarChart3 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { purchaseOrderStatusColors } from "@/lib/constants";
 import NewPurchaseOrderModal from "@/components/procurement/new-purchase-order-modal";
@@ -150,11 +150,12 @@ export default function Procurement() {
         onValueChange={setActiveTab} 
         className="space-y-6"
       >
-        <TabsList className="grid grid-cols-4 w-[600px]">
+        <TabsList className="grid grid-cols-5 w-[750px]">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="create-requisition">Create Requisition</TabsTrigger>
           <TabsTrigger value="requisition-list">Requisition List</TabsTrigger>
           <TabsTrigger value="delivery-tracker">Delivery Tracker</TabsTrigger>
+          <TabsTrigger value="detailed-breakdown">Detailed Breakdown</TabsTrigger>
         </TabsList>
 
         {/* Dashboard Tab */}
@@ -400,6 +401,287 @@ export default function Procurement() {
                 )}
               </TableBody>
             </Table>
+          </div>
+        </TabsContent>
+        
+        {/* Detailed Breakdown Tab */}
+        <TabsContent value="detailed-breakdown" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Project-Based Spend Analysis */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-lg">Project-Based Spend Analysis</CardTitle>
+                <CardDescription>Breakdown of procurement spend by project</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Project spend chart - simplified visual */}
+                  <div className="h-[300px] flex items-end space-x-2">
+                    <div className="flex-1 flex flex-col items-center">
+                      <div className="bg-blue-500 w-24 rounded-t-md" style={{ height: '65%' }}></div>
+                      <div className="mt-2 text-sm font-medium">Westfield</div>
+                      <div className="text-xs text-muted-foreground">£122,450</div>
+                    </div>
+                    <div className="flex-1 flex flex-col items-center">
+                      <div className="bg-green-500 w-24 rounded-t-md" style={{ height: '40%' }}></div>
+                      <div className="mt-2 text-sm font-medium">Littlebrook</div>
+                      <div className="text-xs text-muted-foreground">£75,780</div>
+                    </div>
+                    <div className="flex-1 flex flex-col items-center">
+                      <div className="bg-amber-500 w-24 rounded-t-md" style={{ height: '25%' }}></div>
+                      <div className="mt-2 text-sm font-medium">Corys</div>
+                      <div className="text-xs text-muted-foreground">£46,980</div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Top Project</h4>
+                      <div className="text-sm">Westfield Development</div>
+                      <div className="text-xs text-muted-foreground">49.8% of total spend</div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Avg. PO Value</h4>
+                      <div className="text-sm">£28,450</div>
+                      <div className="text-xs text-muted-foreground">across all projects</div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Spend Trend</h4>
+                      <div className="text-sm flex items-center">
+                        <TrendingUp className="h-4 w-4 text-green-500 mr-1 rotate-180" />
+                        <span>Decreasing</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">-4.2% month-on-month</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* GPSMACS Coded Spending */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">GPSMACS Coding Analysis</CardTitle>
+                <CardDescription>Spend by GPSMACS code category</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <div className="text-sm font-medium">5000-5999: Materials</div>
+                        <div className="text-sm">42%</div>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '42%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <div className="text-sm font-medium">6000-6999: Plant</div>
+                        <div className="text-sm">28%</div>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '28%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <div className="text-sm font-medium">7000-7999: Tools</div>
+                        <div className="text-sm">18%</div>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div className="bg-amber-500 h-2 rounded-full" style={{ width: '18%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <div className="text-sm font-medium">8000-8999: PPE</div>
+                        <div className="text-sm">12%</div>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div className="bg-purple-500 h-2 rounded-full" style={{ width: '12%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 border-t">
+                    <h4 className="text-sm font-medium mb-2">Top GPSMACS Codes:</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-sm">
+                        <div>5100: CONCRETE</div>
+                        <Badge variant="outline">£36,450</Badge>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <div>6200: EXCAVATORS</div>
+                        <Badge variant="outline">£28,750</Badge>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <div>5200: STEEL</div>
+                        <Badge variant="outline">£22,800</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Supplier Spend Analysis */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-lg">Supplier Spend Analysis</CardTitle>
+                <CardDescription>Breakdown of procurement spend by supplier</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Supplier</TableHead>
+                          <TableHead>Total Spend</TableHead>
+                          <TableHead>PO Count</TableHead>
+                          <TableHead>Avg. PO Value</TableHead>
+                          <TableHead>% of Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>BuildMaster Supplies Ltd</TableCell>
+                          <TableCell>£56,780</TableCell>
+                          <TableCell>4</TableCell>
+                          <TableCell>£14,195</TableCell>
+                          <TableCell>23.1%</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>Concrete Express</TableCell>
+                          <TableCell>£42,350</TableCell>
+                          <TableCell>2</TableCell>
+                          <TableCell>£21,175</TableCell>
+                          <TableCell>17.2%</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>FastTrack Equipment Hire</TableCell>
+                          <TableCell>£38,450</TableCell>
+                          <TableCell>3</TableCell>
+                          <TableCell>£12,817</TableCell>
+                          <TableCell>15.6%</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>Other Suppliers</TableCell>
+                          <TableCell>£108,630</TableCell>
+                          <TableCell>7</TableCell>
+                          <TableCell>£15,519</TableCell>
+                          <TableCell>44.1%</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                  
+                  <div className="pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Top Supplier Insights:</h4>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-start">
+                          <AlertCircle className="h-4 w-4 text-amber-500 mr-2 mt-0.5" />
+                          <span>56% of spend concentrated with top 3 suppliers</span>
+                        </li>
+                        <li className="flex items-start">
+                          <TrendingUp className="h-4 w-4 text-green-500 mr-2 mt-0.5" />
+                          <span>14% increase in GPSMACS-compliant supplier spend</span>
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Supplier Optimization:</h4>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-start">
+                          <Lightbulb className="h-4 w-4 text-blue-500 mr-2 mt-0.5" />
+                          <span>Potential £15,800 savings through consolidation</span>
+                        </li>
+                        <li className="flex items-start">
+                          <Clock className="h-4 w-4 text-purple-500 mr-2 mt-0.5" />
+                          <span>Avg. payment term: 30 days (2.4 days decrease)</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Time-Based Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Time-Based Analysis</CardTitle>
+                <CardDescription>Procurement activity over time</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">Monthly Spend Trend</h4>
+                    <div className="h-[180px] flex items-end justify-between px-2">
+                      {['Jan', 'Feb', 'Mar', 'Apr'].map((month, i) => (
+                        <div key={month} className="flex flex-col items-center">
+                          <div 
+                            className="bg-primary/80 w-12 hover:bg-primary transition-all duration-200" 
+                            style={{ 
+                              height: `${[70, 60, 85, 65][i]}%`,
+                              minHeight: "10px"
+                            }}
+                          ></div>
+                          <span className="text-xs mt-2">{month}</span>
+                          <span className="text-xs text-muted-foreground">
+                            £{[42.3, 36.8, 51.2, 38.9][i]}k
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 border-t">
+                    <h4 className="text-sm font-medium mb-2">Process Timelines:</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <div className="text-sm">Avg. PO Approval Time</div>
+                        <div className="flex items-center">
+                          <div className="bg-blue-100 h-4 rounded-full" style={{ width: '80%' }}>
+                            <div className="bg-blue-500 h-4 rounded-l-full" style={{ width: '40%' }}></div>
+                          </div>
+                          <span className="text-xs ml-2">1.8 days</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="text-sm">Avg. Delivery Time</div>
+                        <div className="flex items-center">
+                          <div className="bg-green-100 h-4 rounded-full" style={{ width: '80%' }}>
+                            <div className="bg-green-500 h-4 rounded-l-full" style={{ width: '60%' }}></div>
+                          </div>
+                          <span className="text-xs ml-2">5.4 days</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Export Options */}
+          <div className="flex justify-center gap-4 mt-4">
+            <Button variant="outline" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Export Full Report
+            </Button>
+            <Button variant="outline" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Configure Dashboard
+            </Button>
           </div>
         </TabsContent>
 
