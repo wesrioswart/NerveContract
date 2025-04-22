@@ -12,7 +12,7 @@ import { purchaseOrderStatusColors } from "@/lib/constants";
 import NewPurchaseOrderModal from "@/components/procurement/new-purchase-order-modal";
 import NewSupplierModal from "@/components/procurement/new-supplier-modal";
 import ViewPurchaseOrderModal from "@/components/procurement/view-purchase-order-modal";
-import SpendAnalyticsDashboard from "@/components/procurement/spend-analytics-dashboard-simple";
+import SpendAnalyticsDashboard from "@/components/procurement/spend-analytics-dashboard-fixed";
 import AIRequisitionForm from "@/components/procurement/ai-requisition-form";
 import { useUser } from "@/contexts/user-context";
 
