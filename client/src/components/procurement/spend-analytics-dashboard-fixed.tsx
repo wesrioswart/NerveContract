@@ -827,55 +827,11 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
           {/* Comparison selector */}
           <div className="mt-4 pt-4 border-t border-border/40">
             <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center">
-                <div className="mr-3">
-                  <h3 className="text-sm font-medium flex items-center">
-                    <PieChart className="h-4 w-4 mr-1.5 text-primary" />
-                    Comparison
-                  </h3>
-                </div>
-                <Select 
-                  value={comparisonMode} 
-                  onValueChange={(value) => setComparisonMode(value as 'previous-period' | 'budget' | 'none')}
-                >
-                  <SelectTrigger className="h-8 text-xs w-[180px] bg-muted/20">
-                    <SelectValue placeholder="Select comparison" />
-                  </SelectTrigger>
-                  <SelectContent className="w-[240px]">
-                    <div className="px-1 py-1">
-                      <h4 className="text-xs font-semibold mb-1 text-muted-foreground px-2">Select comparison type</h4>
-                      <Separator className="my-1" />
-                      <div className="py-1">
-                        <SelectItem value="none" className="flex items-center">
-                          <div className="flex items-center">
-                            <Check className={`mr-2 h-4 w-4 ${comparisonMode === 'none' ? 'opacity-100' : 'opacity-0'}`} />
-                            <span>No comparison</span>
-                          </div>
-                        </SelectItem>
-                        
-                        <SelectItem value="previous-period" className="flex items-center">
-                          <div className="flex items-center">
-                            <Check className={`mr-2 h-4 w-4 ${comparisonMode === 'previous-period' ? 'opacity-100' : 'opacity-0'}`} />
-                            <span>vs. Previous period</span>
-                          </div>
-                        </SelectItem>
-                        
-                        <SelectItem value="budget" className="flex items-center">
-                          <div className="flex items-center">
-                            <Check className={`mr-2 h-4 w-4 ${comparisonMode === 'budget' ? 'opacity-100' : 'opacity-0'}`} />
-                            <span>vs. Budget</span>
-                          </div>
-                        </SelectItem>
-                      </div>
-                    </div>
-                  </SelectContent>
-                </Select>
-              </div>
-              
               {comparisonMode !== 'none' && (
-                <div className="bg-primary/5 border border-primary/10 rounded-md py-1 px-3 flex items-center">
-                  <span className="text-xs font-medium mr-2">Currently comparing:</span>
-                  <Badge variant="outline" className="bg-primary/10 text-xs font-normal">
+                <div className="bg-blue-50 border border-blue-100 rounded-md py-1.5 px-3 flex items-center shadow-sm">
+                  <Info className="h-3.5 w-3.5 text-blue-500 mr-2" />
+                  <span className="text-xs text-blue-700 font-medium mr-2">Currently comparing:</span>
+                  <Badge variant="outline" className="bg-blue-100 text-blue-700 text-xs font-normal border-blue-200">
                     {comparisonMode === 'previous-period' ? 'vs. Previous period' : 'vs. Budget'}
                   </Badge>
                 </div>
