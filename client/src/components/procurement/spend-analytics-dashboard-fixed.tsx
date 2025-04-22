@@ -935,8 +935,8 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
                 </div>
                 
-                {/* View Detailed Breakdown Button for Weekly - moved to bottom */}
-                <div className="absolute bottom-[-50px] left-1/2 transform -translate-x-1/2">
+                {/* View Detailed Breakdown Button for Weekly - moved to bottom right */}
+                <div className="absolute bottom-[-50px] right-0">
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -1029,8 +1029,8 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   £0
                 </div>
                 
-                {/* View Detailed Breakdown Button for Monthly - moved to bottom */}
-                <div className="absolute bottom-[-50px] left-1/2 transform -translate-x-1/2">
+                {/* View Detailed Breakdown Button for Monthly - moved to bottom right */}
+                <div className="absolute bottom-[-50px] right-0">
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -1136,8 +1136,8 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
             {/* Category Breakdown */}
             <TabsContent value="category" className="mt-0">
               <div className="relative mt-4 mb-12">
-                {/* View Detailed Breakdown Button for Category - at the bottom */}
-                <div className="absolute bottom-[-50px] left-1/2 transform -translate-x-1/2">
+                {/* View Detailed Breakdown Button for Category - at the bottom right */}
+                <div className="absolute bottom-[-50px] right-0">
                   <Button 
                     variant="outline" 
                     size="sm" 
