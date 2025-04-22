@@ -27,6 +27,7 @@ import NewInventoryLocationModal from "@/components/inventory/new-inventory-loca
 import StockTransactionModal from "@/components/inventory/stock-transaction-modal";
 import ViewInventoryItemModal from "@/components/inventory/view-inventory-item-modal";
 import ViewInventoryLocationModal from "@/components/inventory/view-inventory-location-modal";
+import BatchInventoryOperationsModal from "@/components/inventory/batch-inventory-operations-modal";
 import { useUser } from "@/contexts/user-context";
 import { 
   AreaChart, Area, LineChart, Line, BarChart, Bar, 
@@ -115,7 +116,9 @@ export default function Inventory() {
   const [isNewItemModalOpen, setIsNewItemModalOpen] = useState<boolean>(false);
   const [isNewLocationModalOpen, setIsNewLocationModalOpen] = useState<boolean>(false);
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState<boolean>(false);
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState<boolean>(false);
   const [transactionType, setTransactionType] = useState<'purchase' | 'issue' | 'transfer'>('purchase');
+  const [batchOperationType, setBatchOperationType] = useState<'purchase' | 'issue' | 'adjustment'>('purchase');
   const [viewItemId, setViewItemId] = useState<number | null>(null);
   const [viewLocationId, setViewLocationId] = useState<number | null>(null);
 
@@ -148,6 +151,12 @@ export default function Inventory() {
   const openTransactionModal = (type: 'purchase' | 'issue' | 'transfer') => {
     setTransactionType(type);
     setIsTransactionModalOpen(true);
+  };
+  
+  // Helper to open batch operations modal with specified type
+  const openBatchModal = (type: 'purchase' | 'issue' | 'adjustment') => {
+    setBatchOperationType(type);
+    setIsBatchModalOpen(true);
   };
 
   // Helper to determine if an item has low stock
@@ -478,31 +487,76 @@ export default function Inventory() {
               </Card>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-center gap-4">
-                <Button 
-                  variant="default" 
-                  onClick={() => openTransactionModal('purchase')}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowDownToLine className="h-4 w-4" />
-                  Receive Stock
-                </Button>
-                <Button 
-                  variant="secondary" 
-                  onClick={() => openTransactionModal('issue')}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowUpFromLine className="h-4 w-4" />
-                  Issue Stock
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => openTransactionModal('transfer')}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeftRight className="h-4 w-4" />
-                  Transfer Stock
-                </Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-md">Individual Operations</CardTitle>
+                    <CardDescription>Process transactions for a single item</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      <Button 
+                        variant="default" 
+                        onClick={() => openTransactionModal('purchase')}
+                        className="flex items-center gap-2"
+                      >
+                        <ArrowDownToLine className="h-4 w-4" />
+                        Receive Stock
+                      </Button>
+                      <Button 
+                        variant="secondary" 
+                        onClick={() => openTransactionModal('issue')}
+                        className="flex items-center gap-2"
+                      >
+                        <ArrowUpFromLine className="h-4 w-4" />
+                        Issue Stock
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => openTransactionModal('transfer')}
+                        className="flex items-center gap-2"
+                      >
+                        <ArrowLeftRight className="h-4 w-4" />
+                        Transfer Stock
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-md">Batch Operations</CardTitle>
+                    <CardDescription>Process multiple items at once</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      <Button 
+                        variant="default" 
+                        onClick={() => openBatchModal('purchase')}
+                        className="flex items-center gap-2"
+                      >
+                        <ArrowDownToLine className="h-4 w-4" />
+                        Batch Receive
+                      </Button>
+                      <Button 
+                        variant="secondary" 
+                        onClick={() => openBatchModal('issue')}
+                        className="flex items-center gap-2"
+                      >
+                        <ArrowUpFromLine className="h-4 w-4" />
+                        Batch Issue
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => openBatchModal('adjustment')}
+                        className="flex items-center gap-2"
+                      >
+                        <ArrowLeftRight className="h-4 w-4" />
+                        Batch Adjustment
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </>
           )}
@@ -686,6 +740,16 @@ export default function Inventory() {
           open={!!viewLocationId} 
           onClose={() => setViewLocationId(null)} 
           locationId={viewLocationId}
+        />
+      )}
+      
+      {isBatchModalOpen && (
+        <BatchInventoryOperationsModal
+          open={isBatchModalOpen}
+          onClose={() => setIsBatchModalOpen(false)}
+          items={items}
+          locations={locations}
+          defaultType={batchOperationType}
         />
       )}
     </div>
