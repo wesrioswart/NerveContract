@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import { 
   AlertCircle, 
+  AlertTriangle,
+  AlertOctagon,
   TrendingUp, 
   TrendingDown, 
   PieChart, 
@@ -37,7 +39,8 @@ import {
   LayoutList,
   RotateCcw,
   Table,
-  LineChart
+  LineChart,
+  Clock
 } from "lucide-react";
 import { 
   Dialog, 
@@ -1354,29 +1357,83 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                 <AlertCircle className="h-4 w-4 text-red-500 mr-1.5" />
                 Detected Anomalies
               </h3>
+              
+              {/* Anomalies Summary Section */}
+              <div className="mb-4 p-3 bg-red-50/50 border border-red-100 rounded-md">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full p-1.5 bg-red-500/10 mt-0.5">
+                    <AlertOctagon className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-red-700">Risk Analysis Summary</h4>
+                    <p className="text-xs text-red-700/90 mt-1">
+                      {resolvedAnomalies.length === 0 ? (
+                        <>
+                          We've detected {spendData.anomalies.length} irregularities in your procurement data that require 
+                          attention. Taking action on these items could prevent approximately £43,200 in unnecessary expenditure.
+                        </>
+                      ) : (
+                        <>
+                          Good progress! You've resolved {resolvedAnomalies.length} of {spendData.anomalies.length} detected irregularities. 
+                          Taking action on the remaining items could prevent approximately £{resolvedAnomalies.includes(2) ? '18,400' : '43,200'} in unnecessary expenditure.
+                        </>
+                      )}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs bg-red-100 text-red-700 rounded-full px-2 py-0.5 inline-flex items-center">
+                        <Check className="h-3 w-3 mr-1" />
+                        {resolvedAnomalies.length} of {spendData.anomalies.length} issues resolved
+                      </span>
+                      <span className="text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 inline-flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        Priority: {spendData.anomalies.filter(a => a.severity === 'high').length} high, {spendData.anomalies.filter(a => a.severity === 'medium').length} medium
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               <div className="space-y-3">
                 {spendData.anomalies.map((anomaly, index) => (
                   <div 
                     key={index} 
                     className={`border rounded-md p-3 hover:bg-muted/50 
-                      cursor-pointer transition-colors ${resolvedAnomalies.includes(anomaly.id) ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'}`}
+                      cursor-pointer transition-colors ${resolvedAnomalies.includes(anomaly.id) ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'} group`}
                     onClick={() => openAnomalyDetails(anomaly)}
                   >
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center">
-                        <Badge 
-                          variant="outline" 
-                          className={`mr-2 ${
+                      <div>
+                        <div className="flex items-center">
+                          <div className={`rounded-full p-1 ${
                             anomaly.severity === 'high' 
-                              ? 'text-red-500 border-red-500/50' 
+                              ? 'bg-red-100' 
                               : anomaly.severity === 'medium' 
-                                ? 'text-amber-500 border-amber-500/50' 
-                                : 'text-blue-500 border-blue-500/50'
-                          }`}
-                        >
-                          {anomaly.severity}
-                        </Badge>
-                        <h4 className="text-sm font-medium">{anomaly.title}</h4>
+                                ? 'bg-amber-100' 
+                                : 'bg-blue-100'
+                          } mr-2`}>
+                            <AlertCircle className={`h-3.5 w-3.5 ${
+                              anomaly.severity === 'high' 
+                                ? 'text-red-500' 
+                                : anomaly.severity === 'medium' 
+                                  ? 'text-amber-500' 
+                                  : 'text-blue-500'
+                            }`} />
+                          </div>
+                          <h4 className="text-sm font-medium group-hover:text-primary/80 transition-colors">{anomaly.title}</h4>
+                          <Badge 
+                            variant="outline" 
+                            className={`ml-2 ${
+                              anomaly.severity === 'high' 
+                                ? 'text-red-500 border-red-500/50' 
+                                : anomaly.severity === 'medium' 
+                                  ? 'text-amber-500 border-amber-500/50' 
+                                  : 'text-blue-500 border-blue-500/50'
+                            }`}
+                          >
+                            {anomaly.severity}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1.5 ml-8">{anomaly.description}</p>
                       </div>
                       {resolvedAnomalies.includes(anomaly.id) && (
                         <Badge className="bg-green-500 hover:bg-green-600">
@@ -1385,9 +1442,17 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{anomaly.description}</p>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-xs font-medium">{anomaly.impact}</span>
+                    <div className="flex justify-between items-center mt-2 ml-8">
+                      <span className={`text-xs rounded-full px-2 py-0.5 inline-flex items-center ${
+                        anomaly.severity === 'high' 
+                          ? 'bg-red-100 text-red-700' 
+                          : anomaly.severity === 'medium' 
+                            ? 'bg-amber-100 text-amber-700' 
+                            : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        {anomaly.impact}
+                      </span>
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -1411,6 +1476,34 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                 <Lightbulb className="h-4 w-4 text-amber-500 mr-1.5" />
                 AI Forecast Recommendations
               </h3>
+              
+              {/* AI Summary Section */}
+              <div className="mb-4 p-3 bg-blue-50/50 border border-blue-100 rounded-md">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full p-1.5 bg-blue-500/10 mt-0.5">
+                    <BellRing className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-blue-700">Cost Optimization Summary</h4>
+                    <p className="text-xs text-blue-700/90 mt-1">
+                      Analysis of your procurement data reveals potential savings of approximately £58,600 
+                      over the next quarter through implementing the recommendations below. 
+                      Priority focus areas: materials consolidation, equipment optimization, and payment terms.
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs bg-blue-100 text-blue-700 rounded-full px-2 py-0.5 inline-flex items-center">
+                        <Check className="h-3 w-3 mr-1" />
+                        {implementedForecasts.length} of {spendData.forecasts.length} recommendations implemented
+                      </span>
+                      <span className="text-xs bg-green-100 text-green-700 rounded-full px-2 py-0.5 inline-flex items-center">
+                        <TrendingDown className="h-3 w-3 mr-1" />
+                        Potential savings: £{Math.floor(26400 + 18300 + (4200*3))}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               <div className="space-y-3">
                 {spendData.forecasts.slice(0, 3).map((forecast, index) => (
                   <div 
@@ -1420,14 +1513,21 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                         implementedForecasts.includes(forecast.id) 
                           ? 'bg-green-500/5 border-green-500/20' 
                           : 'bg-amber-500/5 border-amber-500/20'
-                      }`}
+                      } group`}
                     onClick={() => openForecastDetails(forecast)}
                   >
                     <div className="flex items-start justify-between">
-                      <h4 className="text-sm font-medium flex items-center">
-                        <Lightbulb className="h-3.5 w-3.5 text-amber-500 mr-1.5" />
-                        {forecast.description}
-                      </h4>
+                      <div>
+                        <h4 className="text-sm font-medium flex items-center group-hover:text-primary/80 transition-colors">
+                          <div className={`rounded-full p-1 ${implementedForecasts.includes(forecast.id) ? 'bg-green-100' : 'bg-amber-100'} mr-2`}>
+                            <Lightbulb className={`h-3.5 w-3.5 ${implementedForecasts.includes(forecast.id) ? 'text-green-500' : 'text-amber-500'}`} />
+                          </div>
+                          {forecast.description}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1.5 ml-8">
+                          {forecast.impact}
+                        </p>
+                      </div>
                       {implementedForecasts.includes(forecast.id) && (
                         <Badge className="bg-green-500 hover:bg-green-600">
                           <Check className="h-3 w-3 mr-1" />
@@ -1435,8 +1535,17 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                         </Badge>
                       )}
                     </div>
-                    <div className="flex justify-between items-center mt-3">
-                      <Badge variant="outline">{forecast.confidence}% confidence</Badge>
+                    <div className="flex justify-between items-center mt-3 ml-8">
+                      <span className={`text-xs rounded-full px-2 py-0.5 inline-flex items-center ${
+                        forecast.confidence > 90 
+                          ? 'bg-green-100 text-green-700' 
+                          : forecast.confidence > 80 
+                            ? 'bg-blue-100 text-blue-700' 
+                            : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        <Check className="h-3 w-3 mr-1" />
+                        {forecast.confidence}% confidence
+                      </span>
                       <Button 
                         variant="ghost" 
                         size="sm" 
