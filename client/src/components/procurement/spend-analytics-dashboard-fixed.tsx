@@ -153,7 +153,14 @@ interface SpendAnalyticsDashboardProps {
   className?: string;
 }
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number, options?: { abbreviated?: boolean }): string {
+  if (options?.abbreviated && amount >= 1000) {
+    if (amount >= 1000000) {
+      return `£${(amount / 1000000).toFixed(1)}M`;
+    } else {
+      return `£${(amount / 1000).toFixed(0)}k`;
+    }
+  }
   return `£${amount.toLocaleString()}`;
 }
 
@@ -443,18 +450,18 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
             {/* Weekly Spend Chart */}
             <TabsContent value="weekly" className="mt-0">
               <div className="relative h-[250px]">
-                {/* Y-axis labels with intermediate values */}
+                {/* Y-axis labels with intermediate values - abbreviated for readability */}
                 <div className="absolute top-0 left-0 text-xs text-muted-foreground">
-                  {formatCurrency(maxWeeklyAmount)}
+                  {formatCurrency(maxWeeklyAmount, { abbreviated: true })}
                 </div>
                 <div className="absolute top-1/4 left-0 text-xs text-muted-foreground">
-                  {formatCurrency(maxWeeklyAmount * 0.75)}
+                  {formatCurrency(maxWeeklyAmount * 0.75, { abbreviated: true })}
                 </div>
                 <div className="absolute top-1/2 left-0 text-xs text-muted-foreground">
-                  {formatCurrency(maxWeeklyAmount * 0.5)}
+                  {formatCurrency(maxWeeklyAmount * 0.5, { abbreviated: true })}
                 </div>
                 <div className="absolute top-3/4 left-0 text-xs text-muted-foreground">
-                  {formatCurrency(maxWeeklyAmount * 0.25)}
+                  {formatCurrency(maxWeeklyAmount * 0.25, { abbreviated: true })}
                 </div>
                 <div className="absolute bottom-0 left-0 text-xs text-muted-foreground">
                   £0
@@ -546,18 +553,18 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
             {/* Monthly Spend Chart */}
             <TabsContent value="monthly" className="mt-0">
               <div className="relative h-[250px]">
-                {/* Y-axis labels with intermediate values */}
+                {/* Y-axis labels with intermediate values - abbreviated for readability */}
                 <div className="absolute top-0 left-0 text-xs text-muted-foreground">
-                  {formatCurrency(maxMonthlyAmount)}
+                  {formatCurrency(maxMonthlyAmount, { abbreviated: true })}
                 </div>
                 <div className="absolute top-1/4 left-0 text-xs text-muted-foreground">
-                  {formatCurrency(maxMonthlyAmount * 0.75)}
+                  {formatCurrency(maxMonthlyAmount * 0.75, { abbreviated: true })}
                 </div>
                 <div className="absolute top-1/2 left-0 text-xs text-muted-foreground">
-                  {formatCurrency(maxMonthlyAmount * 0.5)}
+                  {formatCurrency(maxMonthlyAmount * 0.5, { abbreviated: true })}
                 </div>
                 <div className="absolute top-3/4 left-0 text-xs text-muted-foreground">
-                  {formatCurrency(maxMonthlyAmount * 0.25)}
+                  {formatCurrency(maxMonthlyAmount * 0.25, { abbreviated: true })}
                 </div>
                 <div className="absolute bottom-0 left-0 text-xs text-muted-foreground">
                   £0
@@ -586,7 +593,7 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                 </div>
                 
                 {/* Chart bars */}
-                <div className="flex justify-between items-end h-[175px] px-6 mt-6">
+                <div className="flex justify-between items-end h-[200px] px-6 mt-6">
                   {spendData.monthlySpend.map((month, index) => (
                     <TooltipProvider key={index}>
                       <Tooltip>
