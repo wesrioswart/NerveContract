@@ -586,9 +586,9 @@ export const processBatchTransactions = async (req: Request, res: Response) => {
           quantity,
           fromLocationId: type === 'issue' ? locationId : null,
           toLocationId: type === 'purchase' ? locationId : null,
-          notes,
+          comments: notes,
           transactionDate: now,
-          userId: req.user?.id || null,
+          performedBy: req.user?.id || 1, // Default to admin user if no user in session
         });
         
         // Update stock levels
@@ -619,7 +619,7 @@ export const processBatchTransactions = async (req: Request, res: Response) => {
           
           await tx
             .update(stockLevels)
-            .set({ quantity: newQuantity, updatedAt: now })
+            .set({ quantity: newQuantity, lastUpdated: now })
             .where(eq(stockLevels.id, stockLevel[0].id));
         } else if (type === 'purchase' || type === 'adjustment') {
           // Create new stock level for purchases and adjustments
@@ -627,8 +627,7 @@ export const processBatchTransactions = async (req: Request, res: Response) => {
             itemId,
             locationId,
             quantity,
-            createdAt: now,
-            updatedAt: now,
+            lastUpdated: now,
           });
         }
       }

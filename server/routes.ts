@@ -1636,6 +1636,7 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   
   // Stock Transactions
   app.post("/api/inventory/transactions", requireAuth, inventoryController.createStockTransaction);
+  app.post("/api/inventory/batch-transactions", requireAuth, inventoryController.processBatchTransactions);
   
   // Dashboard & Analytics
   app.get("/api/inventory/dashboard", requireAuth, inventoryController.getInventoryDashboard);
