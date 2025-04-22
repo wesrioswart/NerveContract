@@ -723,116 +723,65 @@ export default function Procurement() {
                     throw new Error('Failed to generate report');
                   }
                   
-                  // Create a PDF client-side using html2pdf
-                  const { default: html2pdf } = await import('html2pdf.js');
+                  // Create CSV content
+                  let csvContent = "data:text/csv;charset=utf-8,";
                   
-                  // Create HTML content for the PDF
-                  const reportHtml = `
-                    <div style="font-family: Arial, sans-serif; padding: 20px;">
-                      <h1 style="color: #333;">${data.reportData.title}</h1>
-                      <p>Generated: ${new Date(data.reportData.generatedAt).toLocaleString()}</p>
-                      <p>Period: ${data.reportData.dateRange}</p>
-                      
-                      <h2 style="margin-top: 20px; color: #555;">Summary</h2>
-                      <p>Total Spend: £${(data.reportData.summary.totalSpend / 100).toFixed(2)}</p>
-                      
-                      <h3 style="margin-top: 15px; color: #666;">Projects</h3>
-                      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                        <tr style="background-color: #f2f2f2;">
-                          <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Project</th>
-                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
-                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">% of Total</th>
-                        </tr>
-                        ${data.reportData.summary.projects.map(project => `
-                          <tr>
-                            <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${project.name}</td>
-                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(project.spend / 100).toFixed(2)}</td>
-                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${project.percentageOfTotal}%</td>
-                          </tr>
-                        `).join('')}
-                      </table>
-                      
-                      <h3 style="margin-top: 15px; color: #666;">GPSMACS Categories</h3>
-                      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                        <tr style="background-color: #f2f2f2;">
-                          <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Code</th>
-                          <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Description</th>
-                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
-                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">%</th>
-                        </tr>
-                        ${data.reportData.summary.gpsmacsCodes.map(code => `
-                          <tr>
-                            <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${code.code}</td>
-                            <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${code.name}</td>
-                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(code.spend / 100).toFixed(2)}</td>
-                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${code.percentage}%</td>
-                          </tr>
-                        `).join('')}
-                      </table>
-                      
-                      <h3 style="margin-top: 15px; color: #666;">Top Suppliers</h3>
-                      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                        <tr style="background-color: #f2f2f2;">
-                          <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Supplier</th>
-                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
-                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">PO Count</th>
-                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Avg. PO Value (£)</th>
-                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">% of Total</th>
-                        </tr>
-                        ${data.reportData.summary.topSuppliers.map(supplier => `
-                          <tr>
-                            <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${supplier.name}</td>
-                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(supplier.spend / 100).toFixed(2)}</td>
-                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${supplier.poCount}</td>
-                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(supplier.avgPoValue / 100).toFixed(2)}</td>
-                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${supplier.percentageOfTotal}%</td>
-                          </tr>
-                        `).join('')}
-                      </table>
-                      
-                      <h3 style="margin-top: 15px; color: #666;">Monthly Spend Trend</h3>
-                      <table style="width: 50%; border-collapse: collapse; margin-bottom: 20px;">
-                        <tr style="background-color: #f2f2f2;">
-                          <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Month</th>
-                          <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
-                        </tr>
-                        ${data.reportData.summary.monthlyTrend.map(month => `
-                          <tr>
-                            <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${month.month}</td>
-                            <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(month.spend / 100).toFixed(2)}</td>
-                          </tr>
-                        `).join('')}
-                      </table>
-                      
-                      <h2 style="margin-top: 20px; color: #555;">Key Insights</h2>
-                      <ul>
-                        ${data.reportData.insights.map(insight => `
-                          <li style="margin-bottom: 5px;">${insight}</li>
-                        `).join('')}
-                      </ul>
-                    </div>
-                  `;
+                  // Add header
+                  csvContent += `"${data.reportData.title}"\r\n`;
+                  csvContent += `"Generated","${new Date(data.reportData.generatedAt).toLocaleString()}"\r\n`;
+                  csvContent += `"Period","${data.reportData.dateRange}"\r\n\r\n`;
+                  csvContent += `"Total Spend","£${(data.reportData.summary.totalSpend / 100).toFixed(2)}"\r\n\r\n`;
                   
-                  // Configure html2pdf options
-                  const options = {
-                    margin: 10,
-                    filename: `procurement_report_${new Date().toISOString().slice(0, 10)}.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2 },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                  };
+                  // Projects section
+                  csvContent += `"Projects"\r\n`;
+                  csvContent += `"Project","Spend (£)","% of Total"\r\n`;
+                  data.reportData.summary.projects.forEach(project => {
+                    csvContent += `"${project.name}","£${(project.spend / 100).toFixed(2)}","${project.percentageOfTotal}%"\r\n`;
+                  });
+                  csvContent += "\r\n";
                   
-                  // Generate and download the PDF
-                  const element = document.createElement('div');
-                  element.innerHTML = reportHtml;
-                  document.body.appendChild(element);
+                  // GPSMACS Categories section
+                  csvContent += `"GPSMACS Categories"\r\n`;
+                  csvContent += `"Code","Description","Spend (£)","%"\r\n`;
+                  data.reportData.summary.gpsmacsCodes.forEach(code => {
+                    csvContent += `"${code.code}","${code.name}","£${(code.spend / 100).toFixed(2)}","${code.percentage}%"\r\n`;
+                  });
+                  csvContent += "\r\n";
                   
-                  await html2pdf()
-                    .from(element)
-                    .set(options)
-                    .save();
-                    
-                  document.body.removeChild(element);
+                  // Top Suppliers section
+                  csvContent += `"Top Suppliers"\r\n`;
+                  csvContent += `"Supplier","Spend (£)","PO Count","Avg. PO Value (£)","% of Total"\r\n`;
+                  data.reportData.summary.topSuppliers.forEach(supplier => {
+                    csvContent += `"${supplier.name}","£${(supplier.spend / 100).toFixed(2)}","${supplier.poCount}","£${(supplier.avgPoValue / 100).toFixed(2)}","${supplier.percentageOfTotal}%"\r\n`;
+                  });
+                  csvContent += "\r\n";
+                  
+                  // Monthly Trend section
+                  csvContent += `"Monthly Spend Trend"\r\n`;
+                  csvContent += `"Month","Spend (£)"\r\n`;
+                  data.reportData.summary.monthlyTrend.forEach(month => {
+                    csvContent += `"${month.month}","£${(month.spend / 100).toFixed(2)}"\r\n`;
+                  });
+                  csvContent += "\r\n";
+                  
+                  // Key Insights section
+                  csvContent += `"Key Insights"\r\n`;
+                  data.reportData.insights.forEach(insight => {
+                    csvContent += `"${insight}"\r\n`;
+                  });
+                  
+                  // Create download link
+                  const encodedUri = encodeURI(csvContent);
+                  const link = document.createElement("a");
+                  link.setAttribute("href", encodedUri);
+                  link.setAttribute("download", `procurement_report_${new Date().toISOString().slice(0, 10)}.csv`);
+                  document.body.appendChild(link);
+                  
+                  // Trigger download
+                  link.click();
+                  
+                  // Clean up
+                  document.body.removeChild(link);
                   
                   // Reset button
                   if (button) {
