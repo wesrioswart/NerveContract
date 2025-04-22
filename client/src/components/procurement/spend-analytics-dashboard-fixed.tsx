@@ -33,7 +33,8 @@ import {
   Check,
   ExternalLink,
   LayoutList,
-  RotateCcw
+  RotateCcw,
+  Table
 } from "lucide-react";
 import { 
   Dialog, 
@@ -301,6 +302,381 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
   const openDetailedBreakdown = (type: 'weekly' | 'monthly' | 'category') => {
     setBreakdownType(type);
     setDetailedBreakdownOpen(true);
+    
+    // For logging purposes
+    console.log(`Opening detailed breakdown for ${type}`);
+  };
+  
+  // Get detailed breakdown content based on type
+  const getDetailedBreakdownContent = () => {
+    switch (breakdownType) {
+      case 'weekly':
+        return (
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-base font-semibold mb-3">Weekly Spend Detailed Analysis</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Comprehensive breakdown of weekly spend patterns with project allocation and cost category analysis.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                {/* Project-based analysis */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Spend by Project</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      {['Project Alpha', 'Project Beta', 'Project Gamma', 'Other Projects'].map((project, i) => (
+                        <div key={i} className="flex justify-between items-center">
+                          <span className="text-xs">{project}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium">
+                              {formatCurrency(Math.round(40000 - i * 8000))}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {Math.round(35 - i * 7)}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Spend by GPSMACS code */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Spend by GPSMACS Code</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      {['L.3.400.10', 'G.2.100.30', 'P.1.200.40', 'S.5.300.20'].map((code, i) => (
+                        <div key={i} className="flex justify-between items-center">
+                          <span className="text-xs">{code}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium">
+                              {formatCurrency(Math.round(35000 - i * 7000))}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {Math.round(30 - i * 6)}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Anomaly Analysis */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Anomaly Analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      {spendData.weeklySpend.filter(week => week.hasAnomaly).map((week, i) => (
+                        <div key={i} className="flex items-start border-b border-border/40 pb-2">
+                          <div className="rounded-full p-1 bg-red-100 mr-2 mt-0.5">
+                            <AlertCircle className="h-3 w-3 text-red-500" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium">{week.week}: {formatCurrency(week.amount)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {week.week === 'Week 4' 
+                                ? 'Unusual spike in material purchases' 
+                                : 'Significant deviation from historical pattern'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Time-based Analysis */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Time-based Analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs">Avg. Weekly Spend</span>
+                        <span className="text-xs font-medium">{formatCurrency(78500)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs">Weekly Growth</span>
+                        <div className="flex items-center">
+                          <TrendingUp className="h-3 w-3 text-red-500 mr-1" />
+                          <span className="text-xs text-red-500">+8.2%</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs">Peak Day</span>
+                        <span className="text-xs font-medium">Wednesday</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs">Forecast Accuracy</span>
+                        <span className="text-xs font-medium">92%</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        );
+      case 'monthly':
+        return (
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-base font-semibold mb-3">Monthly Spend Detailed Analysis</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Comprehensive breakdown of monthly spend patterns with trend analysis and category insights.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                {/* Supplier Analysis */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Top Suppliers</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      {['BuildMaster Supplies', 'TechnoConstruct', 'EcoMaterials', 'SafetyFirst'].map((supplier, i) => (
+                        <div key={i} className="flex justify-between items-center">
+                          <span className="text-xs">{supplier}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium">
+                              {formatCurrency(Math.round(120000 - i * 25000))}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {Math.round(32 - i * 6)}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Budget vs Actual */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Budget vs Actual</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      {spendData.monthlySpend.map((month, i) => (
+                        <div key={i} className="flex justify-between items-center">
+                          <span className="text-xs">{month.month}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium">{formatCurrency(month.amount)}</span>
+                            <span className={`text-xs ${
+                              i % 2 === 0 ? 'text-green-500' : 'text-red-500'
+                            }`}>
+                              {i % 2 === 0 ? '-4.2%' : '+7.8%'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Category Trends */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Category Trends</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      {['Materials', 'Equipment', 'Labor', 'Services'].map((category, i) => (
+                        <div key={i} className="flex justify-between items-center">
+                          <span className="text-xs">{category}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium">
+                              {i % 2 === 0 ? 'Increasing' : 'Decreasing'}
+                            </span>
+                            <span className={`text-xs ${
+                              i % 2 === 0 ? 'text-red-500' : 'text-green-500'
+                            }`}>
+                              {i % 2 === 0 ? '+12%' : '-8%'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Financial Metrics */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Financial Metrics</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs">Monthly Average</span>
+                        <span className="text-xs font-medium">{formatCurrency(342500)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs">YTD Total</span>
+                        <span className="text-xs font-medium">{formatCurrency(2740000)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs">Forecast Q4</span>
+                        <div className="flex items-center">
+                          <TrendingUp className="h-3 w-3 text-red-500 mr-1" />
+                          <span className="text-xs text-red-500">+15.3%</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs">Cost Saving Target</span>
+                        <span className="text-xs font-medium">{formatCurrency(180000)}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        );
+      case 'category':
+      default:
+        return (
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-base font-semibold mb-3">Category Spend Detailed Analysis</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Comprehensive breakdown of category-based spend with trend analysis and procurement insights.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                {/* Category Details */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Category Breakdown</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      {spendData.categoryBreakdown.map((category, i) => (
+                        <div key={i} className="flex justify-between items-center">
+                          <span className="text-xs">{category.category}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium">
+                              {formatCurrency(category.amount)}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {category.percentage}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Subcategory Analysis */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Subcategory Analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      {['Concrete Materials', 'Structural Steel', 'Electrical Components', 'HVAC Systems'].map((subcategory, i) => (
+                        <div key={i} className="flex justify-between items-center">
+                          <span className="text-xs">{subcategory}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium">
+                              {formatCurrency(Math.round(85000 - i * 15000))}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {Math.round(22 - i * 4)}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Supplier Comparison */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Supplier Comparison</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      {['BuildMaster', 'EcoMaterials', 'TechnoConstruct', 'SafetyFirst'].map((supplier, i) => (
+                        <div key={i} className="flex justify-between items-center">
+                          <span className="text-xs">{supplier}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium">
+                              {formatCurrency(Math.round(65000 - i * 12000))}
+                            </span>
+                            <span className={`text-xs ${
+                              i === 1 || i === 3 ? 'text-green-500' : 'text-red-500'
+                            }`}>
+                              {i === 1 || i === 3 ? '-7.2%' : '+5.8%'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Optimization Opportunities */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Optimization Opportunities</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      <div className="flex items-start border-b border-border/40 pb-2">
+                        <div className="rounded-full p-1 bg-green-100 mr-2 mt-0.5">
+                          <Lightbulb className="h-3 w-3 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium">Materials Consolidation</p>
+                          <p className="text-xs text-muted-foreground">
+                            Potential savings of £45,000 through order consolidation
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start border-b border-border/40 pb-2">
+                        <div className="rounded-full p-1 bg-green-100 mr-2 mt-0.5">
+                          <Lightbulb className="h-3 w-3 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium">Supplier Negotiation</p>
+                          <p className="text-xs text-muted-foreground">
+                            Identify 3 suppliers for price negotiation based on volume
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <div className="rounded-full p-1 bg-green-100 mr-2 mt-0.5">
+                          <Lightbulb className="h-3 w-3 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium">Inventory Optimization</p>
+                          <p className="text-xs text-muted-foreground">
+                            Reduce carrying costs by implementing just-in-time delivery
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        );
+    }
   };
 
   return (
@@ -1112,7 +1488,7 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
 
       {/* Detailed Breakdown Modal */}
       <Dialog open={detailedBreakdownOpen} onOpenChange={setDetailedBreakdownOpen}>
-        <DialogContent className="sm:max-w-4xl">
+        <DialogContent className="sm:max-w-5xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center">
               {breakdownType === 'weekly' && (
@@ -1138,141 +1514,23 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
               Comprehensive analysis of procurement spend patterns
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-4">
-            {/* Main visualization */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="border rounded-lg p-4 h-[300px] flex items-center justify-center">
-                {/* Placeholder for detailed chart - would use a real chart library in production */}
-                <div className="text-center text-muted-foreground">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                  <p>Detailed data visualization would appear here</p>
-                  <p className="text-xs">Using a chart library like Recharts or Chart.js</p>
-                </div>
-              </div>
-              
-              <div className="border rounded-lg p-4">
-                <h3 className="text-sm font-medium mb-3">Trend Analysis</h3>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left font-medium py-2 px-3">Period</th>
-                      <th className="text-right font-medium py-2 px-3">Amount</th>
-                      <th className="text-right font-medium py-2 px-3">Change</th>
-                      <th className="text-right font-medium py-2 px-3">vs. Budget</th>
-                      <th className="text-center font-medium py-2 px-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* Sample data rows - would be dynamic in production */}
-                    <tr className="border-b border-muted/30">
-                      <td className="py-2 px-3">Week 4</td>
-                      <td className="text-right py-2 px-3">£22,100</td>
-                      <td className="text-right py-2 px-3 text-red-500">+125.5%</td>
-                      <td className="text-right py-2 px-3 text-red-500">+32.4%</td>
-                      <td className="text-center py-2 px-3">
-                        <Badge variant="outline" className="bg-red-500/10 text-red-500">Anomaly</Badge>
-                      </td>
-                    </tr>
-                    <tr className="border-b border-muted/30">
-                      <td className="py-2 px-3">Week 5</td>
-                      <td className="text-right py-2 px-3">£10,350</td>
-                      <td className="text-right py-2 px-3 text-green-500">-53.2%</td>
-                      <td className="text-right py-2 px-3 text-green-500">-12.1%</td>
-                      <td className="text-center py-2 px-3">
-                        <Badge variant="outline" className="bg-green-500/10 text-green-500">Under Budget</Badge>
-                      </td>
-                    </tr>
-                    <tr className="border-b border-muted/30">
-                      <td className="py-2 px-3">Week 6</td>
-                      <td className="text-right py-2 px-3">£11,250</td>
-                      <td className="text-right py-2 px-3 text-green-500">+8.7%</td>
-                      <td className="text-right py-2 px-3 text-green-500">-6.3%</td>
-                      <td className="text-center py-2 px-3">
-                        <Badge variant="outline" className="bg-green-500/10 text-green-500">Under Budget</Badge>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            
-            {/* Sidebar with additional metrics */}
-            <div className="space-y-4">
-              <div className="border rounded-lg p-4">
-                <h3 className="text-sm font-medium mb-3 flex items-center">
-                  <Info className="h-4 w-4 mr-1.5 text-muted-foreground" />
-                  Key Metrics
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Total Spend</span>
-                      <span className="font-medium">£115,380</span>
-                    </div>
-                    <Progress value={72} className="h-1.5 mt-1" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">vs Budget</span>
-                      <span className="font-medium text-amber-500">+4.2%</span>
-                    </div>
-                    <Progress value={104.2} max={200} className="h-1.5 mt-1" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">vs Last Period</span>
-                      <span className="font-medium text-red-500">+12.8%</span>
-                    </div>
-                    <Progress value={112.8} max={200} className="h-1.5 mt-1" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="border rounded-lg p-4">
-                <h3 className="text-sm font-medium mb-3 flex items-center">
-                  <Lightbulb className="h-4 w-4 mr-1.5 text-amber-500" />
-                  AI Insights
-                </h3>
-                <div className="space-y-3 text-sm">
-                  <div className="p-2 bg-muted/50 rounded-md">
-                    <p>Unusual spending pattern detected week-over-week, with a notable spike in Week 4.</p>
-                  </div>
-                  <div className="p-2 bg-muted/50 rounded-md">
-                    <p>Category breakdown shows Materials consistently representing the largest expense segment.</p>
-                  </div>
-                  <div className="p-2 bg-muted/50 rounded-md">
-                    <p>May forecast predicts decreased spending as major material purchases have been completed.</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="border rounded-lg p-4">
-                <h3 className="text-sm font-medium mb-3 flex items-center">
-                  <ArrowDown className="h-4 w-4 mr-1.5 text-green-500" />
-                  Savings Opportunities
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Bulk ordering</span>
-                    <span className="font-medium">£4,200</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Early payment</span>
-                    <span className="font-medium">£1,850</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Supplier consolidation</span>
-                    <span className="font-medium">£7,300</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          
+          <div className="py-4">
+            {getDetailedBreakdownContent()}
           </div>
-          <DialogFooter>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <Download className="h-4 w-4" />
-              Export Details
-            </Button>
+          
+          <DialogFooter className="flex justify-between">
+            <div className="flex space-x-2">
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => alert('Report exported to PDF')}>
+                <Download className="h-4 w-4" />
+                Export as PDF
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => alert('Data exported to Excel')}>
+                <Table className="h-4 w-4" />
+                Export to Excel
+              </Button>
+            </div>
+            <Button size="sm" onClick={() => setDetailedBreakdownOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
