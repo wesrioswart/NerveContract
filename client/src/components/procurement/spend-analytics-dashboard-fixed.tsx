@@ -855,13 +855,13 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                 {/* View Detailed Breakdown Button for Weekly */}
                 <div className="absolute top-0 right-0">
                   <Button 
-                    variant="ghost" 
+                    variant="outline" 
                     size="sm" 
-                    className="text-xs h-7"
+                    className="text-xs h-7 bg-primary/10 hover:bg-primary/20 border-primary/20"
                     onClick={() => openDetailedBreakdown('weekly')}
                   >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Details
+                    <PieChart className="h-3 w-3 mr-1" />
+                    Detailed Breakdown
                   </Button>
                 </div>
                 
@@ -949,13 +949,13 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                 {/* View Detailed Breakdown Button for Monthly */}
                 <div className="absolute top-0 right-0">
                   <Button 
-                    variant="ghost" 
+                    variant="outline" 
                     size="sm" 
-                    className="text-xs h-7"
+                    className="text-xs h-7 bg-secondary/10 hover:bg-secondary/20 border-secondary/20"
                     onClick={() => openDetailedBreakdown('monthly')}
                   >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Details
+                    <PieChart className="h-3 w-3 mr-1" />
+                    Detailed Breakdown
                   </Button>
                 </div>
                 
@@ -1056,13 +1056,13 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                 {/* View Detailed Breakdown Button for Category */}
                 <div className="absolute top-0 right-0">
                   <Button 
-                    variant="ghost" 
+                    variant="outline" 
                     size="sm" 
-                    className="text-xs h-7"
+                    className="text-xs h-7 bg-primary/10 hover:bg-primary/20 border-primary/20"
                     onClick={() => openDetailedBreakdown('category')}
                   >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Details
+                    <PieChart className="h-3 w-3 mr-1" />
+                    Detailed Breakdown
                   </Button>
                 </div>
               </div>
