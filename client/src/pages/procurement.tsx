@@ -125,53 +125,114 @@ export default function Procurement() {
     return `£${(value / 100).toFixed(2)}`;
   };
 
-  // Function to download file in two steps
-  const downloadFileFromServer = async (format: string) => {
+  // SVG templates for button states
+  const SVG_ICONS = {
+    loading: `<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`,
+    document: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>'
+  };
+
+  // Report configuration (could be passed as parameters)
+  const REPORT_CONFIG = {
+    type: 'Detailed Breakdown',
+    dateRange: 'Jan 2023 - Apr 2023',
+    resetTimeout: 2000,  // ms before resetting button
+    cleanupTimeout: 5000 // ms before cleaning up iframe
+  };
+
+  // Error types - for more specific error handling
+  enum DownloadError {
+    NETWORK = 'network',
+    SERVER = 'server',
+    UNKNOWN = 'unknown'
+  }
+
+  // Function to download file directly
+  const downloadFileFromServer = async (format: 'pdf' | 'csv'): Promise<void> => {
+    // Find export button once to avoid repeated lookups
+    const button = document.querySelector('[data-export-button]') as HTMLElement;
+    
     try {
       // Show loading state
-      const button = document.querySelector('[data-export-button]');
       if (button) {
-        button.innerHTML = `<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating ${format.toUpperCase()}...`;
+        button.innerHTML = `${SVG_ICONS.loading} Generating ${format.toUpperCase()}...`;
       }
       
-      // Step 1: Request the download URL
-      const response = await fetch('/api/export/procurement-report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reportType: 'Detailed Breakdown',
-          dateRange: 'Jan 2023 - Apr 2023',
-          format
-        })
+      // Create a hidden iframe to handle the download
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      
+      if (!iframe.contentDocument) {
+        throw new Error('Failed to create iframe document');
+      }
+      
+      // Create a form in the iframe
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/api/export/procurement-report';
+      form.target = '_blank'; // Open in new tab
+      
+      // Create form inputs with report parameters
+      const formInputs: Array<{name: string, value: string}> = [
+        { name: 'format', value: format },
+        { name: 'reportType', value: REPORT_CONFIG.type },
+        { name: 'dateRange', value: REPORT_CONFIG.dateRange }
+      ];
+      
+      // Add all inputs to form
+      formInputs.forEach(input => {
+        const inputElement = document.createElement('input');
+        inputElement.type = 'hidden';
+        inputElement.name = input.name;
+        inputElement.value = input.value;
+        form.appendChild(inputElement);
       });
       
-      const data = await response.json();
+      // Append the form to the iframe and submit it
+      iframe.contentDocument.body.appendChild(form);
       
-      if (!data.success || !data.downloadUrl) {
-        throw new Error(`Failed to generate report: ${data.message || 'Unknown error'}`);
-      }
+      // Add listener to detect error in iframe loading
+      iframe.onerror = () => {
+        throw new Error('Failed to load download frame');
+      };
       
-      // Step 2: Trigger the download by opening the URL in a new window/tab
-      // Using window.open ensures browser security policies are respected 
-      // while allowing for direct download
-      window.open(data.downloadUrl, '_blank');
+      // Submit the form to trigger download
+      form.submit();
       
-      // Reset button after short delay
+      // Reset button after configured delay
       setTimeout(() => {
         if (button) {
-          button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
+          button.innerHTML = `${SVG_ICONS.document} Export Full Report`;
         }
-      }, 2000);
+        
+        // Clean up the iframe after ensuring download has started
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, REPORT_CONFIG.cleanupTimeout);
+      }, REPORT_CONFIG.resetTimeout);
     } catch (error) {
       console.error(`Error generating ${format} report:`, error);
-      alert(`Failed to generate ${format} report. Please try again later.`);
+      
+      // Determine error type for more specific messaging
+      let errorType = DownloadError.UNKNOWN;
+      if (error instanceof TypeError && error.message.includes('network')) {
+        errorType = DownloadError.NETWORK;
+      } else if (error instanceof Error && error.message.includes('server')) {
+        errorType = DownloadError.SERVER;
+      }
+      
+      // Show appropriate error message based on error type
+      const errorMessages = {
+        [DownloadError.NETWORK]: `Network error while generating ${format} report. Please check your connection.`,
+        [DownloadError.SERVER]: `Server error while generating ${format} report. Please try again later.`,
+        [DownloadError.UNKNOWN]: `Failed to generate ${format} report. Please try again later.`
+      };
+      
+      alert(errorMessages[errorType]);
       
       // Reset button
-      const button = document.querySelector('[data-export-button]');
       if (button) {
-        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
+        button.innerHTML = `${SVG_ICONS.document} Export Full Report`;
       }
     }
   };

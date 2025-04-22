@@ -1,90 +1,209 @@
 import { Request, Response } from 'express';
-import * as fs from 'fs';
-import * as path from 'path';
 
-// Improved export function to prevent virus detection issues
-export async function exportProcurementReport(req: Request, res: Response) {
+// Define allowed export formats and their content types
+type ExportFormat = 'pdf' | 'csv';
+
+interface FormatConfig {
+  contentType: string;
+  fileExtension: string;
+  fileName: string;
+}
+
+// Format configurations
+const EXPORT_FORMATS: Record<ExportFormat, FormatConfig> = {
+  pdf: {
+    contentType: 'application/pdf',
+    fileExtension: 'pdf',
+    fileName: 'procurement_report'
+  },
+  csv: {
+    contentType: 'text/csv',
+    fileExtension: 'csv',
+    fileName: 'procurement_report'
+  }
+};
+
+/**
+ * Generate and send a report directly to the client
+ * @param req Express request object
+ * @param res Express response object
+ */
+export async function exportProcurementReport(req: Request, res: Response): Promise<void> {
   try {
-    const { format } = req.body;
+    const { format, reportType, dateRange } = req.body;
     
-    // Instead of sending the file directly, return a JSON response with success info
-    // This is what the frontend expects
-    if (format === 'pdf' || format === 'csv') {
-      // Return success with a dummy download URL
-      // The actual download will happen in a separate request
-      const timestamp = Date.now();
-      const downloadUrl = `/api/download/${format}/procurement_report_${timestamp}.${format}`;
-      
-      return res.status(200).json({
-        success: true,
-        downloadUrl,
-        format,
-        message: 'Report generated successfully'
+    // Validate format
+    if (!format || !EXPORT_FORMATS[format as ExportFormat]) {
+      res.status(400).json({ 
+        error: "Invalid format. Use 'pdf' or 'csv'.", 
+        success: false 
       });
-    } else {
-      res.status(400).json({ error: "Invalid format. Use 'pdf' or 'csv'.", success: false });
+      return;
+    }
+    
+    const formatConfig = EXPORT_FORMATS[format as ExportFormat];
+    
+    // Set appropriate headers for file download
+    res.setHeader('Content-Type', formatConfig.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${formatConfig.fileName}.${formatConfig.fileExtension}"`);
+    
+    // Log the export attempt
+    console.log(`Generating ${format} report - Type: ${reportType || 'General'}, Date Range: ${dateRange || 'All time'}`);
+    
+    if (format === 'pdf') {
+      await generatePDFReport(res, { reportType, dateRange });
+    } else if (format === 'csv') {
+      await generateCSVReport(res, { reportType, dateRange });
     }
   } catch (error) {
     console.error('Error generating report:', error);
-    res.status(500).json({ 
-      error: 'Failed to generate report', 
-      success: false,
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
+    
+    // Only send error response if headers haven't been sent yet
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Failed to generate report', 
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    } else {
+      // Otherwise end the response
+      res.end();
+    }
   }
 }
 
-// Separate download endpoint for PDF and CSV files
-export async function downloadReport(req: Request, res: Response) {
+/**
+ * Generate a PDF report using PDFKit
+ */
+async function generatePDFReport(res: Response, options: { reportType?: string, dateRange?: string }): Promise<void> {
+  // Import PDFDocument dynamically
+  const PDFDocument = await import('pdfkit').then(mod => mod.default);
+  
+  // Create a PDF document piped directly to the response
+  const doc = new PDFDocument();
+  
+  // Handle stream errors
+  doc.on('error', (err: Error) => {
+    console.error('Error generating PDF:', err);
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Failed to generate PDF report', 
+        success: false 
+      });
+    } else {
+      res.end();
+    }
+  });
+  
+  // Pipe the PDF document directly to the response
+  doc.pipe(res);
+  
+  // Add content to PDF
+  doc.fontSize(25).text('Procurement Report', 100, 80);
+  
+  // Add report details if provided
+  if (options.reportType || options.dateRange) {
+    const reportDetails = [];
+    if (options.reportType) reportDetails.push(`Report Type: ${options.reportType}`);
+    if (options.dateRange) reportDetails.push(`Date Range: ${options.dateRange}`);
+    
+    doc.fontSize(12).text(reportDetails.join(' | '), 100, 115);
+  }
+  
+  doc.fontSize(15).text('NEC4 Contract Manager', 100, 140);
+  doc.moveDown();
+  doc.moveDown();
+  
+  // Add some table data
+  doc.fontSize(12);
+  
+  // Table header in bold 
+  doc.font('Helvetica-Bold');
+  doc.text('Project', 100, 180);
+  doc.text('Value', 300, 180);
+  doc.font('Helvetica'); // Reset to regular font
+  
+  // Table rows
+  const tableData = [
+    { project: 'Project 1', value: '£12,000' },
+    { project: 'Project 2', value: '£18,000' },
+    { project: 'Project 3', value: '£15,000' }
+  ];
+  
+  let y = 200;
+  tableData.forEach(row => {
+    doc.text(row.project, 100, y);
+    doc.text(row.value, 300, y);
+    y += 20;
+  });
+  
+  // Add totals
+  doc.moveDown(2);
+  doc.font('Helvetica-Bold');
+  doc.text('Total Value:', 100, y + 20);
+  doc.text('£45,000', 300, y + 20);
+  
+  // Add footer with timestamp
+  const now = new Date();
+  doc.fontSize(10).text(
+    `Generated: ${now.toLocaleDateString()} at ${now.toLocaleTimeString()}`,
+    100, 700
+  );
+  
+  // Finalize the PDF
+  doc.end();
+}
+
+/**
+ * Generate a CSV report
+ */
+async function generateCSVReport(res: Response, options: { reportType?: string, dateRange?: string }): Promise<void> {
+  // In a real implementation, we might use a CSV library and real data here
+  let csvContent = 'Project,Value\n';
+  
+  // Generate CSV content
+  const rowData = [
+    { project: 'Project 1', value: '£12000' },
+    { project: 'Project 2', value: '£18000' },
+    { project: 'Project 3', value: '£15000' }
+  ];
+  
+  rowData.forEach(row => {
+    csvContent += `${row.project},${row.value}\n`;
+  });
+  
+  // Add a total row
+  csvContent += 'Total,£45000\n';
+  
+  // Send the CSV data
+  res.send(csvContent);
+}
+
+/**
+ * Legacy download endpoint (kept for backward compatibility)
+ */
+export async function downloadReport(req: Request, res: Response): Promise<void> {
   try {
     const { format } = req.params;
     
-    if (format === 'pdf') {
-      // For PDF, generate it on the fly
-      const { default: PDFDocument } = await import('pdfkit');
-      
-      // Set appropriate headers for file download
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename="procurement_report.pdf"');
-      
-      // Create a PDF document piped directly to the response
-      const doc = new PDFDocument();
-      doc.pipe(res);
-      
-      // Add content to PDF
-      doc.fontSize(25).text('Procurement Report', 100, 80);
-      doc.fontSize(15).text('Sample data for testing purposes only', 100, 120);
-      
-      // Add some table data
-      doc.fontSize(12);
-      doc.text('Project', 100, 180);
-      doc.text('Value', 300, 180);
-      
-      doc.text('Project 1', 100, 200);
-      doc.text('£12,000', 300, 200);
-      
-      doc.text('Project 2', 100, 220);
-      doc.text('£18,000', 300, 220);
-      
-      doc.text('Project 3', 100, 240);
-      doc.text('£15,000', 300, 240);
-      
-      // Finalize the PDF and end the response
-      doc.end();
-      
-    } else if (format === 'csv') {
-      // For CSV, send the content directly
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', 'attachment; filename="procurement_report.csv"');
-      
-      const csvData = 'Project,Value\nProject 1,£12000\nProject 2,£18000\nProject 3,£15000';
-      res.send(csvData);
-      
+    if (format === 'pdf' || format === 'csv') {
+      // Use the standard export function but pass the format from URL params
+      await exportProcurementReport({
+        ...req, 
+        body: { ...req.body, format }
+      }, res);
     } else {
-      res.status(400).json({ error: "Invalid format. Use 'pdf' or 'csv'." });
+      res.status(400).json({ 
+        error: "Invalid format. Use 'pdf' or 'csv'.",
+        success: false
+      });
     }
   } catch (error) {
     console.error('Error downloading report:', error);
-    res.status(500).send('Failed to download report. Please try again.');
+    if (!res.headersSent) {
+      res.status(500).send('Failed to download report. Please try again.');
+    } else {
+      res.end();
+    }
   }
 }
