@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Select, 
@@ -789,10 +790,33 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Comparison mode" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No comparison</SelectItem>
-                      <SelectItem value="previous-period">vs. Previous period</SelectItem>
-                      <SelectItem value="budget">vs. Budget</SelectItem>
+                    <SelectContent className="w-[240px]">
+                      <div className="px-1 py-1">
+                        <h4 className="text-xs font-semibold mb-1 text-muted-foreground px-2">Select comparison type</h4>
+                        <Separator className="my-1" />
+                        <div className="py-1">
+                          <SelectItem value="none" className="flex items-center">
+                            <div className="flex items-center">
+                              <Check className={`mr-2 h-4 w-4 ${comparisonMode === 'none' ? 'opacity-100' : 'opacity-0'}`} />
+                              <span>No comparison</span>
+                            </div>
+                          </SelectItem>
+                          
+                          <SelectItem value="previous-period" className="flex items-center">
+                            <div className="flex items-center">
+                              <Check className={`mr-2 h-4 w-4 ${comparisonMode === 'previous-period' ? 'opacity-100' : 'opacity-0'}`} />
+                              <span>vs. Previous period</span>
+                            </div>
+                          </SelectItem>
+                          
+                          <SelectItem value="budget" className="flex items-center">
+                            <div className="flex items-center">
+                              <Check className={`mr-2 h-4 w-4 ${comparisonMode === 'budget' ? 'opacity-100' : 'opacity-0'}`} />
+                              <span>vs. Budget</span>
+                            </div>
+                          </SelectItem>
+                        </div>
+                      </div>
                     </SelectContent>
                   </Select>
                 </div>
@@ -800,6 +824,65 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
             </div>
           )}
           
+          {/* Comparison selector */}
+          <div className="mt-4 pt-4 border-t border-border/40">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center">
+                <div className="mr-3">
+                  <h3 className="text-sm font-medium flex items-center">
+                    <PieChart className="h-4 w-4 mr-1.5 text-primary" />
+                    Comparison
+                  </h3>
+                </div>
+                <Select 
+                  value={comparisonMode} 
+                  onValueChange={(value) => setComparisonMode(value as 'previous-period' | 'budget' | 'none')}
+                >
+                  <SelectTrigger className="h-8 text-xs w-[180px] bg-muted/20">
+                    <SelectValue placeholder="Select comparison" />
+                  </SelectTrigger>
+                  <SelectContent className="w-[240px]">
+                    <div className="px-1 py-1">
+                      <h4 className="text-xs font-semibold mb-1 text-muted-foreground px-2">Select comparison type</h4>
+                      <Separator className="my-1" />
+                      <div className="py-1">
+                        <SelectItem value="none" className="flex items-center">
+                          <div className="flex items-center">
+                            <Check className={`mr-2 h-4 w-4 ${comparisonMode === 'none' ? 'opacity-100' : 'opacity-0'}`} />
+                            <span>No comparison</span>
+                          </div>
+                        </SelectItem>
+                        
+                        <SelectItem value="previous-period" className="flex items-center">
+                          <div className="flex items-center">
+                            <Check className={`mr-2 h-4 w-4 ${comparisonMode === 'previous-period' ? 'opacity-100' : 'opacity-0'}`} />
+                            <span>vs. Previous period</span>
+                          </div>
+                        </SelectItem>
+                        
+                        <SelectItem value="budget" className="flex items-center">
+                          <div className="flex items-center">
+                            <Check className={`mr-2 h-4 w-4 ${comparisonMode === 'budget' ? 'opacity-100' : 'opacity-0'}`} />
+                            <span>vs. Budget</span>
+                          </div>
+                        </SelectItem>
+                      </div>
+                    </div>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {comparisonMode !== 'none' && (
+                <div className="bg-primary/5 border border-primary/10 rounded-md py-1 px-3 flex items-center">
+                  <span className="text-xs font-medium mr-2">Currently comparing:</span>
+                  <Badge variant="outline" className="bg-primary/10 text-xs font-normal">
+                    {comparisonMode === 'previous-period' ? 'vs. Previous period' : 'vs. Budget'}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Tabs for different views */}
           <div className="mt-4">
             <Tabs defaultValue="weekly" className="w-full">
