@@ -1306,122 +1306,126 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     });
   });
   
-  // Direct export endpoint that handles both generation and downloading
+  // Create reports directory using the imported fs and path modules
+  
+  // Create a directory for storing reports
+  const reportDir = path.join(process.cwd(), 'tmp', 'reports');
+  if (!fs.existsSync(reportDir)) {
+    fs.mkdirSync(reportDir, { recursive: true });
+  }
+  
+  // Prepare report data
+  const getProcurementReportData = (reportType: string, dateRange?: string) => {
+    return {
+      title: `Procurement ${reportType} Report`,
+      generatedAt: new Date().toISOString(),
+      dateRange: dateRange || `${new Date().toLocaleDateString()} - ${new Date().toLocaleDateString()}`,
+      summary: {
+        totalSpend: 245210,
+        projects: [
+          { 
+            name: "Westfield Development",
+            spend: 122450,
+            percentageOfTotal: 49.8
+          },
+          { 
+            name: "Littlebrook",
+            spend: 75780,
+            percentageOfTotal: 30.9
+          },
+          { 
+            name: "Corys",
+            spend: 46980,
+            percentageOfTotal: 19.3
+          }
+        ],
+        gpsmacsCodes: [
+          {
+            code: "5000-5999",
+            name: "Materials",
+            spend: 103000,
+            percentage: 42
+          },
+          {
+            code: "6000-6999",
+            name: "Plant",
+            spend: 68700,
+            percentage: 28
+          },
+          {
+            code: "7000-7999",
+            name: "Tools",
+            spend: 44100,
+            percentage: 18
+          },
+          {
+            code: "8000-8999",
+            name: "PPE",
+            spend: 29410,
+            percentage: 12
+          }
+        ],
+        topSuppliers: [
+          {
+            name: "BuildMaster Supplies Ltd",
+            spend: 56780,
+            poCount: 4,
+            avgPoValue: 14195,
+            percentageOfTotal: 23.1
+          },
+          {
+            name: "Concrete Express",
+            spend: 42350,
+            poCount: 2,
+            avgPoValue: 21175,
+            percentageOfTotal: 17.2
+          },
+          {
+            name: "FastTrack Equipment Hire",
+            spend: 38450,
+            poCount: 3,
+            avgPoValue: 12817,
+            percentageOfTotal: 15.6
+          }
+        ],
+        monthlyTrend: [
+          { month: "Jan", spend: 42300 },
+          { month: "Feb", spend: 36800 },
+          { month: "Mar", spend: 51200 },
+          { month: "Apr", spend: 38900 }
+        ]
+      },
+      insights: [
+        "56% of spend is concentrated with the top 3 suppliers",
+        "Materials represent the highest category of spend at 42%",
+        "Average PO approval time is 1.8 days",
+        "Average delivery time is 5.4 days",
+        "GPSMACS-compliant supplier spend has increased by 14%",
+        "Potential savings of £15,800 through supplier consolidation"
+      ]
+    };
+  };
+  
+  // Step 1: First endpoint to prepare the data and return the download URL
   app.post("/api/export/procurement-report", requireAuth, async (req: Request, res: Response) => {
     try {
       const { reportType, dateRange, format } = req.body;
       
-      // For API clients that need the URL, not direct download
-      const isRequestingUrl = req.query.getUrl === 'true';
-      
-      // Generate report data - same for both formats
-      const reportData = {
-        title: `Procurement ${reportType} Report`,
-        generatedAt: new Date().toISOString(),
-        dateRange: dateRange || `${new Date().toLocaleDateString()} - ${new Date().toLocaleDateString()}`,
-        summary: {
-          totalSpend: 245210,
-          projects: [
-            { 
-              name: "Westfield Development",
-              spend: 122450,
-              percentageOfTotal: 49.8
-            },
-            { 
-              name: "Littlebrook",
-              spend: 75780,
-              percentageOfTotal: 30.9
-            },
-            { 
-              name: "Corys",
-              spend: 46980,
-              percentageOfTotal: 19.3
-            }
-          ],
-          gpsmacsCodes: [
-            {
-              code: "5000-5999",
-              name: "Materials",
-              spend: 103000,
-              percentage: 42
-            },
-            {
-              code: "6000-6999",
-              name: "Plant",
-              spend: 68700,
-              percentage: 28
-            },
-            {
-              code: "7000-7999",
-              name: "Tools",
-              spend: 44100,
-              percentage: 18
-            },
-            {
-              code: "8000-8999",
-              name: "PPE",
-              spend: 29410,
-              percentage: 12
-            }
-          ],
-          topSuppliers: [
-            {
-              name: "BuildMaster Supplies Ltd",
-              spend: 56780,
-              poCount: 4,
-              avgPoValue: 14195,
-              percentageOfTotal: 23.1
-            },
-            {
-              name: "Concrete Express",
-              spend: 42350,
-              poCount: 2,
-              avgPoValue: 21175,
-              percentageOfTotal: 17.2
-            },
-            {
-              name: "FastTrack Equipment Hire",
-              spend: 38450,
-              poCount: 3,
-              avgPoValue: 12817,
-              percentageOfTotal: 15.6
-            }
-          ],
-          monthlyTrend: [
-            { month: "Jan", spend: 42300 },
-            { month: "Feb", spend: 36800 },
-            { month: "Mar", spend: 51200 },
-            { month: "Apr", spend: 38900 }
-          ]
-        },
-        insights: [
-          "56% of spend is concentrated with the top 3 suppliers",
-          "Materials represent the highest category of spend at 42%",
-          "Average PO approval time is 1.8 days",
-          "Average delivery time is 5.4 days",
-          "GPSMACS-compliant supplier spend has increased by 14%",
-          "Potential savings of £15,800 through supplier consolidation"
-        ]
-      };
-      
-      // If just requesting the URL (for web API clients)
-      if (isRequestingUrl) {
-        return res.json({
-          success: true,
-          message: 'Use direct POST with Accept header for file download',
-        });
+      if (format !== 'pdf' && format !== 'csv') {
+        return res.status(400).json({ error: "Invalid format. Use 'pdf' or 'csv'." });
       }
       
-      // Set filename for the report
-      const filename = `procurement_report_${new Date().toISOString().split('T')[0]}`;
+      // Generate a unique filename using timestamp
+      const timestamp = Date.now();
+      const filename = `procurement_report_${timestamp}.${format}`;
+      const filepath = path.join(reportDir, filename);
       
-      // Generate CSV
+      // Get the report data
+      const reportData = getProcurementReportData(reportType, dateRange);
+      
+      // Generate the file content
       if (format === 'csv') {
         const { stringify } = await import('csv-stringify/sync');
-        
-        // Set response headers for CSV download
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
         
         // Create CSV content - Header
         let rows = [
@@ -1473,7 +1477,7 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
         rows.push([]);
         
         // Monthly Trend section
-        rows.push(['Monthly Spend Trend']);
+        rows.push(['Monthly Trend']);
         rows.push(['Month', 'Spend (£)']);
         reportData.summary.monthlyTrend.forEach(month => {
           rows.push([month.month, `£${(month.spend / 100).toFixed(2)}`]);
@@ -1486,23 +1490,23 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
           rows.push([insight]);
         });
         
-        // Convert rows to CSV string and send as response
+        // Convert rows to CSV string
         const csvContent = stringify(rows);
-        return res.send(csvContent);
+        
+        // Save to file
+        fs.writeFileSync(filepath, csvContent);
       } 
-      // Generate PDF
       else if (format === 'pdf') {
         const PDFDocument = await import('pdfkit');
         
-        // Set response headers for PDF download
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}.pdf"`);
+        // Create a write stream to save the PDF
+        const writeStream = fs.createWriteStream(filepath);
         
         // Create a new PDF document
         const doc = new PDFDocument.default({ margin: 50 });
         
-        // Pipe the PDF directly to the response
-        doc.pipe(res);
+        // Pipe the PDF to the writeable stream
+        doc.pipe(writeStream);
         
         // Add content to the PDF
         // Header
@@ -1715,16 +1719,73 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
         
         // Finalize PDF
         doc.end();
-        return;
+        
+        // Wait for the file to be written
+        await new Promise<void>((resolve) => {
+          writeStream.on('finish', () => {
+            resolve();
+          });
+        });
       }
       
-      // If no format or invalid format specified
-      return res.status(400).json({ 
-        error: "Invalid format specified. Use 'pdf' or 'csv'."
+      // Return the download link
+      const displayFilename = format === 'pdf' ? 'procurement_report.pdf' : 'procurement_report.csv';
+      const downloadUrl = `/api/reports/download/${filename}?display=${displayFilename}`;
+      
+      return res.json({ 
+        success: true, 
+        downloadUrl, 
+        format,
+        message: 'Report generated successfully'
       });
+      
     } catch (error) {
       console.error("Error generating report:", error);
-      res.status(500).json({ error: "Failed to generate report" });
+      return res.status(500).json({ error: "Failed to generate report" });
+    }
+  });
+  
+  // Step 2: Second endpoint to download the file
+  app.get("/api/reports/download/:filename", (req: Request, res: Response) => {
+    try {
+      const { filename } = req.params;
+      const displayFilename = req.query.display as string || filename;
+      const filepath = path.join(reportDir, filename);
+      
+      // Check if file exists
+      if (!fs.existsSync(filepath)) {
+        return res.status(404).send('File not found. Please generate the report again.');
+      }
+      
+      // Set appropriate headers
+      const extension = path.extname(filename).toLowerCase();
+      if (extension === '.pdf') {
+        res.setHeader('Content-Type', 'application/pdf');
+      } else if (extension === '.csv') {
+        res.setHeader('Content-Type', 'text/csv');
+      } else {
+        res.setHeader('Content-Type', 'application/octet-stream');
+      }
+      
+      // Set Content-Disposition header
+      res.setHeader('Content-Disposition', `attachment; filename="${displayFilename}"`);
+      
+      // Stream the file instead of loading it all in memory
+      const fileStream = fs.createReadStream(filepath);
+      fileStream.pipe(res);
+      
+      // Delete file after sending to save space (optional)
+      fileStream.on('close', () => {
+        try {
+          fs.unlinkSync(filepath);
+        } catch (err) {
+          console.error('Error deleting temporary file:', err);
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error downloading report:", error);
+      res.status(500).send('Error downloading report. Please try again.');
     }
   });
 
