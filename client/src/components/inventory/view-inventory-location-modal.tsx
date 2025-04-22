@@ -78,9 +78,9 @@ export default function ViewInventoryLocationModal({ open, onClose, locationId }
     );
   }
 
-  const totalItems = location.stock.length;
-  const totalStock = location.stock.reduce((sum, item) => sum + item.quantity, 0);
-  const uniqueCategories = new Set(location.stock.map(item => item.category));
+  const totalItems = location.stock?.length || 0;
+  const totalStock = location.stock?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  const uniqueCategories = new Set(location.stock?.map(item => item.category) || []);
 
   return (
     <Dialog open={open} onOpenChange={open => !open && onClose()}>
@@ -159,7 +159,7 @@ export default function ViewInventoryLocationModal({ open, onClose, locationId }
         </div>
 
         {/* Inventory Items */}
-        {location.stock.length > 0 ? (
+        {(location.stock?.length || 0) > 0 ? (
           <div>
             <h3 className="font-semibold mb-3">Inventory Items</h3>
             <div className="border rounded-md overflow-hidden">
@@ -172,7 +172,7 @@ export default function ViewInventoryLocationModal({ open, onClose, locationId }
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {location.stock.map((item) => (
+                  {location.stock?.map((item) => (
                     <tr key={item.id}>
                       <td className="px-4 py-3">
                         <div className="flex items-start gap-2">
