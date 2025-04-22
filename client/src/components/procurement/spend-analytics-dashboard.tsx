@@ -598,6 +598,7 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
         
         <CardContent className="pt-6">
           <Tabs defaultValue="weekly">
+            
             {/* Weekly Spend Chart */}
             <TabsContent value="weekly" className="mt-0">
               <div className="relative h-[220px]">
