@@ -1315,7 +1315,37 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   app.post("/api/export/procurement-report", requireAuth, exportProcurementReport);
   
   // Step 2: Download the actual file from the generated URL
+  // Legacy endpoint for file downloads
   app.get("/api/download/:format/:filename", requireAuth, downloadReport);
+  
+  // Direct export endpoint for client-side convenience
+  app.get("/api/download/:format", requireAuth, async (req: Request, res: Response) => {
+    try {
+      // Extract query parameters
+      const { format } = req.params;
+      const { reportType, dateRange } = req.query;
+      
+      console.log(`Download requested: Format=${format}, Type=${reportType}, DateRange=${dateRange}`);
+      
+      // Create a modified request object with the parameters in the body
+      req.body = {
+        ...req.body,
+        format,
+        reportType: reportType || 'General',
+        dateRange: dateRange || 'All time'
+      };
+      
+      // Call the export function with the modified request
+      await exportProcurementReport(req, res);
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      if (!res.headersSent) {
+        res.status(500).send('Failed to download report. Please try again.');
+      } else {
+        res.end();
+      }
+    }
+  });
 
   // Z Clause Analysis Test route
   app.get("/api/test/z-clause-analysis", async (_req: Request, res: Response) => {

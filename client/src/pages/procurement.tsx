@@ -146,7 +146,7 @@ export default function Procurement() {
     UNKNOWN = 'unknown'
   }
 
-  // Function to download file directly
+  // Function to download file directly via window.open
   const downloadFileFromServer = async (format: 'pdf' | 'csv'): Promise<void> => {
     // Find export button once to avoid repeated lookups
     const button = document.querySelector('[data-export-button]') as HTMLElement;
@@ -160,44 +160,24 @@ export default function Procurement() {
         button.innerHTML = `${SVG_ICONS.loading} Generating ${format.toUpperCase()}...`;
       }
       
-      // Create a direct form submission approach (simpler and more reliable)
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = '/api/export/procurement-report';
-      form.target = '_blank'; // Open in new tab
-      form.style.display = 'none';
-      
-      // Create form inputs with report parameters
-      const formInputs: Array<{name: string, value: string}> = [
-        { name: 'format', value: format },
-        { name: 'reportType', value: REPORT_CONFIG.type },
-        { name: 'dateRange', value: REPORT_CONFIG.dateRange }
-      ];
-      
-      // Add all inputs to form
-      formInputs.forEach(input => {
-        const inputElement = document.createElement('input');
-        inputElement.type = 'hidden';
-        inputElement.name = input.name;
-        inputElement.value = input.value;
-        form.appendChild(inputElement);
+      // Create a direct URL with query parameters - much more reliable than form submission
+      const queryParams = new URLSearchParams({
+        format,
+        reportType: REPORT_CONFIG.type,
+        dateRange: REPORT_CONFIG.dateRange
       });
       
-      // Append form directly to document body and submit
-      document.body.appendChild(form);
-      console.log(`Submitting ${format} export form...`);
-      form.submit();
+      // Use the legacy endpoint which accepts parameters via URL
+      const downloadUrl = `/api/download/${format}?${queryParams.toString()}`;
+      
+      // This approach is most reliable across browsers
+      window.open(downloadUrl, '_blank');
       
       // Reset button after configured delay
       setTimeout(() => {
         if (button) {
           button.innerHTML = buttonOriginalHTML;
         }
-        
-        // Remove the form after a short delay
-        setTimeout(() => {
-          document.body.removeChild(form);
-        }, 500);
       }, REPORT_CONFIG.resetTimeout);
     } catch (error) {
       console.error(`Error generating ${format} report:`, error);
