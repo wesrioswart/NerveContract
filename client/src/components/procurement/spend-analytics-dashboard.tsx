@@ -49,7 +49,7 @@ import {
   TooltipTrigger 
 } from "@/components/ui/tooltip";
 
-// Enhanced data structure with more detailed information
+// Enhanced data structure with more detailed information to better demonstrate functionality
 const spendData = {
   weeklySpend: [
     { week: 'Week 1', amount: 12450, date: '01 Apr - 07 Apr' },
@@ -58,19 +58,23 @@ const spendData = {
     { week: 'Week 4', amount: 22100, date: '22 Apr - 28 Apr', hasAnomaly: true },
     { week: 'Week 5', amount: 10350, date: '29 Apr - 05 May' },
     { week: 'Week 6', amount: 16200, date: '06 May - 12 May' },
+    { week: 'Week 7', amount: 19300, date: '13 May - 19 May', hasAnomaly: true },
+    { week: 'Week 8', amount: 15700, date: '20 May - 26 May' },
   ],
   monthlySpend: [
     { month: 'Jan', amount: 42300, year: '2025', change: null },
     { month: 'Feb', amount: 36750, year: '2025', change: -13.1 },
     { month: 'Mar', amount: 51200, year: '2025', change: 39.3 },
-    { month: 'Apr', amount: 38900, year: '2025', change: -24.0 },
+    { month: 'Apr', amount: 58900, year: '2025', change: 15.0, hasAnomaly: true },
+    { month: 'May', amount: 45200, year: '2025', change: -23.3 },
   ],
   categoryBreakdown: [
-    { category: 'Materials', amount: 85600, percentage: 38, trend: 'up', changePercent: 8.2 },
-    { category: 'Plant Hire', amount: 62400, percentage: 28, trend: 'down', changePercent: -5.3 },
-    { category: 'Subcontractors', amount: 45800, percentage: 21, trend: 'stable', changePercent: 0.8 },
-    { category: 'PPE & Safety', amount: 18200, percentage: 8, trend: 'up', changePercent: 12.5 },
-    { category: 'Other', amount: 11000, percentage: 5, trend: 'stable', changePercent: -0.2 },
+    { category: 'Materials', amount: 85600, percentage: 36, trend: 'up', changePercent: 8.2 },
+    { category: 'Plant Hire', amount: 62400, percentage: 26, trend: 'down', changePercent: -5.3 },
+    { category: 'Subcontractors', amount: 45800, percentage: 19, trend: 'stable', changePercent: 0.8 },
+    { category: 'PPE & Safety', amount: 22700, percentage: 9, trend: 'up', changePercent: 12.5, hasAnomaly: true },
+    { category: 'Concrete', amount: 15400, percentage: 6, trend: 'up', changePercent: 14.7 },
+    { category: 'Other', amount: 9800, percentage: 4, trend: 'stable', changePercent: -0.2 },
   ],
   anomalies: [
     { 
@@ -78,27 +82,45 @@ const spendData = {
       description: 'Unusually high spend on Plant Hire in Week 4',
       severity: 'high',
       amount: 15800,
-      details: 'Apex Plant Hire invoice DB-4872 shows rates 22% above contract.',
-      recommendation: 'Review invoice DB-4872 and verify against contract rates.',
-      impact: 'Potential £45,000 budget overrun by project completion if not addressed.'
+      details: 'Apex Plant Hire invoice DB-4872 shows rates 22% above contract. Equipment was needed urgently due to unexpected foundation issues, resulting in premium rates being charged.',
+      recommendation: 'Review invoice DB-4872 and verify against contract rates. Negotiate retroactive discount based on volume commitment or initiate early contract renewal discussion.',
+      impact: 'Potential £45,000 budget overrun by project completion if not addressed. This could affect the contingency fund allocation for other critical project areas.'
     },
     { 
       id: 2, 
       description: 'Duplicate invoice detected for Thurrock Engineering',
       severity: 'medium',
       amount: 3450,
-      details: 'Invoices TH-9921 and TH-9924 appear to be for the same delivery.',
-      recommendation: 'Compare invoice details and contact supplier to verify.',
-      impact: 'Direct cost impact of £3,450 if duplicate payment is made.'
+      details: 'Invoices TH-9921 and TH-9924 appear to be for the same delivery of structural materials on April 18th. Both invoices contain identical line items and quantities with minor reference number variations.',
+      recommendation: 'Compare invoice details and contact supplier to verify. Put payment on hold pending resolution and update AP procedures to include additional verification steps for this supplier.',
+      impact: 'Direct cost impact of £3,450 if duplicate payment is made. Multiple instances of this issue have been detected with this supplier over the past 6 months.'
     },
     { 
       id: 3, 
       description: 'Price increase of 15% on concrete supplies',
       severity: 'low',
       amount: 1200,
-      details: 'C&R Concrete applied price increase without prior notification.',
-      recommendation: 'Check if increase aligns with contract terms or market conditions.',
-      impact: 'Cumulative impact of £12,800 over remaining project duration.'
+      details: 'C&R Concrete applied price increase without prior notification on invoice CR-20250421. The contract stipulates a 30-day notice period for price adjustments.',
+      recommendation: 'Check if increase aligns with contract terms or market conditions. Request immediate supplier meeting to discuss compliance with contract notification terms and potential alternatives.',
+      impact: 'Cumulative impact of £12,800 over remaining project duration. May need to explore alternative suppliers or negotiate stepped increase to manage budget impact.'
+    },
+    { 
+      id: 4, 
+      description: 'Unusual PPE expenditure pattern detected',
+      severity: 'medium',
+      amount: 5700,
+      details: 'Safety equipment purchases have increased 47% in Week 7 compared to previous 6-week average without corresponding increase in staffing levels. Large orders placed with non-preferred suppliers.',
+      recommendation: 'Audit PPE inventory levels and check for potential overordering or diversion. Implement additional approval steps for non-preferred supplier purchases.',
+      impact: 'Current pattern suggests potential annual impact of £41,000 in excess purchases if not addressed promptly.'
+    },
+    { 
+      id: 5, 
+      description: 'Multiple small purchases below approval threshold',
+      severity: 'low',
+      amount: 1950,
+      details: 'Pattern of small electrical component purchases just below £500 approval threshold from same supplier (Jenkins Electrical) over consecutive days, potentially circumventing procurement policy.',
+      recommendation: 'Consolidate electrical materials purchasing through framework agreement and implement cumulative approval thresholds.',
+      impact: 'Current approach increases administrative costs by approximately £300 per transaction and eliminates bulk purchase discounts.'
     },
   ],
   nominalInsights: [
@@ -126,40 +148,74 @@ const spendData = {
       insight: 'Multiple suppliers used - consolidation opportunity',
       recommendation: 'Analyze supplier performance data and consolidate to top performers'
     },
+    {
+      code: '5204',
+      description: 'SITE SECURITY',
+      spend: 12800,
+      trend: 'up',
+      insight: 'Weekend coverage costs increased significantly',
+      recommendation: 'Review requirement for 24/7 coverage during non-critical phases'
+    },
+    {
+      code: '5330',
+      description: 'SAFETY EQUIPMENT',
+      spend: 22700,
+      trend: 'up',
+      insight: 'Unusual purchasing pattern detected',
+      recommendation: 'Implement enhanced inventory tracking system'
+    },
   ],
   aiForecasts: [
     {
       id: 1,
       description: 'Based on current trends, expect 15-20% increase in material costs next month',
       confidence: 85,
-      details: 'Analysis of supplier notifications, market indices, and historical patterns indicate rising material costs.',
-      recommendation: 'Consider accelerating material purchases for critical path items.',
-      impact: 'Potential savings of £28,500 if action taken before June 1st.'
+      details: 'Analysis of supplier notifications, market indices, and historical patterns indicate rising material costs. Three major suppliers have signaled price increases between 12-22% due to raw material shortages and transportation cost increases.',
+      recommendation: 'Consider accelerating material purchases for critical path items. Explore fixed-price agreements for critical materials needed in months 6-9 of the project timeline.',
+      impact: 'Potential savings of £28,500 if action taken before June 1st. Early purchasing would also mitigate potential schedule impacts from material delays.'
     },
     {
       id: 2,
       description: 'Plant hire spending likely to decrease as project moves to next phase',
       confidence: 72,
-      details: 'Project schedule analysis shows reduced heavy equipment requirements starting week 8.',
-      recommendation: 'Review plant hire agreements and terminate unnecessary rentals.',
-      impact: 'Projected savings of £14,200 over next 6 weeks.'
+      details: 'Project schedule analysis shows reduced heavy equipment requirements starting week 8. Excavation and foundation work is 87% complete, with structural and fit-out phases beginning in Week 9.',
+      recommendation: 'Review plant hire agreements and terminate unnecessary rentals. Implement 7-day notification system with site management to flag equipment that will no longer be needed.',
+      impact: 'Projected savings of £14,200 over next 6 weeks. Additional benefits include reduced fuel costs and site congestion improvements.'
     },
     {
       id: 3,
       description: 'Potential savings of £12,500 identified through supplier consolidation',
       confidence: 90,
-      details: 'Current procurement spread across 14 suppliers where 7 could fulfill all requirements.',
-      recommendation: 'Consolidate consumables purchasing to preferred suppliers with better rates.',
-      impact: 'Additional benefits include reduced admin overhead and improved delivery reliability.'
-    }
+      details: 'Current procurement spread across 14 suppliers where 7 could fulfill all requirements. Analysis shows 3 suppliers (BuildCorp, Apex Materials, and Northern Supplies) could handle 72% of all purchases with existing framework agreements.',
+      recommendation: 'Consolidate consumables purchasing to preferred suppliers with better rates. Create standardized ordering schedule for predictable materials to improve supplier planning ability.',
+      impact: 'Additional benefits include reduced admin overhead and improved delivery reliability. Consolidated invoicing would reduce AP processing by approximately 60 hours per month.'
+    },
+    {
+      id: 4,
+      description: 'Concrete pricing expected to stabilize in Q3',
+      confidence: 78,
+      details: 'Market analysis shows new production capacity coming online in July 2025. Current supply constraints driving price volatility should ease with three major suppliers expanding production.',
+      recommendation: 'For non-urgent concrete work, consider scheduling for Q3 when possible. Maintain minimum essential purchasing until July price corrections.',
+      impact: 'Strategic scheduling could yield 8-12% savings on concrete expenditure, approximately £24,000 for remainder of project.'
+    },
+    {
+      id: 5,
+      description: 'Framework agreement opportunity with safety equipment suppliers',
+      confidence: 88,
+      details: 'Current PPE purchasing patterns show high variability in supplier selection and pricing. Volume-based framework agreement potential identified with SafetyFirst and ProGuard suppliers.',
+      recommendation: 'Initiate negotiations for 24-month framework agreement with consolidated suppliers. Set minimum inventory levels to prevent rush orders.',
+      impact: 'Projected 22% reduction in safety equipment expenditure through standardization and volume pricing, with annual savings of approximately £32,000 across all active projects.'
+    },
   ],
   gpsmacsCodes: [
-    { code: 'G.01.02.01', description: 'Earthworks', spend: 24500, percentage: 11 },
-    { code: 'P.03.04.01', description: 'Plant - Excavators', spend: 35800, percentage: 16 },
-    { code: 'S.02.01.03', description: 'Steel Reinforcement', spend: 48200, percentage: 22 },
-    { code: 'M.01.03.02', description: 'Concrete Supply', spend: 36700, percentage: 17 },
-    { code: 'A.01.02.01', description: 'Professional Services', spend: 19800, percentage: 9 },
-    { code: 'C.01.01.01', description: 'Various Materials', spend: 54000, percentage: 25 }
+    { code: 'G.01.02.01', description: 'Earthworks', spend: 24500, percentage: 10 },
+    { code: 'P.03.04.01', description: 'Plant - Excavators', spend: 35800, percentage: 15 },
+    { code: 'S.02.01.03', description: 'Steel Reinforcement', spend: 48200, percentage: 20 },
+    { code: 'M.01.03.02', description: 'Concrete Supply', spend: 36700, percentage: 15 },
+    { code: 'A.01.02.01', description: 'Professional Services', spend: 19800, percentage: 8 },
+    { code: 'S.03.05.02', description: 'Electrical Contractors', spend: 22100, percentage: 9 },
+    { code: 'M.02.04.03', description: 'Timber & Formwork', spend: 18400, percentage: 8 },
+    { code: 'C.01.01.01', description: 'Various Materials', spend: 36500, percentage: 15 }
   ]
 };
 
