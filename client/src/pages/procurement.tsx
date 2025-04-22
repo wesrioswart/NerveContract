@@ -125,6 +125,261 @@ export default function Procurement() {
     return `£${(value / 100).toFixed(2)}`;
   };
 
+  // Function to handle report export as PDF
+  const exportReportAsPDF = async () => {
+    try {
+      // Show loading state
+      const button = document.querySelector('[data-export-button]');
+      if (button) {
+        button.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating PDF...';
+      }
+      
+      const response = await fetch('/api/export/procurement-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reportType: 'Detailed Breakdown',
+          dateRange: 'Jan 2023 - Apr 2023'
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error('Failed to generate report');
+      }
+      
+      // Create a PDF client-side using html2pdf
+      const { default: html2pdf } = await import('html2pdf.js');
+      
+      // Create HTML content for the PDF
+      const reportHtml = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h1 style="color: #333;">${data.reportData.title}</h1>
+          <p>Generated: ${new Date(data.reportData.generatedAt).toLocaleString()}</p>
+          <p>Period: ${data.reportData.dateRange}</p>
+          
+          <h2 style="margin-top: 20px; color: #555;">Summary</h2>
+          <p>Total Spend: £${(data.reportData.summary.totalSpend / 100).toFixed(2)}</p>
+          
+          <h3 style="margin-top: 15px; color: #666;">Projects</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr style="background-color: #f2f2f2;">
+              <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Project</th>
+              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
+              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">% of Total</th>
+            </tr>
+            ${data.reportData.summary.projects.map((project: any) => `
+              <tr>
+                <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${project.name}</td>
+                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(project.spend / 100).toFixed(2)}</td>
+                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${project.percentageOfTotal}%</td>
+              </tr>
+            `).join('')}
+          </table>
+          
+          <h3 style="margin-top: 15px; color: #666;">GPSMACS Categories</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr style="background-color: #f2f2f2;">
+              <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Code</th>
+              <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Description</th>
+              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
+              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">%</th>
+            </tr>
+            ${data.reportData.summary.gpsmacsCodes.map((code: any) => `
+              <tr>
+                <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${code.code}</td>
+                <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${code.name}</td>
+                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(code.spend / 100).toFixed(2)}</td>
+                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${code.percentage}%</td>
+              </tr>
+            `).join('')}
+          </table>
+          
+          <h3 style="margin-top: 15px; color: #666;">Top Suppliers</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr style="background-color: #f2f2f2;">
+              <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Supplier</th>
+              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
+              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">PO Count</th>
+              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Avg. PO Value (£)</th>
+              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">% of Total</th>
+            </tr>
+            ${data.reportData.summary.topSuppliers.map((supplier: any) => `
+              <tr>
+                <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${supplier.name}</td>
+                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(supplier.spend / 100).toFixed(2)}</td>
+                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${supplier.poCount}</td>
+                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(supplier.avgPoValue / 100).toFixed(2)}</td>
+                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${supplier.percentageOfTotal}%</td>
+              </tr>
+            `).join('')}
+          </table>
+          
+          <h3 style="margin-top: 15px; color: #666;">Monthly Spend Trend</h3>
+          <table style="width: 50%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr style="background-color: #f2f2f2;">
+              <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Month</th>
+              <th style="padding: 8px; text-align: right; border: 1px solid #ddd;">Spend (£)</th>
+            </tr>
+            ${data.reportData.summary.monthlyTrend.map((month: any) => `
+              <tr>
+                <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">${month.month}</td>
+                <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">£${(month.spend / 100).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </table>
+          
+          <h2 style="margin-top: 20px; color: #555;">Key Insights</h2>
+          <ul>
+            ${data.reportData.insights.map((insight: any) => `
+              <li style="margin-bottom: 5px;">${insight}</li>
+            `).join('')}
+          </ul>
+        </div>
+      `;
+      
+      // Configure html2pdf options
+      const options = {
+        margin: 10,
+        filename: `procurement_report_${new Date().toISOString().slice(0, 10)}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      
+      // Generate and download the PDF
+      const element = document.createElement('div');
+      element.innerHTML = reportHtml;
+      document.body.appendChild(element);
+      
+      await html2pdf()
+        .from(element)
+        .set(options)
+        .save();
+        
+      document.body.removeChild(element);
+      
+      // Reset button
+      if (button) {
+        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
+      }
+    } catch (error) {
+      console.error('Error generating PDF report:', error);
+      alert('Failed to generate PDF report. Please try again later.');
+      
+      // Reset button
+      const button = document.querySelector('[data-export-button]');
+      if (button) {
+        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
+      }
+    }
+  };
+
+  // Function to handle report export as CSV
+  const exportReportAsCSV = async () => {
+    try {
+      // Show loading state
+      const button = document.querySelector('[data-export-button]');
+      if (button) {
+        button.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating CSV...';
+      }
+      
+      const response = await fetch('/api/export/procurement-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reportType: 'Detailed Breakdown',
+          dateRange: 'Jan 2023 - Apr 2023'
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error('Failed to generate report');
+      }
+      
+      // Create CSV content
+      let csvContent = "data:text/csv;charset=utf-8,";
+      
+      // Add header
+      csvContent += `"${data.reportData.title}"\r\n`;
+      csvContent += `"Generated","${new Date(data.reportData.generatedAt).toLocaleString()}"\r\n`;
+      csvContent += `"Period","${data.reportData.dateRange}"\r\n\r\n`;
+      csvContent += `"Total Spend","£${(data.reportData.summary.totalSpend / 100).toFixed(2)}"\r\n\r\n`;
+      
+      // Projects section
+      csvContent += `"Projects"\r\n`;
+      csvContent += `"Project","Spend (£)","% of Total"\r\n`;
+      data.reportData.summary.projects.forEach((project: any) => {
+        csvContent += `"${project.name}","£${(project.spend / 100).toFixed(2)}","${project.percentageOfTotal}%"\r\n`;
+      });
+      csvContent += "\r\n";
+      
+      // GPSMACS Categories section
+      csvContent += `"GPSMACS Categories"\r\n`;
+      csvContent += `"Code","Description","Spend (£)","%"\r\n`;
+      data.reportData.summary.gpsmacsCodes.forEach((code: any) => {
+        csvContent += `"${code.code}","${code.name}","£${(code.spend / 100).toFixed(2)}","${code.percentage}%"\r\n`;
+      });
+      csvContent += "\r\n";
+      
+      // Top Suppliers section
+      csvContent += `"Top Suppliers"\r\n`;
+      csvContent += `"Supplier","Spend (£)","PO Count","Avg. PO Value (£)","% of Total"\r\n`;
+      data.reportData.summary.topSuppliers.forEach((supplier: any) => {
+        csvContent += `"${supplier.name}","£${(supplier.spend / 100).toFixed(2)}","${supplier.poCount}","£${(supplier.avgPoValue / 100).toFixed(2)}","${supplier.percentageOfTotal}%"\r\n`;
+      });
+      csvContent += "\r\n";
+      
+      // Monthly Trend section
+      csvContent += `"Monthly Spend Trend"\r\n`;
+      csvContent += `"Month","Spend (£)"\r\n`;
+      data.reportData.summary.monthlyTrend.forEach((month: any) => {
+        csvContent += `"${month.month}","£${(month.spend / 100).toFixed(2)}"\r\n`;
+      });
+      csvContent += "\r\n";
+      
+      // Key Insights section
+      csvContent += `"Key Insights"\r\n`;
+      data.reportData.insights.forEach((insight: any) => {
+        csvContent += `"${insight}"\r\n`;
+      });
+      
+      // Create download link
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `procurement_report_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      
+      // Trigger download
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      
+      // Reset button
+      if (button) {
+        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
+      }
+    } catch (error) {
+      console.error('Error generating CSV report:', error);
+      alert('Failed to generate CSV report. Please try again later.');
+      
+      // Reset button
+      const button = document.querySelector('[data-export-button]');
+      if (button) {
+        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
+      }
+    }
+  };
+
   // Check if user is not authenticated
   if (!isAuthenticated) {
     return (
@@ -382,8 +637,8 @@ export default function Procurement() {
                   <TableHead>Project</TableHead>
                   <TableHead>Supplier</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead>Value</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Total Cost</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -396,20 +651,15 @@ export default function Procurement() {
                     >
                       <TableCell>
                         <div className="font-medium">{po.reference}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(po.createdAt).toLocaleDateString()}
-                        </div>
                       </TableCell>
                       <TableCell>{po.projectReference}</TableCell>
                       <TableCell>{po.supplierName}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{po.description}</TableCell>
+                      <TableCell>{formatCurrency(po.totalCost)}</TableCell>
                       <TableCell>
                         <Badge className={purchaseOrderStatusColors[po.status] || ""}>
                           {po.status.replace('_', ' ')}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatCurrency(po.totalCost)}
                       </TableCell>
                     </TableRow>
                   ))
@@ -425,125 +675,96 @@ export default function Procurement() {
           </div>
         </TabsContent>
         
-        {/* Detailed Breakdown Tab */}
         <TabsContent value="detailed-breakdown" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Project-Based Spend Analysis */}
-            <Card className="lg:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Project-Based Analysis */}
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Project-Based Spend Analysis</CardTitle>
-                <CardDescription>Breakdown of procurement spend by project</CardDescription>
+                <CardTitle className="text-lg">Project-Based Analysis</CardTitle>
+                <CardDescription>Spend by project</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  {/* Project spend chart - simplified visual */}
-                  <div className="h-[300px] flex items-end space-x-2">
-                    <div className="flex-1 flex flex-col items-center">
-                      <div className="bg-blue-500 w-24 rounded-t-md" style={{ height: '65%' }}></div>
-                      <div className="mt-2 text-sm font-medium">Westfield</div>
-                      <div className="text-xs text-muted-foreground">£122,450</div>
-                    </div>
-                    <div className="flex-1 flex flex-col items-center">
-                      <div className="bg-green-500 w-24 rounded-t-md" style={{ height: '40%' }}></div>
-                      <div className="mt-2 text-sm font-medium">Littlebrook</div>
-                      <div className="text-xs text-muted-foreground">£75,780</div>
-                    </div>
-                    <div className="flex-1 flex flex-col items-center">
-                      <div className="bg-amber-500 w-24 rounded-t-md" style={{ height: '25%' }}></div>
-                      <div className="mt-2 text-sm font-medium">Corys</div>
-                      <div className="text-xs text-muted-foreground">£46,980</div>
+                <div className="space-y-4">
+                  <div className="h-[250px] flex flex-col justify-center">
+                    <div className="text-center p-4 italic text-sm text-muted-foreground">
+                      Procurement spend by project visualization
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Top Project</h4>
-                      <div className="text-sm">Westfield Development</div>
-                      <div className="text-xs text-muted-foreground">49.8% of total spend</div>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Avg. PO Value</h4>
-                      <div className="text-sm">£28,450</div>
-                      <div className="text-xs text-muted-foreground">across all projects</div>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Spend Trend</h4>
-                      <div className="text-sm flex items-center">
-                        <TrendingUp className="h-4 w-4 text-green-500 mr-1 rotate-180" />
-                        <span>Decreasing</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">Westfield Development</div>
+                        <div className="text-sm text-muted-foreground">49.8% of total spend</div>
                       </div>
-                      <div className="text-xs text-muted-foreground">-4.2% month-on-month</div>
+                      <div className="font-medium">£122,450</div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">Littlebrook</div>
+                        <div className="text-sm text-muted-foreground">30.9% of total spend</div>
+                      </div>
+                      <div className="font-medium">£75,780</div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">Corys</div>
+                        <div className="text-sm text-muted-foreground">19.3% of total spend</div>
+                      </div>
+                      <div className="font-medium">£46,980</div>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            {/* GPSMACS Coded Spending */}
+            {/* GPSMACS Coding Analysis */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">GPSMACS Coding Analysis</CardTitle>
-                <CardDescription>Spend by GPSMACS code category</CardDescription>
+                <CardDescription>Spend by category</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <div className="text-sm font-medium">5000-5999: Materials</div>
-                        <div className="text-sm">42%</div>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '42%' }}></div>
-                      </div>
+                  <div className="h-[180px] grid grid-cols-4 gap-4 items-end">
+                    <div className="flex flex-col items-center">
+                      <div className="bg-blue-500 w-full rounded-t-sm" style={{ height: '100px' }}></div>
+                      <div className="text-xs mt-2">Materials</div>
+                      <div className="text-xs text-muted-foreground">42%</div>
                     </div>
-                    
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <div className="text-sm font-medium">6000-6999: Plant</div>
-                        <div className="text-sm">28%</div>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '28%' }}></div>
-                      </div>
+                    <div className="flex flex-col items-center">
+                      <div className="bg-green-500 w-full rounded-t-sm" style={{ height: '67px' }}></div>
+                      <div className="text-xs mt-2">Plant</div>
+                      <div className="text-xs text-muted-foreground">28%</div>
                     </div>
-                    
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <div className="text-sm font-medium">7000-7999: Tools</div>
-                        <div className="text-sm">18%</div>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div className="bg-amber-500 h-2 rounded-full" style={{ width: '18%' }}></div>
-                      </div>
+                    <div className="flex flex-col items-center">
+                      <div className="bg-amber-500 w-full rounded-t-sm" style={{ height: '43px' }}></div>
+                      <div className="text-xs mt-2">Tools</div>
+                      <div className="text-xs text-muted-foreground">18%</div>
                     </div>
-                    
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <div className="text-sm font-medium">8000-8999: PPE</div>
-                        <div className="text-sm">12%</div>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div className="bg-purple-500 h-2 rounded-full" style={{ width: '12%' }}></div>
-                      </div>
+                    <div className="flex flex-col items-center">
+                      <div className="bg-red-500 w-full rounded-t-sm" style={{ height: '29px' }}></div>
+                      <div className="text-xs mt-2">PPE</div>
+                      <div className="text-xs text-muted-foreground">12%</div>
                     </div>
                   </div>
                   
-                  <div className="pt-4 border-t">
-                    <h4 className="text-sm font-medium mb-2">Top GPSMACS Codes:</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-sm">
-                        <div>5100: CONCRETE</div>
-                        <Badge variant="outline">£36,450</Badge>
-                      </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <div>6200: EXCAVATORS</div>
-                        <Badge variant="outline">£28,750</Badge>
-                      </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <div>5200: STEEL</div>
-                        <Badge variant="outline">£22,800</Badge>
-                      </div>
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div>
+                      <div className="text-sm font-medium">5000-5999: Materials</div>
+                      <div className="text-sm">£103,000</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">6000-6999: Plant</div>
+                      <div className="text-sm">£68,700</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">7000-7999: Tools</div>
+                      <div className="text-sm">£44,100</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">8000-8999: PPE</div>
+                      <div className="text-sm">£29,410</div>
                     </div>
                   </div>
                 </div>
@@ -551,52 +772,37 @@ export default function Procurement() {
             </Card>
             
             {/* Supplier Spend Analysis */}
-            <Card className="lg:col-span-2">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Supplier Spend Analysis</CardTitle>
-                <CardDescription>Breakdown of procurement spend by supplier</CardDescription>
+                <CardDescription>Top suppliers by spend</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="overflow-x-auto">
+                  <div className="rounded-md border">
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Supplier</TableHead>
-                          <TableHead>Total Spend</TableHead>
-                          <TableHead>PO Count</TableHead>
-                          <TableHead>Avg. PO Value</TableHead>
-                          <TableHead>% of Total</TableHead>
+                          <TableHead className="text-right">Spend</TableHead>
+                          <TableHead className="text-right">%</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         <TableRow>
                           <TableCell>BuildMaster Supplies Ltd</TableCell>
-                          <TableCell>£56,780</TableCell>
-                          <TableCell>4</TableCell>
-                          <TableCell>£14,195</TableCell>
-                          <TableCell>23.1%</TableCell>
+                          <TableCell className="text-right">£56,780</TableCell>
+                          <TableCell className="text-right">23.1%</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>Concrete Express</TableCell>
-                          <TableCell>£42,350</TableCell>
-                          <TableCell>2</TableCell>
-                          <TableCell>£21,175</TableCell>
-                          <TableCell>17.2%</TableCell>
+                          <TableCell className="text-right">£42,350</TableCell>
+                          <TableCell className="text-right">17.2%</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>FastTrack Equipment Hire</TableCell>
-                          <TableCell>£38,450</TableCell>
-                          <TableCell>3</TableCell>
-                          <TableCell>£12,817</TableCell>
-                          <TableCell>15.6%</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>Other Suppliers</TableCell>
-                          <TableCell>£108,630</TableCell>
-                          <TableCell>7</TableCell>
-                          <TableCell>£15,519</TableCell>
-                          <TableCell>44.1%</TableCell>
+                          <TableCell className="text-right">£38,450</TableCell>
+                          <TableCell className="text-right">15.6%</TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
@@ -698,105 +904,46 @@ export default function Procurement() {
             <Button 
               variant="outline" 
               className="flex items-center gap-2"
-              onClick={async () => {
-                try {
-                  // Show loading state
-                  const button = document.querySelector('[data-export-button]');
-                  if (button) {
-                    button.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating...';
-                  }
-                  
-                  const response = await fetch('/api/export/procurement-report', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      reportType: 'Detailed Breakdown',
-                      dateRange: 'Jan 2023 - Apr 2023'
-                    }),
-                  });
-                  
-                  const data = await response.json();
-                  
-                  if (!data.success) {
-                    throw new Error('Failed to generate report');
-                  }
-                  
-                  // Create CSV content
-                  let csvContent = "data:text/csv;charset=utf-8,";
-                  
-                  // Add header
-                  csvContent += `"${data.reportData.title}"\r\n`;
-                  csvContent += `"Generated","${new Date(data.reportData.generatedAt).toLocaleString()}"\r\n`;
-                  csvContent += `"Period","${data.reportData.dateRange}"\r\n\r\n`;
-                  csvContent += `"Total Spend","£${(data.reportData.summary.totalSpend / 100).toFixed(2)}"\r\n\r\n`;
-                  
-                  // Projects section
-                  csvContent += `"Projects"\r\n`;
-                  csvContent += `"Project","Spend (£)","% of Total"\r\n`;
-                  data.reportData.summary.projects.forEach(project => {
-                    csvContent += `"${project.name}","£${(project.spend / 100).toFixed(2)}","${project.percentageOfTotal}%"\r\n`;
-                  });
-                  csvContent += "\r\n";
-                  
-                  // GPSMACS Categories section
-                  csvContent += `"GPSMACS Categories"\r\n`;
-                  csvContent += `"Code","Description","Spend (£)","%"\r\n`;
-                  data.reportData.summary.gpsmacsCodes.forEach(code => {
-                    csvContent += `"${code.code}","${code.name}","£${(code.spend / 100).toFixed(2)}","${code.percentage}%"\r\n`;
-                  });
-                  csvContent += "\r\n";
-                  
-                  // Top Suppliers section
-                  csvContent += `"Top Suppliers"\r\n`;
-                  csvContent += `"Supplier","Spend (£)","PO Count","Avg. PO Value (£)","% of Total"\r\n`;
-                  data.reportData.summary.topSuppliers.forEach(supplier => {
-                    csvContent += `"${supplier.name}","£${(supplier.spend / 100).toFixed(2)}","${supplier.poCount}","£${(supplier.avgPoValue / 100).toFixed(2)}","${supplier.percentageOfTotal}%"\r\n`;
-                  });
-                  csvContent += "\r\n";
-                  
-                  // Monthly Trend section
-                  csvContent += `"Monthly Spend Trend"\r\n`;
-                  csvContent += `"Month","Spend (£)"\r\n`;
-                  data.reportData.summary.monthlyTrend.forEach(month => {
-                    csvContent += `"${month.month}","£${(month.spend / 100).toFixed(2)}"\r\n`;
-                  });
-                  csvContent += "\r\n";
-                  
-                  // Key Insights section
-                  csvContent += `"Key Insights"\r\n`;
-                  data.reportData.insights.forEach(insight => {
-                    csvContent += `"${insight}"\r\n`;
-                  });
-                  
-                  // Create download link
-                  const encodedUri = encodeURI(csvContent);
-                  const link = document.createElement("a");
-                  link.setAttribute("href", encodedUri);
-                  link.setAttribute("download", `procurement_report_${new Date().toISOString().slice(0, 10)}.csv`);
-                  document.body.appendChild(link);
-                  
-                  // Trigger download
-                  link.click();
-                  
-                  // Clean up
-                  document.body.removeChild(link);
-                  
-                  // Reset button
-                  if (button) {
-                    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
-                  }
-                } catch (error) {
-                  console.error('Error generating report:', error);
-                  alert('Failed to generate report. Please try again later.');
-                  
-                  // Reset button
-                  const button = document.querySelector('[data-export-button]');
-                  if (button) {
-                    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export Full Report';
-                  }
-                }
+              onClick={() => {
+                // Open format selection dialog
+                const exportDialog = document.createElement('div');
+                exportDialog.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+                exportDialog.innerHTML = `
+                  <div class="bg-white rounded-lg shadow-lg p-6 w-96 max-w-full">
+                    <h3 class="text-lg font-semibold mb-4">Choose Export Format</h3>
+                    <p class="text-sm text-gray-600 mb-4">Select the format you would like to export the procurement report in.</p>
+                    <div class="flex flex-col gap-3">
+                      <button id="export-pdf" class="flex items-center gap-2 py-2 px-3 border rounded-md hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        PDF Format
+                      </button>
+                      <button id="export-csv" class="flex items-center gap-2 py-2 px-3 border rounded-md hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.08V8l-6-6H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-3.08a2.9 2.9 0 0 1-2 0z"></path><path d="M14 2v6h6"></path><path d="M12 18h4"></path><path d="M12 14h8"></path><path d="M12 10h6"></path></svg>
+                        CSV Format
+                      </button>
+                    </div>
+                    <div class="flex justify-end mt-4">
+                      <button id="export-cancel" class="py-2 px-3 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+                    </div>
+                  </div>
+                `;
+                
+                document.body.appendChild(exportDialog);
+                
+                // Add event listeners to buttons
+                document.getElementById('export-cancel')?.addEventListener('click', () => {
+                  document.body.removeChild(exportDialog);
+                });
+                
+                document.getElementById('export-pdf')?.addEventListener('click', async () => {
+                  document.body.removeChild(exportDialog);
+                  await exportReportAsPDF();
+                });
+                
+                document.getElementById('export-csv')?.addEventListener('click', async () => {
+                  document.body.removeChild(exportDialog);
+                  await exportReportAsCSV();
+                });
               }}
               data-export-button
             >
