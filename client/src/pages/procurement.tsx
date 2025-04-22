@@ -46,16 +46,8 @@ interface PurchaseOrder {
   createdAt: string;
 }
 
-interface Supplier {
-  id: number;
-  name: string;
-  contactPerson: string;
-  email: string;
-  phone: string;
-  address: string;
-  accountNumber: string;
-  isGpsmacs: boolean;
-}
+// Replace local Supplier interface with the one from schema.ts
+import { Supplier } from "@shared/schema";
 
 export default function Procurement() {
   // Get authentication status from user context
@@ -102,8 +94,8 @@ export default function Procurement() {
   // Filter suppliers based on search query
   const filteredSuppliers = suppliers.filter(supplier => 
     supplier.name.toLowerCase().includes(supplierSearchQuery.toLowerCase()) ||
-    supplier.contactPerson.toLowerCase().includes(supplierSearchQuery.toLowerCase()) ||
-    supplier.email.toLowerCase().includes(supplierSearchQuery.toLowerCase()) ||
+    (supplier.contactPerson && supplier.contactPerson.toLowerCase().includes(supplierSearchQuery.toLowerCase())) ||
+    (supplier.contactEmail && supplier.contactEmail.toLowerCase().includes(supplierSearchQuery.toLowerCase())) ||
     (supplier.isGpsmacs && "gpsmacs".includes(supplierSearchQuery.toLowerCase()))
   );
 
@@ -523,9 +515,9 @@ export default function Procurement() {
                       </TableCell>
                       <TableCell>{supplier.contactPerson || '—'}</TableCell>
                       <TableCell>
-                        <div>{supplier.email || '—'}</div>
+                        <div>{supplier.contactEmail || '—'}</div>
                         <div className="text-sm text-muted-foreground">
-                          {supplier.phone || '—'}
+                          {supplier.contactPhone || '—'}
                         </div>
                       </TableCell>
                       <TableCell>{supplier.accountNumber || '—'}</TableCell>
