@@ -948,18 +948,18 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   </Button>
                 </div>
                 
-                {/* Chart bars */}
-                <div className="grid grid-cols-8 gap-1 items-end h-[200px] px-6 mt-6">
+                {/* Chart bars - using table layout for perfect column alignment */}
+                <div className="relative flex justify-center items-end h-[200px] mt-6 mx-auto" style={{ maxWidth: "800px" }}>
                   {spendData.weeklySpend.map((week, index) => (
                     <TooltipProvider key={index}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex flex-col items-center group w-full">
-                            <div className="relative w-full max-w-[60px] mx-auto">
+                          <div className="flex flex-col items-center mx-2" style={{ width: "80px" }}>
+                            <div className="relative" style={{ width: "50px" }}>
                               <div 
                                 className={`bg-gradient-to-t from-primary/70 to-primary w-full 
                                   rounded-t hover:brightness-110 transition-all duration-200 
-                                  group-hover:shadow-lg ${week.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}`} 
+                                  ${week.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}`} 
                                 style={{ 
                                   height: `${(week.amount / maxWeeklyAmount) * 100}%`,
                                   minHeight: "10px"
@@ -976,7 +976,7 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                                 </div>
                               )}
                             </div>
-                            <div className="mt-2 text-center">
+                            <div className="mt-2 text-center" style={{ width: "80px" }}>
                               <span className="block text-xs font-medium">{week.week}</span>
                               <span className="block text-xs text-muted-foreground">
                                 {formatCurrency(week.amount)}
@@ -1051,18 +1051,18 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   <div className="h-px bg-muted/30 w-full mt-[25%]"></div>
                 </div>
                 
-                {/* Chart bars */}
-                <div className="grid grid-cols-6 gap-1 items-end h-[200px] px-6 mt-6">
+                {/* Chart bars - using fixed width for perfect column alignment */}
+                <div className="relative flex justify-center items-end h-[200px] mt-6 mx-auto" style={{ maxWidth: "800px" }}>
                   {spendData.monthlySpend.map((month, index) => (
                     <TooltipProvider key={index}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex flex-col items-center group w-full">
-                            <div className="relative w-full max-w-[70px] mx-auto">
+                          <div className="flex flex-col items-center mx-2" style={{ width: "90px" }}>
+                            <div className="relative" style={{ width: "60px" }}>
                               <div 
                                 className={`bg-gradient-to-t from-secondary/70 to-secondary w-full 
                                   rounded-t hover:brightness-110 transition-all duration-200 
-                                  group-hover:shadow-lg ${month.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
+                                  ${month.hasAnomaly ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
                                 style={{ 
                                   height: `${(month.amount / maxMonthlyAmount) * 100}%`,
                                   minHeight: "10px"
