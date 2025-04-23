@@ -37,12 +37,12 @@ export default function MobileScanInterface() {
 
   // Query to get data for the scanned item
   const { isLoading: isLoadingItem } = useQuery({
-    queryKey: ["/api/equipment-hire/scan", qrCode],
+    queryKey: ["/api/equipment/mobile-scan", qrCode],
     queryFn: async () => {
       if (!qrCode || qrCode.length < 5) return null;
       setProcessingState("processing");
       try {
-        const res = await apiRequest("GET", `/api/equipment-hire/scan?code=${qrCode}`);
+        const res = await apiRequest("GET", `/api/equipment/mobile-scan?code=${qrCode}`);
         const data = await res.json();
         setScannedItem(data);
         setProcessingState("success");
@@ -58,7 +58,7 @@ export default function MobileScanInterface() {
   // Mutation to record the scan (off-hire request)
   const { mutate: recordScan, isPending: isRecording } = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/equipment-hire/off-hire-requests", {
+      const res = await apiRequest("POST", "/api/equipment/off-hire-requests", {
         ...data,
         qrCode
       });
@@ -70,8 +70,8 @@ export default function MobileScanInterface() {
         description: "Off-hire request has been recorded successfully",
         variant: "default",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/off-hire-requests"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/statistics"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment/off-hire-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment/dashboard"] });
       setShowConfirmation(false);
       setQrCode("");
       setAdditionalNotes("");

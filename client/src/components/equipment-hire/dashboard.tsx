@@ -26,7 +26,7 @@ export default function Dashboard() {
   
   // Fetch equipment hire statistics
   const { data: stats, isLoading } = useQuery({
-    queryKey: ["/api/equipment-hire/statistics", selectedProject?.id],
+    queryKey: ["/api/equipment/dashboard", selectedProject?.id],
   });
 
   // Function to calculate weekly cost
