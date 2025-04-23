@@ -506,20 +506,22 @@ async function seedEquipmentHire(force = false) {
         const requestedEndDate = new Date(today);
         requestedEndDate.setDate(today.getDate() + (1 + index)); // Request for the next few days
         
+        const createdDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (4 + index));
+        const confirmDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
         requests.push({
           hireId: hire.id,
           reference: `OFFHIRE-S-${(3000 + index).toString()}`,
-          requestedEndDate: requestedEndDate.toISOString(),
+          requestedEndDate: requestedEndDate,
           status: "sent" as const,
           requestedById: userIds[index % userIds.length],
           confirmationNumber: `CONF-${(5000 + index).toString()}`,
-          confirmationDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1).toISOString(),
+          confirmationDate: confirmDate,
           pickupAddress: `Project Site ${index % 3 + 1}, Construction Way, London`,
           pickupContact: `Site Manager: 07700 9002${(index % 100).toString().padStart(2, '0')}`,
           notes: `Collection confirmed for ${requestedEndDate.toLocaleDateString()}. Please advise time of arrival.`,
           qrCode: `EQ-S-${hire.id}-${index}`,
-          createdAt: new Date(today.getFullYear(), today.getMonth(), today.getDate() - (4 + index)).toISOString(),
-          requestDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - (4 + index)).toISOString()
+          createdAt: createdDate,
+          requestDate: createdDate
         });
       });
       
@@ -529,21 +531,23 @@ async function seedEquipmentHire(force = false) {
         const requestedEndDate = new Date(today);
         requestedEndDate.setDate(today.getDate() + (1 + index));
         
+        const createdDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (6 + index));
+        const confirmDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2);
         requests.push({
           hireId: hire.id,
           reference: `OFFHIRE-C-${(4000 + index).toString()}`,
-          requestedEndDate: requestedEndDate.toISOString(),
+          requestedEndDate: requestedEndDate,
           status: "confirmed" as const,
           requestedById: userIds[index % userIds.length],
           confirmationNumber: `CONF-${(6000 + index).toString()}`,
-          confirmationDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2).toISOString(),
+          confirmationDate: confirmDate,
           confirmedById: userIds[(index + 1) % userIds.length],
           pickupAddress: `Project Site ${index % 3 + 1}, Construction Way, London`,
           pickupContact: `Site Manager: 07700 9003${(index % 100).toString().padStart(2, '0')}`,
           notes: `Collection scheduled for ${requestedEndDate.toLocaleDateString()} between 08:00-12:00.`,
           qrCode: `EQ-C-${hire.id}-${index}`,
-          createdAt: new Date(today.getFullYear(), today.getMonth(), today.getDate() - (6 + index)).toISOString(),
-          requestDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - (6 + index)).toISOString()
+          createdAt: createdDate,
+          requestDate: createdDate
         });
       });
       
@@ -607,19 +611,22 @@ async function seedEquipmentHire(force = false) {
         sentDate.setDate(today.getDate() - (2 + index % 3));
       }
       
+      const lastReminderDate = type === "overdue" ? new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1) : null;
+      const responseDate = status === "action-taken" ? new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1) : null;
+      
       notificationData.push({
         hireId: hire.id,
         offHireRequestId: type === "off-hire-request" ? offHires[index % offHires.length].id : null,
         type,
         message,
-        sentDate: sentDate.toISOString(),
+        sentDate: sentDate,
         sentTo,
         sentById: userIds[index % userIds.length],
         status,
         escalationLevel,
         reminderCount: type === "overdue" ? (1 + index % 3) : 0,
-        lastReminderDate: type === "overdue" ? new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1).toISOString() : null,
-        responseDate: status === "action-taken" ? new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1).toISOString() : null,
+        lastReminderDate,
+        responseDate,
         responseMessage: status === "action-taken" ? "Action has been taken, equipment will be returned on schedule." : null,
       });
     });
