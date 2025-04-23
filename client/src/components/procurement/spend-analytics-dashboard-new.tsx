@@ -167,6 +167,7 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
   const [viewType, setViewType] = useState<'chart' | 'table'>('chart');
   const [dateRange, setDateRange] = useState<string>('Last 90 days');
   const [comparisonType, setComparisonType] = useState<string>('vs. Previous period');
+  const [activeTab, setActiveTab] = useState<string>("weekly");
   
   // Calculate max value for Y-axis
   const maxValue = Math.max(...weeklyData.map(d => d.value)) * 1.2;
@@ -253,44 +254,41 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
           
           {/* Tab navigation */}
           <div className="mt-4 border-b border-border">
-            <Tabs defaultValue="weekly" className="w-full">
-              <TabsList className="bg-transparent border-b-0 h-10 justify-start p-0 w-full gap-3">
-                <TabsTrigger 
-                  value="weekly" 
-                  className="data-[state=active]:border-primary data-[state=active]:border-b-2 data-[state=active]:bg-transparent border-b-2 border-transparent pb-2 mb-0 px-2 rounded-none"
-                >
-                  <Calendar className="h-4 w-4 mr-1.5" />
-                  Weekly
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="monthly" 
-                  className="data-[state=active]:border-primary data-[state=active]:border-b-2 data-[state=active]:bg-transparent border-b-2 border-transparent pb-2 mb-0 px-2 rounded-none"
-                >
-                  <Calendar className="h-4 w-4 mr-1.5" />
-                  Monthly
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="category" 
-                  className="data-[state=active]:border-primary data-[state=active]:border-b-2 data-[state=active]:bg-transparent border-b-2 border-transparent pb-2 mb-0 px-2 rounded-none"
-                >
-                  <PieChart className="h-4 w-4 mr-1.5" />
-                  Category
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="insights" 
-                  className="data-[state=active]:border-primary data-[state=active]:border-b-2 data-[state=active]:bg-transparent border-b-2 border-transparent pb-2 mb-0 px-2 rounded-none"
-                >
-                  <Info className="h-4 w-4 mr-1.5" />
-                  AI Insights
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex h-10 justify-start p-0 w-full gap-3 mb-[-2px]">
+              <button 
+                onClick={() => setActiveTab("weekly")}
+                className={`flex items-center px-2 pb-2 mb-0 text-sm font-medium rounded-none border-b-2 ${activeTab === "weekly" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+              >
+                <Calendar className="h-4 w-4 mr-1.5" />
+                Weekly
+              </button>
+              <button 
+                onClick={() => setActiveTab("monthly")}
+                className={`flex items-center px-2 pb-2 mb-0 text-sm font-medium rounded-none border-b-2 ${activeTab === "monthly" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+              >
+                <Calendar className="h-4 w-4 mr-1.5" />
+                Monthly
+              </button>
+              <button 
+                onClick={() => setActiveTab("category")}
+                className={`flex items-center px-2 pb-2 mb-0 text-sm font-medium rounded-none border-b-2 ${activeTab === "category" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+              >
+                <PieChart className="h-4 w-4 mr-1.5" />
+                Category
+              </button>
+              <button 
+                onClick={() => setActiveTab("insights")}
+                className={`flex items-center px-2 pb-2 mb-0 text-sm font-medium rounded-none border-b-2 ${activeTab === "insights" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+              >
+                <Info className="h-4 w-4 mr-1.5" />
+                AI Insights
+              </button>
+            </div>
           </div>
         </CardHeader>
 
         <CardContent className="pt-6">
-          <Tabs defaultValue="weekly">
-            <TabsContent value="weekly">
+            {activeTab === "weekly" && (
               <div className="relative h-[300px]">
                 {/* Y-axis labels */}
                 <div className="absolute top-0 left-0 text-xs text-muted-foreground">
