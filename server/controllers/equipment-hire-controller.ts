@@ -416,7 +416,7 @@ export async function confirmOffHireRequest(req: Request, res: Response) {
             <div class="info-box">
               <p><strong>Reference:</strong> ${offHireRequest.reference}</p>
               <p><strong>Confirmation Number:</strong> ${offHireRequest.confirmationNumber}</p>
-              <p><strong>Requested End Date:</strong> ${offHireRequest.requestedEndDate.toLocaleDateString()}</p>
+              <p><strong>Requested End Date:</strong> ${new Date(offHireRequest.requestedEndDate).toLocaleDateString()}</p>
               <p><strong>Hire Reference:</strong> ${hire.hireReference}</p>
             </div>
             
