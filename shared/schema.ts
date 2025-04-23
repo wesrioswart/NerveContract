@@ -808,7 +808,7 @@ export const equipmentItems = pgTable("equipment_items", {
   description: text("description"),
   ownedStatus: text("owned_status", { enum: ["owned", "hired", "leased"] }).notNull(),
   purchaseDate: date("purchase_date"),
-  purchasePrice: decimal("purchase_price", { precision: 10, scale: 2 }),
+  purchasePrice: real("purchase_price"),
   supplierRef: integer("supplier_ref").references(() => suppliers.id),
   status: text("status", { 
     enum: ["available", "on-hire", "under-repair", "off-hired", "disposed"] 
@@ -831,7 +831,7 @@ export const equipmentHires = pgTable("equipment_hires", {
   startDate: date("start_date").notNull(),
   expectedEndDate: date("expected_end_date").notNull(),
   actualEndDate: date("actual_end_date"),
-  hireRate: decimal("hire_rate", { precision: 10, scale: 2 }).notNull(),
+  hireRate: real("hire_rate").notNull(),
   rateFrequency: text("rate_frequency", { 
     enum: ["daily", "weekly", "monthly"] 
   }).notNull().default("weekly"),
