@@ -1711,6 +1711,9 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   
   // Dashboard Statistics
   app.get("/api/equipment/dashboard", requireAuth, equipmentHireController.getEquipmentHireDashboardStats);
+  
+  // Off-hire confirmation endpoint (public, accessed via email link)
+  app.get("/api/equipment/confirm-off-hire/:token", equipmentHireController.confirmOffHireRequest);
 
   const httpServer = createServer(app);
   return httpServer;

@@ -1023,6 +1023,12 @@ export const insertOffHireRequestSchema = createInsertSchema(offHireRequests).om
   updatedAt: true,
 });
 
+export const insertOffHireConfirmationSchema = createInsertSchema(offHireConfirmations).omit({
+  id: true,
+  createdAt: true,
+  used: true,
+});
+
 export const insertHireNotificationSchema = createInsertSchema(hireNotifications).omit({
   id: true,
   sentDate: true,
@@ -1041,6 +1047,9 @@ export type InsertEquipmentHire = z.infer<typeof insertEquipmentHireSchema>;
 
 export type OffHireRequest = typeof offHireRequests.$inferSelect;
 export type InsertOffHireRequest = z.infer<typeof insertOffHireRequestSchema>;
+
+export type OffHireConfirmation = typeof offHireConfirmations.$inferSelect;
+export type InsertOffHireConfirmation = z.infer<typeof insertOffHireConfirmationSchema>;
 
 export type HireNotification = typeof hireNotifications.$inferSelect;
 export type InsertHireNotification = z.infer<typeof insertHireNotificationSchema>;
