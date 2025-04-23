@@ -5,6 +5,7 @@ import {
   equipmentItems, 
   equipmentHires, 
   offHireRequests,
+  offHireConfirmations,
   hireNotifications 
 } from "../../shared/schema";
 import { 
@@ -271,6 +272,169 @@ export async function updateEquipmentHire(req: Request, res: Response) {
     }
     console.error(`Error updating hire ID ${req.params.id}:`, error);
     return res.status(500).json({ message: "Error updating hire" });
+  }
+}
+
+// --- Supplier Email Confirmation Feature ---
+
+/**
+ * Confirm an off-hire request via token from email
+ * This is a public endpoint (no auth required) accessed via email
+ */
+export async function confirmOffHireRequest(req: Request, res: Response) {
+  try {
+    const { token } = req.params;
+    
+    if (!token) {
+      return res.status(400).send('Invalid token');
+    }
+    
+    // Find confirmation token
+    const [confirmation] = await db.select()
+      .from(offHireConfirmations)
+      .where(eq(offHireConfirmations.token, token))
+      .limit(1);
+    
+    if (!confirmation) {
+      return res.status(404).send('Token not found');
+    }
+    
+    if (confirmation.used) {
+      return res.status(400).send('This confirmation link has already been used');
+    }
+    
+    if (new Date() > confirmation.expiresAt) {
+      return res.status(400).send('This confirmation link has expired');
+    }
+    
+    // Mark token as used and record IP and user agent
+    await db.update(offHireConfirmations)
+      .set({
+        used: true,
+        usedAt: new Date(),
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      })
+      .where(eq(offHireConfirmations.id, confirmation.id));
+      
+    // Update the off-hire request status to "confirmed"
+    const [offHireRequest] = await db.update(offHireRequests)
+      .set({
+        status: "confirmed",
+        confirmationDate: new Date(),
+        confirmationNumber: `CNF-${Date.now().toString().substring(7)}`,
+      })
+      .where(eq(offHireRequests.id, confirmation.offHireRequestId))
+      .returning();
+      
+    // Get hire information for reference
+    const [hire] = await db.select()
+      .from(equipmentHires)
+      .where(eq(equipmentHires.id, offHireRequest.hireId));
+      
+    // Update the hire status to "off-hire-requested"
+    await db.update(equipmentHires)
+      .set({
+        status: "off-hire-requested",
+        updatedAt: new Date(),
+      })
+      .where(eq(equipmentHires.id, offHireRequest.hireId));
+      
+    // Create notification for the confirmation
+    await db.insert(hireNotifications)
+      .values({
+        hireId: offHireRequest.hireId,
+        offHireRequestId: offHireRequest.id,
+        type: "return-confirmation",
+        message: `Supplier confirmed off-hire request ${offHireRequest.reference}`,
+        sentTo: "system",
+        status: "action-taken",
+        sentById: 1, // System user
+      });
+      
+    // Return a success page
+    return res.status(200).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Off-Hire Confirmation</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+          }
+          .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          }
+          .header {
+            background-color: #28a745;
+            padding: 20px;
+            text-align: center;
+            color: white;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            margin: -20px -20px 20px -20px;
+          }
+          .content {
+            padding: 20px;
+          }
+          .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+          }
+          .info-box {
+            background-color: #e8f4f8;
+            border-left: 4px solid #0056b3;
+            padding: 15px;
+            margin: 20px 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Off-Hire Confirmation</h1>
+          </div>
+          <div class="content">
+            <h2>Thank You!</h2>
+            
+            <p>You have successfully confirmed the off-hire request for:</p>
+            
+            <div class="info-box">
+              <p><strong>Reference:</strong> ${offHireRequest.reference}</p>
+              <p><strong>Confirmation Number:</strong> ${offHireRequest.confirmationNumber}</p>
+              <p><strong>Requested End Date:</strong> ${offHireRequest.requestedEndDate.toLocaleDateString()}</p>
+              <p><strong>Hire Reference:</strong> ${hire.hireReference}</p>
+            </div>
+            
+            <p>Our team will get in touch with you to arrange collection of the equipment.</p>
+            
+            <p>If you have any questions or need to make changes, please contact us directly.</p>
+          </div>
+          <div class="footer">
+            <p>This is an automated response from the NEC4 Contract Management System.</p>
+            <p>&copy; ${new Date().getFullYear()} NEC4 Contract Manager</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error("Error confirming off-hire request:", error);
+    return res.status(500).send('An error occurred while processing your request');
   }
 }
 

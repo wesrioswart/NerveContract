@@ -878,6 +878,19 @@ export const offHireRequests = pgTable("off_hire_requests", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Confirmation tokens for supplier email confirmations
+export const offHireConfirmations = pgTable("off_hire_confirmations", {
+  id: serial("id").primaryKey(),
+  offHireRequestId: integer("off_hire_request_id").notNull().references(() => offHireRequests.id),
+  token: text("token").notNull().unique(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  used: boolean("used").notNull().default(false),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+});
+
 // Hire Notifications
 export const hireNotifications = pgTable("hire_notifications", {
   id: serial("id").primaryKey(),

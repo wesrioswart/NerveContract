@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { emailService } from '../services/email-service';
+import * as emailService from '../services/email-service';
 import { z } from 'zod';
 
 // Schema for email configuration validation
