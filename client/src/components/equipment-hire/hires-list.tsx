@@ -64,12 +64,12 @@ export default function HiresList() {
 
   // Get active hires
   const { data: hires, isLoading: isLoadingHires } = useQuery({
-    queryKey: ["/api/equipment-hire/hires", { projectId: selectedProject?.id }],
+    queryKey: ["/api/equipment/hires", { projectId: selectedProject?.id }],
   });
 
   // Get equipment items for reference
   const { data: equipment, isLoading: isLoadingEquipment } = useQuery({
-    queryKey: ["/api/equipment-hire/equipment"],
+    queryKey: ["/api/equipment/items"],
   });
 
   // Get suppliers for reference
@@ -110,7 +110,7 @@ export default function HiresList() {
   // Mutation to initiate off-hire request
   const { mutate: initiateOffHire, isPending: isInitiatingOffHire } = useMutation({
     mutationFn: async (data: { hireId: number; requestedEndDate: string }) => {
-      const res = await apiRequest("POST", "/api/equipment-hire/off-hire-requests", {
+      const res = await apiRequest("POST", "/api/equipment/off-hire-requests", {
         ...data,
         reference: `OFF-${new Date().toISOString().substring(0, 10)}-${Math.floor(Math.random() * 1000)}`,
         pickupAddress: "Site location",
@@ -126,8 +126,8 @@ export default function HiresList() {
         description: "Off-hire request has been initiated successfully",
         variant: "default",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/hires"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/off-hire-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment/hires"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment/off-hire-requests"] });
       setIsViewDialogOpen(false);
       setSelectedHire(null);
     },

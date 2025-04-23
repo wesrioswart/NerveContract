@@ -66,17 +66,17 @@ export default function OffHireRequests() {
 
   // Get off-hire requests
   const { data: offHireRequests, isLoading } = useQuery({
-    queryKey: ["/api/equipment-hire/off-hire-requests", { projectId: selectedProject?.id }],
+    queryKey: ["/api/equipment/off-hire-requests", { projectId: selectedProject?.id }],
   });
 
   // Get equipment items for reference
   const { data: equipment } = useQuery({
-    queryKey: ["/api/equipment-hire/equipment"],
+    queryKey: ["/api/equipment/items"],
   });
 
   // Get hire records for reference
   const { data: hires } = useQuery({
-    queryKey: ["/api/equipment-hire/hires"],
+    queryKey: ["/api/equipment/hires"],
   });
 
   // Filter requests based on search term and status
@@ -111,7 +111,7 @@ export default function OffHireRequests() {
   // Mutation to update off-hire request status
   const { mutate: updateRequestStatus, isPending: isUpdating } = useMutation({
     mutationFn: async (data: { id: number; status: string; confirmedBy?: number; notes?: string }) => {
-      const res = await apiRequest("PATCH", `/api/equipment-hire/off-hire-requests/${data.id}`, data);
+      const res = await apiRequest("PATCH", `/api/equipment/off-hire-requests/${data.id}`, data);
       return await res.json();
     },
     onSuccess: () => {
@@ -120,8 +120,8 @@ export default function OffHireRequests() {
         description: "Off-hire request has been updated successfully",
         variant: "default",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/off-hire-requests"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/statistics"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment/off-hire-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment/dashboard"] });
       setIsViewDialogOpen(false);
       setSelectedRequest(null);
       setConfirmationNotes("");
