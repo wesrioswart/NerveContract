@@ -17,7 +17,9 @@ import {
   BadgeCheck,
   ShoppingCart,
   Package2,
-  Building
+  Building,
+  Truck,
+  QrCode
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +70,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/procurement", label: "Procurement", icon: ShoppingCart },
     { path: "/suppliers", label: "Supplier Accounts", icon: Building, badge: "New" },
     { path: "/inventory", label: "Inventory", icon: Package2 },
+    { path: "/equipment-hire", label: "Equipment Hire", icon: Truck, badge: "New" },
   ];
 
   // Utility items

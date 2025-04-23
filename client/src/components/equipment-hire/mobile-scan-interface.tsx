@@ -1,331 +1,365 @@
-import { useState, useRef } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle,
-  CardFooter 
-} from "@/components/ui/card";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Loader2, Camera, QrCode, Check, X, MapPin, AlignLeft, FileImage } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Camera,
+  QrCode,
+  AlertTriangle,
+  Check,
+  Truck,
+  Package,
+  Send,
+  ArrowRight,
+  Loader2
+} from "lucide-react";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function MobileScanInterface() {
-  const [activeTab, setActiveTab] = useState("qr-code");
-  const [qrCodeValue, setQrCodeValue] = useState("");
-  const [scanLocation, setScanLocation] = useState("");
-  const [notes, setNotes] = useState("");
-  const [images, setImages] = useState<string[]>([]);
-  const [userCoordinates, setUserCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
-  const [scanResult, setScanResult] = useState<any>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [qrCode, setQrCode] = useState("");
+  const [scanMethod, setScanMethod] = useState<"manual" | "camera">("manual");
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [processingState, setProcessingState] = useState<"idle" | "scanning" | "processing" | "success" | "error">("idle");
+  const [additionalNotes, setAdditionalNotes] = useState("");
+  const [scannedItem, setScannedItem] = useState<any>(null);
   const { toast } = useToast();
 
-  // Request user location if supported
-  const requestLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserCoordinates({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          });
-          toast({
-            title: "Location Acquired",
-            description: "Your current location has been added to the scan.",
-          });
-        },
-        (error) => {
-          toast({
-            variant: "destructive",
-            title: "Location Error",
-            description: "Could not access your location: " + error.message,
-          });
-        }
-      );
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Location Not Supported",
-        description: "Geolocation is not supported by your browser.",
-      });
-    }
-  };
+  // Query to get data for the scanned item
+  const { isLoading: isLoadingItem } = useQuery({
+    queryKey: ["/api/equipment-hire/scan", qrCode],
+    queryFn: async () => {
+      if (!qrCode || qrCode.length < 5) return null;
+      setProcessingState("processing");
+      try {
+        const res = await apiRequest("GET", `/api/equipment-hire/scan?code=${qrCode}`);
+        const data = await res.json();
+        setScannedItem(data);
+        setProcessingState("success");
+        return data;
+      } catch (error) {
+        setProcessingState("error");
+        return null;
+      }
+    },
+    enabled: processingState === "processing" && qrCode.length >= 5,
+  });
 
-  // Mutation for handling the scan
-  const scanMutation = useMutation({
-    mutationFn: async (scanData: any) => {
-      const res = await apiRequest("POST", "/api/equipment-hire/mobile-scan", scanData);
+  // Mutation to record the scan (off-hire request)
+  const { mutate: recordScan, isPending: isRecording } = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/equipment-hire/off-hire-requests", {
+        ...data,
+        qrCode
+      });
       return await res.json();
     },
-    onSuccess: (data) => {
-      setScanResult(data);
-      setIsSuccessDialogOpen(true);
-      
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/hires"] });
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Off-hire request has been recorded successfully",
+        variant: "default",
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/off-hire-requests"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/equipment"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/dashboard-stats"] });
-      
-      // Reset form
-      setQrCodeValue("");
-      setScanLocation("");
-      setNotes("");
-      setImages([]);
-      setUserCoordinates(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/statistics"] });
+      setShowConfirmation(false);
+      setQrCode("");
+      setAdditionalNotes("");
+      setScannedItem(null);
+      setProcessingState("idle");
     },
     onError: (error: any) => {
       toast({
+        title: "Error",
+        description: error.message || "Failed to record scan. Please try again.",
         variant: "destructive",
-        title: "Scan Failed",
-        description: error.message || "Failed to process QR code scan. Please try again.",
       });
     },
   });
 
-  const handleSubmit = () => {
-    if (!qrCodeValue.trim()) {
+  // Handle manual QR code input
+  const handleManualInput = () => {
+    if (qrCode.length >= 5) {
+      setProcessingState("processing");
+      // The query will automatically run because of the dependency on processingState
+    } else {
       toast({
+        title: "Invalid QR Code",
+        description: "Please enter a valid QR code (at least 5 characters)",
         variant: "destructive",
-        title: "Validation Error",
-        description: "QR code value is required.",
       });
-      return;
-    }
-
-    scanMutation.mutate({
-      qrCode: qrCodeValue,
-      latitude: userCoordinates?.latitude,
-      longitude: userCoordinates?.longitude,
-      location: scanLocation,
-      notes: notes,
-      images: images
-    });
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    Array.from(files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setImages(prev => [...prev, e.target!.result as string]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-
-    // Clear input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
     }
   };
 
-  const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+  // Simulate camera scan
+  const simulateCameraScan = () => {
+    setScanMethod("camera");
+    setProcessingState("scanning");
+    
+    // Simulate the scanning process
+    setTimeout(() => {
+      // Generate a fake QR code that matches the format expected
+      const fakeQrCode = `EQ${Math.floor(Math.random() * 10000)}`;
+      setQrCode(fakeQrCode);
+      setProcessingState("processing");
+    }, 1500);
+  };
+
+  // Handle confirmation and submit the off-hire request
+  const handleConfirmOffHire = () => {
+    if (!scannedItem) return;
+    
+    const offHireData = {
+      hireId: scannedItem.hireId,
+      requestedEndDate: new Date().toISOString().split('T')[0], // Today
+      notes: additionalNotes,
+      pickupAddress: scannedItem.deliveryAddress || "Main warehouse",
+      pickupContact: scannedItem.deliveryContact || "Site Manager"
+    };
+    
+    recordScan(offHireData);
+  };
+
+  // Reset the scan
+  const resetScan = () => {
+    setQrCode("");
+    setAdditionalNotes("");
+    setScannedItem(null);
+    setProcessingState("idle");
+    setScanMethod("manual");
+  };
+
+  // Render scanning interface based on the current method
+  const renderScanInterface = () => {
+    if (processingState === "scanning" && scanMethod === "camera") {
+      return (
+        <div className="flex flex-col items-center space-y-4">
+          <div className="relative w-full max-w-md aspect-square bg-gray-900 rounded-lg overflow-hidden">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="animate-pulse text-white text-sm font-medium">
+                Accessing camera...
+              </div>
+            </div>
+            <div className="absolute inset-16 border-2 border-dashed border-white rounded-lg flex items-center justify-center">
+              <QrCode className="h-12 w-12 text-white opacity-50" />
+            </div>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={resetScan} 
+            className="mt-4"
+          >
+            Cancel
+          </Button>
+        </div>
+      );
+    }
+
+    if (processingState === "idle") {
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button
+              onClick={() => setScanMethod("manual")}
+              variant={scanMethod === "manual" ? "default" : "outline"}
+              className="flex-1 h-auto py-6 flex flex-col items-center gap-2"
+            >
+              <QrCode className="h-8 w-8 mb-2" />
+              <span className="text-sm font-medium">Manual Entry</span>
+              <span className="text-xs text-muted-foreground">
+                Enter QR code manually
+              </span>
+            </Button>
+            <Button
+              onClick={simulateCameraScan}
+              variant={scanMethod === "camera" ? "default" : "outline"}
+              className="flex-1 h-auto py-6 flex flex-col items-center gap-2"
+            >
+              <Camera className="h-8 w-8 mb-2" />
+              <span className="text-sm font-medium">Camera Scan</span>
+              <span className="text-xs text-muted-foreground">
+                Use device camera to scan QR
+              </span>
+            </Button>
+          </div>
+
+          {scanMethod === "manual" && (
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm font-medium mb-2">Enter Equipment QR Code</div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={qrCode}
+                    onChange={(e) => setQrCode(e.target.value)}
+                    placeholder="e.g. EQ1234"
+                    className="flex-1"
+                  />
+                  <Button onClick={handleManualInput}>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // Render result based on the current state
+  const renderResult = () => {
+    if (processingState === "processing" || isLoadingItem) {
+      return (
+        <div className="flex flex-col items-center justify-center py-8">
+          <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
+          <p className="text-sm text-muted-foreground">
+            Processing QR code: {qrCode}
+          </p>
+        </div>
+      );
+    }
+
+    if (processingState === "error") {
+      return (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="bg-red-100 p-3 rounded-full mb-4">
+            <AlertTriangle className="h-10 w-10 text-red-600" />
+          </div>
+          <h3 className="text-lg font-medium mb-2">QR Code Not Recognized</h3>
+          <p className="text-sm text-muted-foreground mb-6">
+            The QR code "{qrCode}" was not found in our system or is not associated with any equipment.
+          </p>
+          <Button onClick={resetScan}>Try Again</Button>
+        </div>
+      );
+    }
+
+    if (processingState === "success" && scannedItem) {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center space-x-3 text-green-600 bg-green-50 p-2 rounded">
+            <Check className="h-5 w-5" />
+            <span className="text-sm font-medium">Equipment found</span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-blue-800 flex items-center mb-2">
+                <Package className="h-4 w-4 mr-2" />
+                Equipment Details
+              </h3>
+              <p className="text-base font-semibold mb-1">{scannedItem.name}</p>
+              <p className="text-sm mb-1">{scannedItem.make} {scannedItem.model}</p>
+              <p className="text-xs text-muted-foreground">Serial: {scannedItem.serialNumber}</p>
+            </div>
+            
+            <div className="bg-amber-50 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-amber-800 flex items-center mb-2">
+                <Truck className="h-4 w-4 mr-2" />
+                Hire Details
+              </h3>
+              <p className="text-base font-semibold mb-1">Ref: {scannedItem.hireReference}</p>
+              <p className="text-sm mb-1">Since: {new Date(scannedItem.startDate).toLocaleDateString()}</p>
+              <p className="text-xs text-muted-foreground">
+                Expected until: {new Date(scannedItem.expectedEndDate).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            <label htmlFor="notes" className="text-sm font-medium mb-1 block">
+              Additional Notes
+            </label>
+            <Textarea
+              id="notes"
+              placeholder="Add any additional information about the off-hire request..."
+              value={additionalNotes}
+              onChange={(e) => setAdditionalNotes(e.target.value)}
+              rows={3}
+            />
+          </div>
+          
+          <Button 
+            className="w-full mt-4 bg-blue-600 hover:bg-blue-700"
+            onClick={() => setShowConfirmation(true)}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            Request Off-Hire
+          </Button>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold">Mobile Off-hire Scan</h2>
-        <p className="text-muted-foreground">
-          Scan equipment QR codes for off-hire processing
-        </p>
-      </div>
-
-      <Card className="md:max-w-3xl mx-auto">
-        <CardHeader>
-          <CardTitle>Equipment Off-hire Scan</CardTitle>
-          <CardDescription>
-            Scan a QR code on an off-hire request document or enter it manually
-          </CardDescription>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xl">Equipment Scanning Station</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="qr-code">
-                <QrCode className="h-4 w-4 mr-2" /> 
-                QR Code
-              </TabsTrigger>
-              <TabsTrigger value="camera">
-                <Camera className="h-4 w-4 mr-2" /> 
-                Camera
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="qr-code" className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="qr-code">QR Code Value</Label>
-                <Input 
-                  id="qr-code" 
-                  placeholder="Enter QR code" 
-                  value={qrCodeValue}
-                  onChange={(e) => setQrCodeValue(e.target.value)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Enter the QR code from the off-hire document
-                </p>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="camera" className="space-y-4 py-4">
-              <div className="border rounded-md p-4 bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center h-64">
-                <Camera className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-center text-muted-foreground mb-4">
-                  Camera access will be requested when you click the button below
-                </p>
-                <Button>
-                  <Camera className="h-4 w-4 mr-2" />
-                  Activate Camera
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Point the camera at the QR code on the off-hire document
-              </p>
-            </TabsContent>
-          </Tabs>
-
-          <div className="space-y-4 mt-6 pt-6 border-t">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="location">Collection Location</Label>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={requestLocation}
-                  disabled={!!userCoordinates}
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  {userCoordinates ? "Location Added" : "Add Current Location"}
-                </Button>
-              </div>
-              <Input 
-                id="location" 
-                placeholder="Equipment collection location" 
-                value={scanLocation}
-                onChange={(e) => setScanLocation(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea 
-                id="notes" 
-                placeholder="Add any notes about the equipment condition or collection" 
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Equipment Photos</Label>
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                {images.map((image, index) => (
-                  <div 
-                    key={index} 
-                    className="relative h-24 rounded-md overflow-hidden border bg-gray-50 dark:bg-gray-900"
-                  >
-                    <img 
-                      src={image} 
-                      alt={`Equipment ${index + 1}`} 
-                      className="h-full w-full object-cover"
-                    />
-                    <Button 
-                      variant="destructive" 
-                      size="icon" 
-                      className="absolute top-1 right-1 h-6 w-6"
-                      onClick={() => removeImage(index)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  className="h-24 border-dashed flex flex-col"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <FileImage className="h-6 w-6 mb-1" />
-                  <span className="text-xs">Add Photo</span>
-                </Button>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  ref={fileInputRef}
-                  onChange={handleImageUpload}
-                />
-              </div>
-            </div>
-          </div>
+          {renderScanInterface()}
+          {renderResult()}
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline">Reset</Button>
-          <Button 
-            onClick={handleSubmit}
-            disabled={!qrCodeValue.trim() || scanMutation.isPending}
-          >
-            {scanMutation.isPending && (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            )}
-            Process Off-hire Scan
-          </Button>
-        </CardFooter>
       </Card>
 
-      {/* Success Dialog */}
-      <AlertDialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center">
-              <Check className="h-5 w-5 mr-2 text-green-500" />
-              Off-hire Scan Successful
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              The equipment has been successfully scanned and marked as returned.
-              {scanResult && (
-                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-md">
-                  <p className="font-medium">Equipment Details:</p>
-                  <p className="text-sm mt-1">Reference: {scanResult.reference}</p>
-                  <p className="text-sm">Item: {scanResult.equipment?.name}</p>
-                  <p className="text-sm">Status: Updated to Returned</p>
-                </div>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction>Done</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Off-Hire Request</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to request off-hire for this equipment?
+            </DialogDescription>
+          </DialogHeader>
+          
+          {scannedItem && (
+            <div className="py-2">
+              <p className="font-medium">{scannedItem.name}</p>
+              <p className="text-sm text-muted-foreground">
+                {scannedItem.make} {scannedItem.model} ({scannedItem.serialNumber})
+              </p>
+              <p className="text-sm mt-2">
+                <span className="font-medium">Hire Reference:</span> {scannedItem.hireReference}
+              </p>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowConfirmation(false)}
+              disabled={isRecording}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmOffHire}
+              disabled={isRecording}
+            >
+              {isRecording ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : "Confirm Off-Hire"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

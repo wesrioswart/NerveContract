@@ -1,209 +1,257 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { useProjectContext } from "@/contexts/project-context";
 import { 
   Card, 
   CardContent, 
-  CardDescription, 
   CardHeader, 
-  CardTitle,
-  CardFooter 
+  CardTitle, 
+  CardDescription 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Loader2, AlertTriangle, Clock, ChevronRight } from "lucide-react";
-import { format, parseISO, isAfter, isBefore, addDays } from "date-fns";
+  Boxes, 
+  Truck, 
+  Wrench, 
+  AlertTriangle, 
+  Clock, 
+  Calendar, 
+  MoveDiagonal, 
+  ChevronRight,
+  TrendingUp
+} from "lucide-react";
+import { Link } from "wouter";
 
-export default function EquipmentHireDashboard() {
-  const [projectFilter, setProjectFilter] = useState<string | null>(null);
-  const { toast } = useToast();
-
-  // Get list of projects for filter
-  const { data: projects, isLoading: isLoadingProjects } = useQuery({
-    queryKey: ["/api/projects"],
+export default function Dashboard() {
+  const { selectedProject } = useProjectContext();
+  
+  // Fetch equipment hire statistics
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["/api/equipment-hire/statistics", selectedProject?.id],
   });
 
-  // Get equipment hires
-  const { data: hires, isLoading: isLoadingHires } = useQuery({
-    queryKey: ["/api/equipment-hire/hires", { projectId: projectFilter }],
-  });
-
-  // Get equipment off-hire requests
-  const { data: offHireRequests, isLoading: isLoadingOffHire } = useQuery({
-    queryKey: ["/api/equipment-hire/off-hire-requests", { projectId: projectFilter }],
-  });
-
-  const isLoading = isLoadingHires || isLoadingOffHire || isLoadingProjects;
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  // Filter active hires that are overdue or due soon
-  const today = new Date();
-  const dueHires = (hires || []).filter((hire: any) => {
-    if (hire.status !== "on-hire") return false;
+  // Function to calculate weekly cost
+  const calculateWeeklyCost = () => {
+    if (!stats?.hires) return 0;
     
-    const endDate = parseISO(hire.expectedEndDate);
-    const isOverdueOrDueSoon = isBefore(endDate, addDays(today, 7));
-    
-    return isOverdueOrDueSoon;
-  });
+    return stats.hires
+      .filter((hire: any) => hire.status === "active")
+      .reduce((total: number, hire: any) => {
+        const rate = hire.hireRate || 0;
+        if (hire.rateFrequency === "daily") {
+          return total + (rate * 7);
+        }
+        return total + rate;
+      }, 0);
+  };
 
-  // Sort by date - overdue first, then by expected end date
-  dueHires.sort((a: any, b: any) => {
-    const aDate = parseISO(a.expectedEndDate);
-    const bDate = parseISO(b.expectedEndDate);
+  // Get upcoming returns (next 7 days)
+  const getUpcomingReturns = () => {
+    if (!stats?.hires) return [];
     
-    const aIsOverdue = isBefore(aDate, today);
-    const bIsOverdue = isBefore(bDate, today);
+    const now = new Date();
+    const sevenDaysLater = new Date();
+    sevenDaysLater.setDate(now.getDate() + 7);
     
-    if (aIsOverdue && !bIsOverdue) return -1;
-    if (!aIsOverdue && bIsOverdue) return 1;
-    
-    return aDate.getTime() - bDate.getTime();
-  });
+    return stats.hires
+      .filter((hire: any) => {
+        const endDate = new Date(hire.expectedEndDate);
+        return hire.status === "active" && endDate >= now && endDate <= sevenDaysLater;
+      })
+      .slice(0, 3); // Only show top 3
+  };
 
-  // Filter pending off-hire requests
-  const pendingOffHire = (offHireRequests || []).filter((request: any) => 
-    request.status === "pending"
+  const upcomingReturns = getUpcomingReturns();
+  const weeklyHireCost = calculateWeeklyCost();
+
+  const renderStatCard = (
+    title: string, 
+    value: number | string, 
+    description: string, 
+    icon: React.ReactNode, 
+    colorClass: string
+  ) => (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+          <div className={`p-2 rounded-full ${colorClass}`}>
+            {icon}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        <p className="text-xs text-muted-foreground mt-1">{description}</p>
+      </CardContent>
+    </Card>
   );
 
   return (
-    <div>
-      <div className="mb-6 flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Equipment Hire Dashboard</h2>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {renderStatCard(
+          "Total Equipment", 
+          isLoading ? "..." : stats?.totalEquipment || 0, 
+          "Items in inventory", 
+          <Boxes className="h-4 w-4 text-blue-500" />, 
+          "bg-blue-50"
+        )}
         
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-muted-foreground mr-2">Filter by project:</span>
-          <Select value={projectFilter || ""} onValueChange={(value) => setProjectFilter(value || null)}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="All Projects" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Projects</SelectItem>
-              {projects?.map((project: any) => (
-                <SelectItem key={project.id} value={project.id.toString()}>
-                  {project.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {renderStatCard(
+          "On Hire", 
+          isLoading ? "..." : stats?.onHire || 0, 
+          "Active hire items", 
+          <Truck className="h-4 w-4 text-amber-500" />, 
+          "bg-amber-50"
+        )}
+        
+        {renderStatCard(
+          "Total Hires", 
+          isLoading ? "..." : stats?.totalHires || 0, 
+          "Since tracking began", 
+          <MoveDiagonal className="h-4 w-4 text-indigo-500" />, 
+          "bg-indigo-50"
+        )}
+        
+        {renderStatCard(
+          "Weekly Cost", 
+          isLoading ? "..." : `£${weeklyHireCost.toFixed(2)}`, 
+          "Current weekly spend", 
+          <TrendingUp className="h-4 w-4 text-green-500" />, 
+          "bg-green-50"
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Equipment due for return */}
-        <Card>
+        {/* Items due for return */}
+        <Card className="col-span-1">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Clock className="h-5 w-5 mr-2 text-amber-500" />
-              Equipment Due for Return
-            </CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>Due Soon</CardTitle>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/equipment-hire/hires" className="flex items-center gap-1">
+                  <span className="text-sm">View all</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
             <CardDescription>
-              Equipment items that are due for return soon or overdue
+              Equipment due for return in the next 7 days
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            {dueHires.length === 0 ? (
-              <p className="text-muted-foreground py-4 text-center">No equipment due for return soon</p>
-            ) : (
-              <div className="space-y-4">
-                {dueHires.slice(0, 5).map((hire: any) => {
-                  const endDate = parseISO(hire.expectedEndDate);
-                  const isOverdue = isBefore(endDate, today);
-                  
-                  return (
-                    <div key={hire.id} className="flex items-center justify-between border-b pb-3">
-                      <div>
-                        <div className="font-medium">{hire.hireReference}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Due: {format(endDate, "dd MMM yyyy")}
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        {isOverdue ? (
-                          <span className="flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-red-100 text-red-800">
-                            <AlertTriangle className="h-3 w-3 mr-1" />
-                            Overdue
-                          </span>
-                        ) : (
-                          <span className="flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Due Soon
-                          </span>
-                        )}
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {isLoading ? (
+                <div className="px-6 py-4 text-sm text-muted-foreground">Loading...</div>
+              ) : upcomingReturns.length === 0 ? (
+                <div className="px-6 py-4 text-sm text-muted-foreground">No equipment due for return this week</div>
+              ) : (
+                upcomingReturns.map((hire: any, index: number) => (
+                  <div key={index} className="px-6 py-4 flex justify-between items-center">
+                    <div>
+                      <div className="font-medium">{hire.equipmentName}</div>
+                      <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>Due: {new Date(hire.expectedEndDate).toLocaleDateString()}</span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/equipment-hire/off-hire?id=${hire.id}`}>
+                        Off-hire
+                      </Link>
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
           </CardContent>
-          {dueHires.length > 5 && (
-            <CardFooter>
-              <Button variant="ghost" size="sm" className="ml-auto">
-                View All <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </CardFooter>
-          )}
         </Card>
 
-        {/* Pending Off-hire Requests */}
-        <Card>
+        {/* Issues and alerts */}
+        <Card className="col-span-1">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <AlertTriangle className="h-5 w-5 mr-2 text-blue-500" />
-              Pending Off-hire Requests
-            </CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>Alerts</CardTitle>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/equipment-hire/off-hire" className="flex items-center gap-1">
+                  <span className="text-sm">View all</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
             <CardDescription>
-              Equipment that has been requested to be returned
+              Issues requiring attention
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            {pendingOffHire.length === 0 ? (
-              <p className="text-muted-foreground py-4 text-center">No pending off-hire requests</p>
-            ) : (
-              <div className="space-y-4">
-                {pendingOffHire.slice(0, 5).map((request: any) => {
-                  const requestDate = parseISO(request.requestDate);
-                  const requestedEndDate = parseISO(request.requestedEndDate);
-                  
-                  return (
-                    <div key={request.id} className="flex items-center justify-between border-b pb-3">
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {isLoading ? (
+                <div className="px-6 py-4 text-sm text-muted-foreground">Loading...</div>
+              ) : (
+                <>
+                  {stats?.overdue > 0 && (
+                    <div className="px-6 py-4 flex justify-between items-center">
                       <div>
-                        <div className="font-medium">{request.reference}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Requested: {format(requestDate, "dd MMM yyyy")}
+                        <div className="font-medium flex items-center">
+                          <AlertTriangle className="h-4 w-4 text-red-500 mr-2" />
+                          Overdue Equipment
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          Pickup: {format(requestedEndDate, "dd MMM yyyy")}
+                        <div className="text-sm text-muted-foreground mt-1">
+                          {stats.overdue} item{stats.overdue !== 1 ? 's' : ''} past expected return date
                         </div>
                       </div>
-                      <Button size="sm" variant="outline">Process</Button>
+                      <Button variant="outline" size="sm" className="border-red-200 bg-red-50 text-red-600 hover:bg-red-100">
+                        View
+                      </Button>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  )}
+                  
+                  {stats?.pendingOffHire > 0 && (
+                    <div className="px-6 py-4 flex justify-between items-center">
+                      <div>
+                        <div className="font-medium flex items-center">
+                          <Clock className="h-4 w-4 text-amber-500 mr-2" />
+                          Pending Off-hire Requests
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          {stats.pendingOffHire} request{stats.pendingOffHire !== 1 ? 's' : ''} awaiting processing
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" className="border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100">
+                        Process
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {stats?.underRepair > 0 && (
+                    <div className="px-6 py-4 flex justify-between items-center">
+                      <div>
+                        <div className="font-medium flex items-center">
+                          <Wrench className="h-4 w-4 text-blue-500 mr-2" />
+                          Equipment Under Repair
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          {stats.underRepair} item{stats.underRepair !== 1 ? 's' : ''} currently being serviced
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Check Status
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* If no alerts, show empty state */}
+                  {(!stats?.overdue || stats.overdue === 0) && 
+                   (!stats?.pendingOffHire || stats.pendingOffHire === 0) && 
+                   (!stats?.underRepair || stats.underRepair === 0) && (
+                    <div className="px-6 py-4 text-sm text-muted-foreground">
+                      No immediate issues requiring attention
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </CardContent>
-          {pendingOffHire.length > 5 && (
-            <CardFooter>
-              <Button variant="ghost" size="sm" className="ml-auto">
-                View All <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </CardFooter>
-          )}
         </Card>
       </div>
     </div>

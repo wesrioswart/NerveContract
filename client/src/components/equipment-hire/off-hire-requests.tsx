@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useProjectContext } from "@/contexts/project-context";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Card, 
-  CardContent,
-  CardHeader,
-  CardTitle, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,88 +32,236 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Loader2, 
   Search, 
   Filter,
   Calendar,
+  CheckCircle2,
+  XCircle,
   Clock,
   Truck,
-  ArrowUpRight,
-  CheckCircle2,
-  Timer,
+  Package,
+  MapPin,
+  Phone,
   Send,
-  QrCode,
-  Download,
+  QrCode
 } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, addDays } from "date-fns";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function OffHireRequests() {
-  const [projectFilter, setProjectFilter] = useState<string | null>(null);
+  const { selectedProject } = useProjectContext();
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [confirmationNotes, setConfirmationNotes] = useState("");
   const { toast } = useToast();
 
-  // Get list of projects for filter
-  const { data: projects, isLoading: isLoadingProjects } = useQuery({
-    queryKey: ["/api/projects"],
-  });
-
   // Get off-hire requests
-  const { data: offHireRequests, isLoading: isLoadingRequests } = useQuery({
-    queryKey: ["/api/equipment-hire/off-hire-requests", { 
-      projectId: projectFilter,
-      status: statusFilter
-    }],
+  const { data: offHireRequests, isLoading } = useQuery({
+    queryKey: ["/api/equipment-hire/off-hire-requests", { projectId: selectedProject?.id }],
   });
 
-  const isLoading = isLoadingRequests || isLoadingProjects;
+  // Get equipment items for reference
+  const { data: equipment } = useQuery({
+    queryKey: ["/api/equipment-hire/equipment"],
+  });
 
-  // Filter requests based on search term
+  // Get hire records for reference
+  const { data: hires } = useQuery({
+    queryKey: ["/api/equipment-hire/hires"],
+  });
+
+  // Filter requests based on search term and status
   const filteredRequests = offHireRequests 
     ? offHireRequests.filter((request: any) => {
-        if (!searchTerm) return true;
+        // Status filter
+        if (statusFilter && request.status !== statusFilter) {
+          return false;
+        }
         
-        const searchLower = searchTerm.toLowerCase();
-        return (
-          request.reference?.toLowerCase().includes(searchLower) ||
-          request.notes?.toLowerCase().includes(searchLower) ||
-          request.hireReference?.toLowerCase().includes(searchLower)
-        );
+        // Search term
+        if (searchTerm) {
+          const searchLower = searchTerm.toLowerCase();
+          const equipmentItem = equipment?.find((item: any) => {
+            const hire = hires?.find((h: any) => h.id === request.hireId);
+            return hire && hire.equipmentId === item.id;
+          });
+          
+          return (
+            request.reference?.toLowerCase().includes(searchLower) ||
+            equipmentItem?.name?.toLowerCase().includes(searchLower) ||
+            equipmentItem?.make?.toLowerCase().includes(searchLower) ||
+            equipmentItem?.model?.toLowerCase().includes(searchLower) ||
+            equipmentItem?.serialNumber?.toLowerCase().includes(searchLower)
+          );
+        }
+        
+        return true;
       })
     : [];
 
-  // Function to view request details
+  // Mutation to update off-hire request status
+  const { mutate: updateRequestStatus, isPending: isUpdating } = useMutation({
+    mutationFn: async (data: { id: number; status: string; confirmedBy?: number; notes?: string }) => {
+      const res = await apiRequest("PATCH", `/api/equipment-hire/off-hire-requests/${data.id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Off-hire request has been updated successfully",
+        variant: "default",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/off-hire-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment-hire/statistics"] });
+      setIsViewDialogOpen(false);
+      setSelectedRequest(null);
+      setConfirmationNotes("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update request. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // View request details
   const viewRequestDetails = (request: any) => {
     setSelectedRequest(request);
     setIsViewDialogOpen(true);
   };
 
-  // Function to print QR code
-  const printQrCode = (request: any) => {
-    // In a real implementation, this would generate a QR code and print it
-    toast({
-      title: "QR Code Generated",
-      description: `QR code for request ${request.reference} is ready to print.`,
+  // Handle confirm request
+  const handleConfirmRequest = () => {
+    if (!selectedRequest) return;
+    
+    updateRequestStatus({
+      id: selectedRequest.id,
+      status: "confirmed",
+      confirmedBy: 1, // Current user ID
+      notes: confirmationNotes
     });
+  };
+
+  // Handle reject request
+  const handleRejectRequest = () => {
+    if (!selectedRequest) return;
+    
+    updateRequestStatus({
+      id: selectedRequest.id,
+      status: "rejected",
+      confirmedBy: 1, // Current user ID
+      notes: confirmationNotes
+    });
+  };
+
+  // Get associated equipment and hire details
+  const getAssociatedDetails = (requestId: number) => {
+    if (!hires || !equipment) return null;
+    
+    const request = offHireRequests?.find((r: any) => r.id === requestId);
+    if (!request) return null;
+    
+    const hire = hires.find((h: any) => h.id === request.hireId);
+    if (!hire) return null;
+    
+    const equipmentItem = equipment.find((e: any) => e.id === hire.equipmentId);
+    if (!equipmentItem) return null;
+    
+    return {
+      hire,
+      equipment: equipmentItem
+    };
+  };
+
+  // Render status badge
+  const renderStatusBadge = (status: string) => {
+    let colorClass = "";
+    let icon = null;
+    
+    switch (status) {
+      case "pending":
+        colorClass = "bg-amber-100 text-amber-800 border-amber-200";
+        icon = <Clock className="h-3 w-3 mr-1" />;
+        break;
+      case "confirmed":
+        colorClass = "bg-green-100 text-green-800 border-green-200";
+        icon = <CheckCircle2 className="h-3 w-3 mr-1" />;
+        break;
+      case "rejected":
+        colorClass = "bg-red-100 text-red-800 border-red-200";
+        icon = <XCircle className="h-3 w-3 mr-1" />;
+        break;
+      case "sent":
+        colorClass = "bg-blue-100 text-blue-800 border-blue-200";
+        icon = <Send className="h-3 w-3 mr-1" />;
+        break;
+      default:
+        colorClass = "bg-gray-100 text-gray-800 border-gray-200";
+    }
+    
+    return (
+      <Badge variant="outline" className={`${colorClass} font-medium flex items-center`}>
+        {icon}
+        {status}
+      </Badge>
+    );
+  };
+
+  // Calculate days left
+  const getTimingInfo = (requestDate: string, requestedEndDate: string) => {
+    const today = new Date();
+    const endDate = parseISO(requestedEndDate);
+    const requestDateObj = parseISO(requestDate);
+    
+    // Days since request made
+    const daysSinceRequest = Math.floor((today.getTime() - requestDateObj.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Days until requested end date
+    const daysUntilEnd = Math.floor((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    return {
+      daysSinceRequest,
+      daysUntilEnd,
+      isPast: daysUntilEnd < 0,
+      isUrgent: daysUntilEnd >= 0 && daysUntilEnd <= 2,
+      isSoon: daysUntilEnd > 2 && daysUntilEnd <= 7
+    };
+  };
+
+  // Format date with relative info
+  const formatDateWithInfo = (date: string, includeRelative = true) => {
+    const dateObj = parseISO(date);
+    const today = new Date();
+    const tomorrow = addDays(today, 1);
+    
+    const isToday = dateObj.toDateString() === today.toDateString();
+    const isTomorrow = dateObj.toDateString() === tomorrow.toDateString();
+    
+    const formattedDate = format(dateObj, "dd MMM yyyy");
+    
+    if (!includeRelative) return formattedDate;
+    
+    if (isToday) return `${formattedDate} (Today)`;
+    if (isTomorrow) return `${formattedDate} (Tomorrow)`;
+    
+    return formattedDate;
   };
 
   return (
     <div>
       <div className="mb-6 flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Off-hire Requests</h2>
+        <h2 className="text-2xl font-bold">Off-Hire Requests</h2>
       </div>
 
       <Card className="mb-6">
@@ -121,32 +270,18 @@ export default function OffHireRequests() {
             <div className="relative flex-grow">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search off-hire requests..."
+                placeholder="Search requests..."
                 className="pl-8"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             
-            <div className="flex flex-col md:flex-row gap-2">
+            <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm whitespace-nowrap">Filters:</span>
+                <span className="text-sm whitespace-nowrap">Status:</span>
               </div>
-              
-              <Select value={projectFilter || ""} onValueChange={(value) => setProjectFilter(value || null)}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="All Projects" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Projects</SelectItem>
-                  {projects?.map((project: any) => (
-                    <SelectItem key={project.id} value={project.id.toString()}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               
               <Select value={statusFilter || ""} onValueChange={(value) => setStatusFilter(value || null)}>
                 <SelectTrigger className="w-[180px]">
@@ -155,10 +290,9 @@ export default function OffHireRequests() {
                 <SelectContent>
                   <SelectItem value="">All Statuses</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="sent">Sent</SelectItem>
                   <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="sent">Sent</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -173,105 +307,90 @@ export default function OffHireRequests() {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Off-hire Request Records</CardTitle>
+            <CardTitle>Off-Hire Requests</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Reference</TableHead>
-                  <TableHead>Hire Ref</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Equipment</TableHead>
                   <TableHead>Requested Date</TableHead>
-                  <TableHead>Pickup Date</TableHead>
-                  <TableHead>Project</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Requested By</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredRequests.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={6} className="h-24 text-center">
                       No off-hire requests found
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredRequests.map((request: any) => {
-                    const requestDate = parseISO(request.requestDate);
-                    const endDate = parseISO(request.requestedEndDate);
+                    const details = getAssociatedDetails(request.id);
+                    const timingInfo = getTimingInfo(request.requestDate, request.requestedEndDate);
                     
                     return (
-                      <TableRow key={request.id}>
-                        <TableCell className="font-medium">{request.reference}</TableCell>
-                        <TableCell>{request.hireReference}</TableCell>
+                      <TableRow key={request.id} className={
+                        request.status === "pending" && timingInfo.isUrgent ? "bg-amber-50" : ""
+                      }>
                         <TableCell>
-                          <div className="flex items-center">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              request.status === "pending" 
-                                ? "bg-amber-100 text-amber-800" 
-                                : request.status === "sent"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : request.status === "confirmed"
-                                    ? "bg-green-100 text-green-800"
-                                    : request.status === "completed"
-                                      ? "bg-purple-100 text-purple-800"
-                                      : "bg-slate-100 text-slate-800"
-                            }`}>
-                              {request.status}
-                            </span>
+                          <div className="font-medium">{request.reference}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {request.requestDate && (
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Requested: {format(parseISO(request.requestDate), "dd MMM yyyy")}
+                              </span>
+                            )}
                           </div>
                         </TableCell>
-                        <TableCell>{format(requestDate, "dd MMM yyyy")}</TableCell>
-                        <TableCell>{format(endDate, "dd MMM yyyy")}</TableCell>
                         <TableCell>
-                          {projects?.find((p: any) => p.id === request.projectId)?.name || "—"}
+                          {details ? (
+                            <div>
+                              <div className="font-medium">{details.equipment.name}</div>
+                              <div className="text-xs text-muted-foreground">{details.equipment.make} {details.equipment.model}</div>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">Equipment data not available</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">
+                            {formatDateWithInfo(request.requestedEndDate)}
+                          </div>
+                          {request.status === "pending" && (
+                            <div className={`text-xs ${
+                              timingInfo.isPast ? "text-red-600" :
+                              timingInfo.isUrgent ? "text-amber-600" :
+                              timingInfo.isSoon ? "text-blue-600" : "text-muted-foreground"
+                            }`}>
+                              {timingInfo.isPast 
+                                ? `${Math.abs(timingInfo.daysUntilEnd)} days overdue` 
+                                : timingInfo.daysUntilEnd === 0 
+                                ? "Due today" 
+                                : `${timingInfo.daysUntilEnd} days remaining`}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {renderStatusBadge(request.status)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">User #{request.requestedById}</div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button 
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => printQrCode(request)}
-                                  >
-                                    <QrCode className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Generate QR Code</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            
-                            {request.status === "pending" && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
-                                    >
-                                      <Send className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Send to Supplier</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
-                            
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => viewRequestDetails(request)}
-                            >
-                              View
-                            </Button>
-                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => viewRequestDetails(request)}
+                            className={request.status === "pending" ? "border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100" : ""}
+                          >
+                            {request.status === "pending" ? "Process" : "View"}
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -283,96 +402,149 @@ export default function OffHireRequests() {
         </Card>
       )}
 
-      {/* View Off-hire Request Dialog */}
+      {/* View/Process Request Dialog */}
       {selectedRequest && (
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle>Off-hire Request Details</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                Off-Hire Request: {selectedRequest.reference}
+                {renderStatusBadge(selectedRequest.status)}
+              </DialogTitle>
               <DialogDescription>
-                Reference: {selectedRequest.reference}
+                Requested on {formatDateWithInfo(selectedRequest.requestDate, false)}
               </DialogDescription>
             </DialogHeader>
             
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Request Date</h3>
-                  <p className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
-                    {format(parseISO(selectedRequest.requestDate), "dd MMM yyyy")}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Pickup Date</h3>
-                  <p className="flex items-center">
-                    <Truck className="h-4 w-4 mr-1 text-muted-foreground" />
-                    {format(parseISO(selectedRequest.requestedEndDate), "dd MMM yyyy")}
-                  </p>
-                </div>
-              </div>
+            {(() => {
+              const details = getAssociatedDetails(selectedRequest.id);
+              if (!details) return <div>Associated equipment data not available</div>;
               
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Status</h3>
-                <div className="flex items-center space-x-2">
-                  {selectedRequest.status === "pending" && <Timer className="h-4 w-4 text-amber-500" />}
-                  {selectedRequest.status === "sent" && <Send className="h-4 w-4 text-blue-500" />}
-                  {selectedRequest.status === "confirmed" && <CheckCircle2 className="h-4 w-4 text-green-500" />}
-                  <span className="capitalize">{selectedRequest.status}</span>
-                </div>
-              </div>
-              
-              <Separator />
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Pickup Address</h3>
-                <p>{selectedRequest.pickupAddress}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Pickup Contact</h3>
-                <p>{selectedRequest.pickupContact}</p>
-              </div>
-              
-              {selectedRequest.notes && (
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Notes</h3>
-                  <p className="text-sm">{selectedRequest.notes}</p>
-                </div>
-              )}
-              
-              <Separator />
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">QR Code</h3>
-                <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-900 rounded-md justify-center">
-                  <QrCode className="h-32 w-32" />
-                </div>
-                <p className="text-xs text-center mt-2 text-muted-foreground">
-                  Code: {selectedRequest.qrCode}
-                </p>
-              </div>
-            </div>
+              return (
+                <>
+                  <div className="grid grid-cols-2 gap-4 py-2">
+                    <div className="col-span-2 rounded-md bg-blue-50 p-4 border border-blue-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Package className="h-4 w-4 text-blue-600" />
+                        <h4 className="font-medium text-blue-900">Equipment Details</h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-blue-800 text-xs">Name</Label>
+                          <div className="text-sm font-medium">{details.equipment.name}</div>
+                        </div>
+                        <div>
+                          <Label className="text-blue-800 text-xs">Model</Label>
+                          <div className="text-sm">{details.equipment.make} {details.equipment.model}</div>
+                        </div>
+                        <div>
+                          <Label className="text-blue-800 text-xs">Serial Number</Label>
+                          <div className="text-sm font-mono">{details.equipment.serialNumber}</div>
+                        </div>
+                        <div>
+                          <Label className="text-blue-800 text-xs">Hire Reference</Label>
+                          <div className="text-sm">{details.hire.hireReference}</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="col-span-2">
+                      <Separator className="my-2" />
+                      <h4 className="font-medium mb-2">Off-Hire Request Details</h4>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-muted-foreground text-xs">Requested End Date</Label>
+                      <div className="font-medium">{formatDateWithInfo(selectedRequest.requestedEndDate)}</div>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-muted-foreground text-xs">Requested By</Label>
+                      <div className="font-medium">User #{selectedRequest.requestedById}</div>
+                    </div>
+                    
+                    <div className="col-span-2 rounded-md bg-amber-50 p-4 border border-amber-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="h-4 w-4 text-amber-600" />
+                        <h4 className="font-medium text-amber-900">Pickup Details</h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="col-span-2">
+                          <Label className="text-amber-800 text-xs">Pickup Address</Label>
+                          <div className="text-sm">
+                            {selectedRequest.pickupAddress || "Address not specified"}
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-amber-800 text-xs">Contact</Label>
+                          <div className="text-sm flex items-center gap-1">
+                            <Phone className="h-3 w-3" />
+                            {selectedRequest.pickupContact || "No contact specified"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="col-span-2">
+                      <Label className="text-muted-foreground text-xs">Notes</Label>
+                      <div className="text-sm rounded-md border p-3 mt-1">
+                        {selectedRequest.notes || "No additional notes provided."}
+                      </div>
+                    </div>
+                    
+                    {selectedRequest.status === "pending" && (
+                      <div className="col-span-2 mt-2">
+                        <Label htmlFor="confirmation-notes">Confirmation Notes</Label>
+                        <Textarea
+                          id="confirmation-notes"
+                          placeholder="Add notes about this off-hire request..."
+                          value={confirmationNotes}
+                          onChange={(e) => setConfirmationNotes(e.target.value)}
+                          rows={3}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
             
-            <DialogFooter className="flex-col sm:flex-row gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsViewDialogOpen(false)}
-              >
-                Close
-              </Button>
-              <Button 
-                variant="outline"
-                className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
-                onClick={() => printQrCode(selectedRequest)}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download QR Code
-              </Button>
-              {selectedRequest.status === "pending" && (
-                <Button className="bg-blue-600 hover:bg-blue-700">
-                  <Send className="h-4 w-4 mr-2" />
-                  Send to Supplier
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              {selectedRequest.status === "pending" ? (
+                <>
+                  <Button 
+                    variant="outline" 
+                    className="border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                    onClick={handleRejectRequest}
+                    disabled={isUpdating}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Reject
+                  </Button>
+                  <Button 
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={handleConfirmRequest}
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Confirm Off-Hire
+                      </>
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsViewDialogOpen(false)}
+                >
+                  Close
                 </Button>
               )}
             </DialogFooter>

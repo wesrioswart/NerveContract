@@ -1,135 +1,125 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Loader2, AlertTriangle, Clock, Check, Truck, Calendar } from "lucide-react";
-import EquipmentHireDashboard from "@/components/equipment-hire/dashboard";
+import { useProjectContext } from "@/contexts/project-context";
+import Dashboard from "@/components/equipment-hire/dashboard";
 import EquipmentList from "@/components/equipment-hire/equipment-list";
 import HiresList from "@/components/equipment-hire/hires-list";
 import OffHireRequests from "@/components/equipment-hire/off-hire-requests";
 import MobileScanInterface from "@/components/equipment-hire/mobile-scan-interface";
+import { 
+  Truck, 
+  PackageCheck, 
+  QrCode, 
+  Boxes, 
+  ArrowDownUp, 
+  MoveRight,
+  Laptop
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
-export default function EquipmentHirePage() {
+export default function EquipmentHire() {
+  const { selectedProject } = useProjectContext();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const { toast } = useToast();
+  const [showMobileInterface, setShowMobileInterface] = useState(false);
 
-  const { data: dashboardStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ["/api/equipment-hire/dashboard-stats"],
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-
-  // Summary stats shown at the top of all tabs
-  const renderStats = () => {
-    if (isLoadingStats) {
-      return (
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-4 mb-6">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="h-24 animate-pulse bg-muted/50">
-              <CardContent className="p-4">
-                <div className="h-4 w-16 bg-muted rounded mb-2"></div>
-                <div className="h-8 w-12 bg-muted rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      );
-    }
-
-    if (!dashboardStats) return null;
-
-    const stats = [
-      {
-        title: "Total Equipment",
-        value: dashboardStats.totalEquipment,
-        icon: <Truck className="h-4 w-4 text-muted-foreground" />,
-      },
-      {
-        title: "On Hire",
-        value: dashboardStats.onHire,
-        icon: <Truck className="h-4 w-4 text-blue-500" />,
-      },
-      {
-        title: "Current Hires",
-        value: dashboardStats.totalHires,
-        icon: <Calendar className="h-4 w-4 text-green-500" />,
-      },
-      {
-        title: "Due Soon",
-        value: dashboardStats.dueSoon,
-        icon: <Clock className="h-4 w-4 text-amber-500" />,
-      },
-      {
-        title: "Overdue",
-        value: dashboardStats.overdue,
-        icon: <AlertTriangle className="h-4 w-4 text-destructive" />,
-      },
-      {
-        title: "Pending Off-hire",
-        value: dashboardStats.pendingOffHire,
-        icon: <Check className="h-4 w-4 text-green-500" />,
-      },
-    ];
-
-    return (
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-4 mb-6">
-        {stats.map((stat, i) => (
-          <Card key={i}>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2 mb-2">
-                {stat.icon}
-                <span className="text-xs text-muted-foreground font-medium">{stat.title}</span>
-              </div>
-              <p className="text-2xl font-bold">{stat.value}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+  // Toggle mobile scanning interface
+  const toggleMobileInterface = () => {
+    setShowMobileInterface(!showMobileInterface);
   };
 
+  if (showMobileInterface) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Equipment Mobile Scanner</h1>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={toggleMobileInterface}
+            className="gap-2"
+          >
+            <Laptop className="h-4 w-4" />
+            <span>Exit Mobile Mode</span>
+          </Button>
+        </div>
+        <Separator className="my-2" />
+        <MobileScanInterface />
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Equipment Hire Management</h1>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Equipment Hire Management</h1>
+          <p className="text-muted-foreground">
+            {selectedProject 
+              ? `Project: ${selectedProject.name}`
+              : "All Projects"}
+          </p>
+        </div>
+        <Button 
+          variant="default" 
+          onClick={toggleMobileInterface}
+          className="bg-blue-600 hover:bg-blue-700 gap-2"
+        >
+          <QrCode className="h-4 w-4" />
+          <span>Mobile Scanning Interface</span>
+          <MoveRight className="h-4 w-4 ml-1" />
+        </Button>
       </div>
 
-      {renderStats()}
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 mb-6">
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="equipment">Equipment</TabsTrigger>
-          <TabsTrigger value="hires">Hires</TabsTrigger>
-          <TabsTrigger value="off-hire">Off-hire</TabsTrigger>
-          <TabsTrigger value="scan">Mobile Scan</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
+          <TabsTrigger 
+            value="dashboard" 
+            className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none data-[state=active]:rounded-b-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 py-2 px-4 rounded-none"
+          >
+            <Boxes className="h-4 w-4 mr-2" />
+            Dashboard
+          </TabsTrigger>
+          <TabsTrigger 
+            value="equipment" 
+            className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none data-[state=active]:rounded-b-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 py-2 px-4 rounded-none"
+          >
+            <PackageCheck className="h-4 w-4 mr-2" />
+            Equipment Items
+          </TabsTrigger>
+          <TabsTrigger 
+            value="hires" 
+            className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none data-[state=active]:rounded-b-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 py-2 px-4 rounded-none"
+          >
+            <ArrowDownUp className="h-4 w-4 mr-2" />
+            Active Hires
+          </TabsTrigger>
+          <TabsTrigger 
+            value="off-hire" 
+            className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none data-[state=active]:rounded-b-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 py-2 px-4 rounded-none"
+          >
+            <Truck className="h-4 w-4 mr-2" />
+            Off-hire Requests
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="dashboard">
-          <EquipmentHireDashboard />
-        </TabsContent>
-
-        <TabsContent value="equipment">
-          <EquipmentList />
-        </TabsContent>
-
-        <TabsContent value="hires">
-          <HiresList />
-        </TabsContent>
-
-        <TabsContent value="off-hire">
-          <OffHireRequests />
-        </TabsContent>
-
-        <TabsContent value="scan">
-          <MobileScanInterface />
-        </TabsContent>
+        <div className="p-1">
+          <TabsContent value="dashboard" className="mt-4">
+            <Dashboard />
+          </TabsContent>
+          
+          <TabsContent value="equipment" className="mt-4">
+            <EquipmentList />
+          </TabsContent>
+          
+          <TabsContent value="hires" className="mt-4">
+            <HiresList />
+          </TabsContent>
+          
+          <TabsContent value="off-hire" className="mt-4">
+            <OffHireRequests />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   );
