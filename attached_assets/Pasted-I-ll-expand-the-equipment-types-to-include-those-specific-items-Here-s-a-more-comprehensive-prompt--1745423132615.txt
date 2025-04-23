@@ -1,0 +1,52 @@
+I'll expand the equipment types to include those specific items. Here's a more comprehensive prompt for generating dummy data:
+Generate comprehensive test data for an Equipment Hire Management system within an NEC4 construction contract platform, focusing on these specific equipment types:
+
+1. Equipment Categories (include all of these):
+   - Piling Hammers
+   - Excavators (various sizes)
+   - Welding Units
+   - Barges
+   - Welfare Units
+   - Telehandlers
+   - Generators
+   - Lighting Towers
+   - Scaffolding Systems
+   - Pumps & Dewatering Equipment
+   - Site Accommodation
+   - Cranes & Lifting Equipment
+
+2. Equipment Items (minimum 25):
+   - Include specific models for each category 
+   - For excavators: include mini, midi, and large excavators with tonnage
+   - For piling hammers: include different energy classes
+   - For welding units: include different amp ratings
+   - For barges: include different tonnage capacities
+   - For welfare units: include different occupancy sizes
+   - For telehandlers: include different reach and load capacities
+   - Include properties: id, name, description, category, serial number, status (available, on-hire, maintenance), purchase/manufacturing date, last maintenance date
+
+3. Equipment Suppliers (minimum 8):
+   - Include specialist suppliers for each equipment type
+   - Include company name, contact person, email, phone, address, account number, supplier type
+   - Match with actual suppliers from the system if possible (HeavyLift Plant Hire, ElectroPro Services, etc.)
+
+4. Active Hire Records (minimum 20):
+   - Different statuses: active, pending return, overdue, returned
+   - Include: equipment id, supplier id, project assignment, hire start date, expected return date, actual return date (where applicable), daily rate, total cost to date
+   - Ensure some items are approaching return dates (within 7 days)
+   - Include some overdue items (5+ days past expected return)
+   - Include UK-specific project locations and site references
+
+5. Off-hire Requests (minimum 15):
+   - Different statuses: pending, sent, confirmed
+   - Include request date, requested by, notes, confirmation number (where applicable)
+   - Include reasons for off-hire (project complete, no longer needed, replacement)
+
+6. Notifications (minimum 10):
+   - Types: approaching return date (3/7 days), overdue equipment, maintenance due
+   - Include escalation levels, recipient roles, delivery status
+   - Include some unread notifications
+
+Format the data in JSON structure appropriate for seeding a database. Ensure data relationships are maintained (e.g., equipment items reference valid categories, hire records reference valid equipment items).
+
+Use realistic UK-based company names, realistic costs based on equipment type (higher daily rates for piling equipment and barges, mid-range for excavators and telehandlers, lower for welfare units), and date ranges within the last 3 months for active hires.

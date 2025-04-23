@@ -25,19 +25,20 @@ async function seedEquipmentHire(force = false) {
       console.log("Existing equipment hire data cleared.");
     }
 
-    // Add equipment categories
+    // Add equipment categories based on the requested specification
     const categoryIds = await db.insert(equipmentCategories).values([
-      { name: "Excavators", description: "Excavation equipment for construction", code: "EXC" },
-      { name: "Loaders", description: "Loading equipment", code: "LDR" },
-      { name: "Generators", description: "Power generation equipment", code: "GEN" },
-      { name: "Lifts & Platforms", description: "Aerial work platforms and lifts", code: "LFT" },
-      { name: "Concrete Equipment", description: "Concrete mixers and pumps", code: "CNC" },
-      { name: "Compactors", description: "Ground compaction equipment", code: "CMP" },
-      { name: "Scaffolding", description: "Scaffolding and access systems", code: "SCF" },
-      { name: "Portable Cabins", description: "Temporary site offices and facilities", code: "CAB" },
-      { name: "Pumps", description: "Water and fluid pumps", code: "PMP" },
-      { name: "Lighting", description: "Site lighting solutions", code: "LGT" },
-      { name: "Tools & Light Equipment", description: "Hand tools and light equipment", code: "TLE" },
+      { name: "Piling Hammers", description: "Impact hammers for driving piles into the ground", code: "PIL" },
+      { name: "Excavators", description: "Excavation equipment of various sizes for construction", code: "EXC" },
+      { name: "Welding Units", description: "Equipment for welding metal components", code: "WLD" },
+      { name: "Barges", description: "Floating platforms for marine construction", code: "BRG" },
+      { name: "Welfare Units", description: "Mobile facilities providing amenities for site workers", code: "WLF" },
+      { name: "Telehandlers", description: "Versatile lifting and handling machines", code: "TLH" },
+      { name: "Generators", description: "Power generation equipment for construction sites", code: "GEN" },
+      { name: "Lighting Towers", description: "Mobile lighting systems for construction sites", code: "LGT" },
+      { name: "Scaffolding Systems", description: "Modular scaffolding and access systems", code: "SCF" },
+      { name: "Pumps & Dewatering", description: "Water and fluid pumps for site drainage", code: "PMP" },
+      { name: "Site Accommodation", description: "Temporary site offices and facilities", code: "ACC" },
+      { name: "Cranes & Lifting", description: "Heavy lifting equipment for construction", code: "CRN" },
     ]).returning();
 
     console.log(`Added ${categoryIds.length} equipment categories`);
@@ -58,40 +59,79 @@ async function seedEquipmentHire(force = false) {
     // Track current date for creating relative dates
     const today = new Date();
     
-    // Create more comprehensive equipment dataset
+    // Create more comprehensive equipment dataset based on the requested specifications
     const equipmentData = [
-      // EXCAVATORS
+      // PILING HAMMERS (category index 0)
       {
-        categoryId: categoryIds[0].id, // Excavators
+        categoryId: categoryIds[0].id, // Piling Hammers
+        name: "Hydraulic Piling Hammer 7t",
+        make: "BSP",
+        model: "CX85",
+        serialNumber: "BSP-CX85-78421",
+        description: "7 ton hydraulic impact hammer for sheet piling",
+        ownedStatus: "hired" as const,
+        status: "on-hire" as const,
+        supplierRef: supplierIds[0],
+        createdBy: userIds[0],
+      },
+      {
+        categoryId: categoryIds[0].id, // Piling Hammers
+        name: "Diesel Piling Hammer 9t",
+        make: "Delmag",
+        model: "D19-42",
+        serialNumber: "DEL-D19-12457",
+        description: "9 ton diesel impact hammer with 42kJ energy class",
+        ownedStatus: "hired" as const,
+        status: "on-hire" as const,
+        supplierRef: supplierIds[0],
+        createdBy: userIds[0],
+      },
+      {
+        categoryId: categoryIds[0].id, // Piling Hammers
+        name: "Vibratory Piling Hammer",
+        make: "Movax",
+        model: "SG-75V",
+        serialNumber: "MVX-SG75-87631",
+        description: "75kN excavator-mounted vibratory pile driver",
+        ownedStatus: "hired" as const,
+        status: "available" as const,
+        supplierRef: supplierIds[1],
+        createdBy: userIds[1],
+        lastMaintenanceDate: new Date(today.getFullYear(), today.getMonth() - 1, 15),
+      },
+      
+      // EXCAVATORS (category index 1)
+      {
+        categoryId: categoryIds[1].id, // Excavators
         name: "Mini Excavator 1.5T",
         make: "Caterpillar",
         model: "301.7D CR",
         serialNumber: "CAT301-78965",
-        description: "1.5 ton mini excavator with cab",
+        description: "1.5 ton mini excavator with cab for confined spaces",
         ownedStatus: "hired" as const,
         status: "on-hire" as const,
         supplierRef: supplierIds[0],
         createdBy: userIds[0],
       },
       {
-        categoryId: categoryIds[0].id, // Excavators
-        name: "Excavator 8T",
+        categoryId: categoryIds[1].id, // Excavators
+        name: "Midi Excavator 8T",
         make: "JCB",
         model: "85Z-1",
         serialNumber: "JCB85Z-54321",
-        description: "8 ton zero tail swing excavator",
+        description: "8 ton zero tail swing excavator for urban environments",
         ownedStatus: "hired" as const,
         status: "on-hire" as const,
         supplierRef: supplierIds[0],
         createdBy: userIds[0],
       },
       {
-        categoryId: categoryIds[0].id, // Excavators
-        name: "Tracked Excavator 25T",
+        categoryId: categoryIds[1].id, // Excavators
+        name: "Large Excavator 25T",
         make: "Komatsu",
         model: "PC210LC-11",
         serialNumber: "KPC210-98745",
-        description: "25 ton tracked excavator with long carriage",
+        description: "25 ton tracked excavator with long carriage for deep excavation",
         ownedStatus: "hired" as const,
         status: "available" as const,
         supplierRef: supplierIds[0],
@@ -99,138 +139,122 @@ async function seedEquipmentHire(force = false) {
         lastMaintenanceDate: new Date(today.getFullYear(), today.getMonth() - 2, 15),
       },
       
-      // LOADERS
+      // WELDING UNITS (category index 2)
       {
-        categoryId: categoryIds[1].id, // Loaders
-        name: "Compact Wheel Loader",
-        make: "Volvo",
-        model: "L25",
-        serialNumber: "VLV-L25-12345",
-        description: "Compact wheel loader with GP bucket",
+        categoryId: categoryIds[2].id, // Welding Units
+        name: "Diesel Welder 400A",
+        make: "Lincoln Electric",
+        model: "Vantage 400",
+        serialNumber: "LE-V400-54782",
+        description: "400A diesel welding generator with multi-process capabilities",
         ownedStatus: "hired" as const,
         status: "on-hire" as const,
-        supplierRef: supplierIds[1],
+        supplierRef: supplierIds[2],
         createdBy: userIds[1],
       },
       {
-        categoryId: categoryIds[1].id, // Loaders
-        name: "Skid Steer Loader",
-        make: "Bobcat",
-        model: "S650",
-        serialNumber: "BBS650-45678",
-        description: "Skid steer loader with multiple attachments",
+        categoryId: categoryIds[2].id, // Welding Units
+        name: "Inverter Welder 200A",
+        make: "Miller",
+        model: "XMT 304",
+        serialNumber: "ML-XMT304-98735",
+        description: "200A multi-process inverter welding system",
         ownedStatus: "owned" as const,
         status: "under-repair" as const,
         purchaseDate: new Date(today.getFullYear() - 1, 5, 12),
-        purchasePrice: 35000,
+        purchasePrice: 8500,
         createdBy: userIds[0],
         lastMaintenanceDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 5),
         nextMaintenanceDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 25),
-        notes: "Currently undergoing transmission repair. ETA 3 days."
+        notes: "Control board replacement needed. ETA 3 days."
       },
-      
-      // GENERATORS - Multiple sizes
       {
-        categoryId: categoryIds[2].id, // Generators
-        name: "Mobile Generator 20kVA",
-        make: "Atlas Copco",
-        model: "QAS 20",
-        serialNumber: "QAS20-13579",
-        description: "20kVA silent diesel generator",
+        categoryId: categoryIds[2].id, // Welding Units
+        name: "Pipeline Welding Spread",
+        make: "Lincoln Electric",
+        model: "Pipeliner 200D",
+        serialNumber: "LE-PL200-12458",
+        description: "Complete pipeline welding spread with 6 welding stations",
         ownedStatus: "hired" as const,
         status: "on-hire" as const,
         supplierRef: supplierIds[2],
         createdBy: userIds[0],
       },
       {
-        categoryId: categoryIds[2].id, // Generators
-        name: "Mobile Generator 100kVA",
-        make: "Atlas Copco",
-        model: "QAS 100",
-        serialNumber: "QAS100-78945",
-        description: "100kVA silent diesel generator",
+        categoryId: categoryIds[2].id, // Welding Units
+        name: "MIG Welder 300A",
+        make: "ESAB",
+        model: "Rebel EMP 285",
+        serialNumber: "ESAB-RE285-57428",
+        description: "300A MIG/TIG/Stick multi-process welding system",
         ownedStatus: "hired" as const,
         status: "on-hire" as const,
-        supplierRef: supplierIds[2],
-        createdBy: userIds[0],
-      },
-      {
-        categoryId: categoryIds[2].id, // Generators
-        name: "Mobile Generator 350kVA",
-        make: "FG Wilson",
-        model: "P350-1",
-        serialNumber: "FGW350-85296",
-        description: "350kVA containerized generator",
-        ownedStatus: "hired" as const,
-        status: "on-hire" as const,
-        supplierRef: supplierIds[2],
-        createdBy: userIds[1],
-      },
-      {
-        categoryId: categoryIds[2].id, // Generators
-        name: "Mobile Generator 500kVA",
-        make: "Cummins",
-        model: "C500D5",
-        serialNumber: "CUM500-74125",
-        description: "500kVA prime power generator",
-        ownedStatus: "hired" as const,
-        status: "off-hired" as const,
-        supplierRef: supplierIds[2],
+        supplierRef: supplierIds[1],
         createdBy: userIds[2],
       },
       
-      // LIFTS AND PLATFORMS
+      // BARGES (category index 3)
       {
-        categoryId: categoryIds[3].id, // Lifts & Platforms
-        name: "Scissor Lift 8m",
-        make: "Genie",
-        model: "GS-2669 RT",
-        serialNumber: "GNS2669-41258",
-        description: "8m rough terrain scissor lift",
+        categoryId: categoryIds[3].id, // Barges
+        name: "Flat-Top Barge 400T",
+        make: "Damen",
+        model: "Stan Pontoon B-4020",
+        serialNumber: "DM-SP4020-54621",
+        description: "400 ton capacity flat-top barge for marine construction",
         ownedStatus: "hired" as const,
         status: "on-hire" as const,
-        supplierRef: supplierIds[3], 
-        createdBy: userIds[1],
+        supplierRef: supplierIds[3],
+        createdBy: userIds[2],
       },
       {
-        categoryId: categoryIds[3].id, // Lifts & Platforms
-        name: "Telescopic Boom Lift",
-        make: "JLG",
-        model: "600AJ",
-        serialNumber: "JLG600-235689",
-        description: "60ft telescopic boom lift",
+        categoryId: categoryIds[3].id, // Barges
+        name: "Crane Barge 200T",
+        make: "Maritime Services Ltd",
+        model: "CB-200",
+        serialNumber: "MSL-CB200-45712",
+        description: "200 ton floating crane barge with 50T lifting capacity",
         ownedStatus: "hired" as const,
         status: "on-hire" as const,
         supplierRef: supplierIds[3],
         createdBy: userIds[1],
       },
       
-      // CONCRETE EQUIPMENT
+      // WELFARE UNITS (category index 4)
       {
-        categoryId: categoryIds[4].id, // Concrete Equipment
-        name: "Concrete Mixer",
-        make: "Belle",
-        model: "Minimix 150",
-        serialNumber: "BLM150-456789",
-        description: "150L cement mixer",
-        ownedStatus: "owned" as const,
-        status: "available" as const,
-        purchaseDate: new Date(today.getFullYear() - 1, 5, 15),
-        purchasePrice: 750,
+        categoryId: categoryIds[4].id, // Welfare Units
+        name: "Site Welfare Unit 12-person",
+        make: "Groundhog",
+        model: "Fusion 7",
+        serialNumber: "GH-FUS7-87456",
+        description: "Mobile welfare unit with kitchen, toilet and 12-person seating area",
+        ownedStatus: "hired" as const,
+        status: "on-hire" as const,
+        supplierRef: supplierIds[0],
+        createdBy: userIds[2],
+      },
+      {
+        categoryId: categoryIds[4].id, // Welfare Units
+        name: "Welfare Van 6-person",
+        make: "Armadillo",
+        model: "Towable Eco",
+        serialNumber: "ARM-ECO-54711",
+        description: "Towable 6-person welfare unit with generator and solar panels",
+        ownedStatus: "hired" as const,
+        status: "on-hire" as const,
+        supplierRef: supplierIds[4],
         createdBy: userIds[0],
       },
       {
-        categoryId: categoryIds[4].id, // Concrete Equipment
-        name: "Concrete Poker Vibrator",
-        make: "Wacker Neuson",
-        model: "IREN 38",
-        serialNumber: "WNIR38-753159",
-        description: "38mm high frequency poker vibrator",
-        ownedStatus: "owned" as const,
+        categoryId: categoryIds[4].id, // Welfare Units
+        name: "Toilet Block 5-bay",
+        make: "Wernick",
+        model: "WC5",
+        serialNumber: "WRN-WC5-76523",
+        description: "5-bay site toilet block with water-saving flush system",
+        ownedStatus: "hired" as const,
         status: "on-hire" as const,
-        purchaseDate: new Date(today.getFullYear() - 1, 2, 8),
-        purchasePrice: 425,
-        createdBy: userIds[0],
+        supplierRef: supplierIds[2],
+        createdBy: userIds[1],
       },
       
       // COMPACTORS
