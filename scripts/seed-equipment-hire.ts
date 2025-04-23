@@ -257,43 +257,67 @@ async function seedEquipmentHire(force = false) {
         createdBy: userIds[1],
       },
       
-      // COMPACTORS
+      // TELEHANDLERS (category index 5)
       {
-        categoryId: categoryIds[5].id, // Compactors
-        name: "Plate Compactor",
-        make: "Wacker Neuson",
-        model: "WP1550A",
-        serialNumber: "WNWP15-951357",
-        description: "15kN plate compactor",
+        categoryId: categoryIds[5].id, // Telehandlers
+        name: "Telehandler 14m",
+        make: "JCB",
+        model: "540-140",
+        serialNumber: "JCB-540140-74523",
+        description: "14m reach telehandler with 4 ton lifting capacity",
+        ownedStatus: "hired" as const,
+        status: "on-hire" as const,
+        supplierRef: supplierIds[1],
+        createdBy: userIds[1],
+      },
+      {
+        categoryId: categoryIds[5].id, // Telehandlers
+        name: "Telehandler 17m",
+        make: "Manitou",
+        model: "MT1740",
+        serialNumber: "MAN-MT1740-65472",
+        description: "17m reach telehandler with 4 ton lifting capacity",
+        ownedStatus: "hired" as const,
+        status: "available" as const,
+        supplierRef: supplierIds[1],
+        createdBy: userIds[0],
+      },
+      
+      // SHORING EQUIPMENT (category index 6)
+      {
+        categoryId: categoryIds[6].id, // Shoring Equipment
+        name: "Trench Box System",
+        make: "MGF",
+        model: "KKD 600 Series",
+        serialNumber: "MGF-KKD600-78456",
+        description: "Modular trench box shoring system for excavation safety",
+        ownedStatus: "hired" as const,
+        status: "on-hire" as const,
+        supplierRef: supplierIds[4],
+        createdBy: userIds[1],
+      },
+      {
+        categoryId: categoryIds[6].id, // Shoring Equipment
+        name: "Hydraulic Waler Frame",
+        make: "Groundforce",
+        model: "MP150",
+        serialNumber: "GF-MP150-45612",
+        description: "Hydraulic frame for supporting excavation walls",
         ownedStatus: "hired" as const,
         status: "on-hire" as const,
         supplierRef: supplierIds[4],
         createdBy: userIds[2],
       },
-      
-      // SCAFFOLDING
       {
-        categoryId: categoryIds[6].id, // Scaffolding
-        name: "Tower Scaffold",
-        make: "Boss",
-        model: "Clima",
-        serialNumber: "BSCL-458796",
-        description: "Mobile scaffold tower 2.5m x 1.3m",
+        categoryId: categoryIds[6].id, // Shoring Equipment
+        name: "Sheet Pile Driver",
+        make: "ABI",
+        model: "Mobilram TM 14/17",
+        serialNumber: "ABI-TM1417-95621",
+        description: "Telescopic leader rig for driving sheet piles",
         ownedStatus: "hired" as const,
         status: "on-hire" as const,
-        supplierRef: supplierIds[1],
-        createdBy: userIds[0],
-      },
-      {
-        categoryId: categoryIds[6].id, // Scaffolding
-        name: "System Scaffold 1000m²",
-        make: "Layher",
-        model: "Allround",
-        serialNumber: "LYH-AR-789123",
-        description: "Layher system scaffold package for facade",
-        ownedStatus: "hired" as const,
-        status: "on-hire" as const,
-        supplierRef: supplierIds[1],
+        supplierRef: supplierIds[0],
         createdBy: userIds[0],
       },
       
@@ -335,57 +359,80 @@ async function seedEquipmentHire(force = false) {
         createdBy: userIds[0],
       },
       
-      // PUMPS
+      // PILING HAMMERS (category index 8)
       {
-        categoryId: categoryIds[8].id, // Pumps
-        name: "Submersible Pump 3\"",
-        make: "Tsurumi",
-        model: "LB-800",
-        serialNumber: "TSLB-124578",
-        description: "3 inch submersible pump for dirty water",
-        ownedStatus: "owned" as const,
-        status: "available" as const,
-        purchaseDate: new Date(today.getFullYear() - 1, 1, 10),
-        purchasePrice: 630,
+        categoryId: categoryIds[8].id, // Piling Hammers
+        name: "Hydraulic Piling Hammer",
+        make: "BSP",
+        model: "CX85",
+        serialNumber: "BSP-CX85-47851",
+        description: "Hydraulic impact hammer for sheet and tubular piling",
+        ownedStatus: "hired" as const,
+        status: "on-hire" as const,
+        supplierRef: supplierIds[3],
         createdBy: userIds[1],
       },
       {
-        categoryId: categoryIds[8].id, // Pumps
-        name: "Diesel Water Pump 6\"",
-        make: "Selwood",
-        model: "Drainer D150",
-        serialNumber: "SWD150-456123",
-        description: "6 inch diesel water pump",
+        categoryId: categoryIds[8].id, // Piling Hammers
+        name: "Diesel Piling Hammer",
+        make: "Delmag",
+        model: "D46-32",
+        serialNumber: "DLM-D4632-96523",
+        description: "Diesel hammer for heavy piling applications",
         ownedStatus: "hired" as const,
         status: "on-hire" as const,
-        supplierRef: supplierIds[4],
+        supplierRef: supplierIds[3],
+        createdBy: userIds[0],
+      },
+      {
+        categoryId: categoryIds[8].id, // Piling Hammers
+        name: "Pile Vibrator",
+        make: "Movax",
+        model: "SG-75V",
+        serialNumber: "MVX-SG75V-85412",
+        description: "High-frequency vibrator for installing and extracting sheet piles",
+        ownedStatus: "hired" as const,
+        status: "available" as const,
+        supplierRef: supplierIds[3],
         createdBy: userIds[2],
       },
       
-      // LIGHTING
+      // SPECIALIZED CONSTRUCTION PUMPS (category index 9)
       {
-        categoryId: categoryIds[9].id, // Lighting
-        name: "Lighting Tower",
-        make: "Towerlight",
-        model: "VT1 Eco",
-        serialNumber: "TLVT1-125478",
-        description: "LED lighting tower with auto start",
+        categoryId: categoryIds[9].id, // Specialized Construction Pumps
+        name: "Concrete Pump 70m³/hr",
+        make: "Putzmeister",
+        model: "BSA 1409 D",
+        serialNumber: "PM-BSA1409-85741",
+        description: "Trailer-mounted concrete pump with 70m³/hr output capacity",
         ownedStatus: "hired" as const,
         status: "on-hire" as const,
-        supplierRef: supplierIds[2],
+        supplierRef: supplierIds[1],
+        createdBy: userIds[0],
+      },
+      {
+        categoryId: categoryIds[9].id, // Specialized Construction Pumps
+        name: "Grout Pump 45 bar",
+        make: "Atlas Copco",
+        model: "Unigrout E22H",
+        serialNumber: "AC-UGE22H-98671",
+        description: "High-pressure grout pump for construction applications",
+        ownedStatus: "hired" as const,
+        status: "on-hire" as const,
+        supplierRef: supplierIds[4],
         createdBy: userIds[1],
       },
       {
-        categoryId: categoryIds[9].id, // Lighting
-        name: "Lighting Tower LED",
-        make: "Trime",
-        model: "X-Eco",
-        serialNumber: "TRX-ECO-789654",
-        description: "Low-emission LED lighting tower",
+        categoryId: categoryIds[9].id, // Specialized Construction Pumps
+        name: "Bentonite Pump System",
+        make: "Colcrete Eurodrill",
+        model: "CP15",
+        serialNumber: "CE-CP15-74125",
+        description: "Bentonite slurry mixing and pumping system for diaphragm walls",
         ownedStatus: "hired" as const,
-        status: "on-hire" as const,
-        supplierRef: supplierIds[2],
-        createdBy: userIds[0],
+        status: "available" as const,
+        supplierRef: supplierIds[3],
+        createdBy: userIds[2],
       }
     ];
     
