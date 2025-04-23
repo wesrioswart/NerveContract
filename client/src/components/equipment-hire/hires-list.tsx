@@ -249,12 +249,12 @@ export default function HiresList() {
                 <span className="text-sm whitespace-nowrap">Status:</span>
               </div>
               
-              <Select value={statusFilter || ""} onValueChange={(value) => setStatusFilter(value || null)}>
+              <Select value={statusFilter || "all"} onValueChange={(value) => setStatusFilter(value === "all" ? null : value)}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="pending-collection">Pending Collection</SelectItem>
                   <SelectItem value="off-hire-requested">Off-hire Requested</SelectItem>

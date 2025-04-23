@@ -200,12 +200,12 @@ export default function EquipmentList() {
                 <span className="text-sm whitespace-nowrap">Filters:</span>
               </div>
               
-              <Select value={categoryFilter || ""} onValueChange={(value) => setCategoryFilter(value || null)}>
+              <Select value={categoryFilter || "all"} onValueChange={(value) => setCategoryFilter(value === "all" ? null : value)}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories?.map((category: any) => (
                     <SelectItem key={category.id} value={category.id.toString()}>
                       {category.name}
@@ -214,12 +214,12 @@ export default function EquipmentList() {
                 </SelectContent>
               </Select>
               
-              <Select value={statusFilter || ""} onValueChange={(value) => setStatusFilter(value || null)}>
+              <Select value={statusFilter || "all"} onValueChange={(value) => setStatusFilter(value === "all" ? null : value)}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="available">Available</SelectItem>
                   <SelectItem value="on-hire">On Hire</SelectItem>
                   <SelectItem value="under-repair">Under Repair</SelectItem>
@@ -228,12 +228,12 @@ export default function EquipmentList() {
                 </SelectContent>
               </Select>
               
-              <Select value={ownedStatusFilter || ""} onValueChange={(value) => setOwnedStatusFilter(value || null)}>
+              <Select value={ownedStatusFilter || "all"} onValueChange={(value) => setOwnedStatusFilter(value === "all" ? null : value)}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="All Ownership" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Ownership</SelectItem>
+                  <SelectItem value="all">All Ownership</SelectItem>
                   <SelectItem value="owned">Owned</SelectItem>
                   <SelectItem value="hired">Hired</SelectItem>
                   <SelectItem value="leased">Leased</SelectItem>
