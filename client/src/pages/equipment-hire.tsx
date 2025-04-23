@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProjectContext } from "@/contexts/project-context";
+import { useProject } from "@/contexts/project-context";
 import Dashboard from "@/components/equipment-hire/dashboard";
 import EquipmentList from "@/components/equipment-hire/equipment-list";
 import HiresList from "@/components/equipment-hire/hires-list";
@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 export default function EquipmentHire() {
-  const { selectedProject } = useProjectContext();
+  const { currentProject: selectedProject } = useProject();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showMobileInterface, setShowMobileInterface] = useState(false);
 

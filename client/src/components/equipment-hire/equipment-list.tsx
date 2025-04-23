@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useProjectContext } from "@/contexts/project-context";
+import { useProject } from "@/contexts/project-context";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Card, 
@@ -59,7 +59,7 @@ import {
 import { format, parseISO } from "date-fns";
 
 export default function EquipmentList() {
-  const { selectedProject } = useProjectContext();
+  const { currentProject: selectedProject } = useProject();
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [ownedStatusFilter, setOwnedStatusFilter] = useState<string | null>(null);

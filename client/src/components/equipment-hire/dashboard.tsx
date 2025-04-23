@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useProjectContext } from "@/contexts/project-context";
+import { useProject } from "@/contexts/project-context";
 import { 
   Card, 
   CardContent, 
@@ -22,7 +22,7 @@ import {
 import { Link } from "wouter";
 
 export default function Dashboard() {
-  const { selectedProject } = useProjectContext();
+  const { currentProject: selectedProject } = useProject();
   
   // Fetch equipment hire statistics
   const { data: stats, isLoading } = useQuery({

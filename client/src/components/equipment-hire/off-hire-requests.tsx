@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useProjectContext } from "@/contexts/project-context";
+import { useProject } from "@/contexts/project-context";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Card, 
@@ -56,7 +56,7 @@ import { format, parseISO, addDays } from "date-fns";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function OffHireRequests() {
-  const { selectedProject } = useProjectContext();
+  const { currentProject: selectedProject } = useProject();
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
