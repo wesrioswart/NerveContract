@@ -1,16 +1,27 @@
 import { pool, db } from "../server/db";
 import { equipmentCategories, equipmentItems, equipmentHires, offHireRequests } from "../shared/schema";
 import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm/expressions";
 
-async function seedEquipmentHire() {
+async function seedEquipmentHire(force = false) {
   console.log("Seeding equipment hire data...");
 
   try {
     // Check if categories already exist
     const existingCategories = await db.select().from(equipmentCategories);
-    if (existingCategories.length > 0) {
+    if (existingCategories.length > 0 && !force) {
       console.log("Equipment categories already exist, skipping seeding.");
       return;
+    }
+    
+    // If force is true, clear existing data
+    if (force) {
+      console.log("Force mode - clearing existing data...");
+      await db.delete(offHireRequests);
+      await db.delete(equipmentHires);
+      await db.delete(equipmentItems);
+      await db.delete(equipmentCategories);
+      console.log("Existing equipment hire data cleared.");
     }
 
     // Add equipment categories
@@ -41,7 +52,7 @@ async function seedEquipmentHire() {
     const projects = await db.execute(sql`SELECT id FROM projects LIMIT 2`);
     const projectIds = projects.rows.map(row => Number(row.id));
 
-    // Add equipment items
+    // Add equipment items with modified format for PostgreSQL
     const equipmentData = [
       {
         categoryId: categoryIds[0].id, // Excavators
@@ -53,6 +64,7 @@ async function seedEquipmentHire() {
         ownedStatus: "hired" as const,
         status: "on-hire" as const,
         createdBy: userIds[0],
+        createdAt: new Date().toISOString(), // Format as ISO string for PostgreSQL
       },
       {
         categoryId: categoryIds[0].id, // Excavators
@@ -164,13 +176,35 @@ async function seedEquipmentHire() {
       },
     ];
     
-    const equipmentResult = await db.insert(equipmentItems).values(equipmentData).returning();
+    // Add the createdAt field to all items
+    const equipmentDataWithDates = equipmentData.map(item => {
+      if (!item.createdAt) {
+        return { 
+          ...item, 
+          createdAt: new Date().toISOString(),
+          purchaseDate: item.purchaseDate ? item.purchaseDate.toISOString() : undefined 
+        };
+      }
+      return item;
+    });
 
-    console.log(`Added ${equipmentData.length} equipment items`);
+    const equipmentResult = await db.insert(equipmentItems).values(equipmentDataWithDates).returning();
+
+    console.log(`Added ${equipmentDataWithDates.length} equipment items`);
     
     // Add equipment hires for items with status "on-hire"
     const today = new Date();
-    const onHireEquipment = equipmentData.filter(item => item.status === "on-hire");
+    const onHireEquipment = [];
+    
+    // Manually identify equipment IDs from the result
+    for (let i = 0; i < equipmentResult.length; i++) {
+      if (equipmentDataWithDates[i].status === "on-hire") {
+        onHireEquipment.push({
+          ...equipmentDataWithDates[i],
+          id: equipmentResult[i].id
+        });
+      }
+    }
     
     const hireData = onHireEquipment.map((item, index) => {
       // Set varied hire periods - some coming due, some overdue
@@ -191,13 +225,15 @@ async function seedEquipmentHire() {
         projectId: projectIds[index % projectIds.length],
         supplierRef: item.supplierRef || supplierIds[index % supplierIds.length],
         hireReference: `HIRE-${(1000 + index).toString()}`,
-        startDate: startDate,
-        expectedEndDate: expectedEndDate,
+        startDate: startDate.toISOString(),
+        expectedEndDate: expectedEndDate.toISOString(),
         hireRate: 100 + (index * 25),
         rateFrequency: (index % 2 === 0 ? "weekly" : "daily") as "weekly" | "daily",
         requestedById: userIds[index % userIds.length],
         deliveryAddress: "Project Site, Construction Way, London",
         notes: `Equipment hire for project phase ${index + 1}`,
+        createdAt: new Date().toISOString(),
+        status: "on-hire",
       };
     });
     
@@ -213,13 +249,15 @@ async function seedEquipmentHire() {
       return {
         hireId: hire.id,
         reference: `OFFHIRE-${(2000 + index).toString()}`,
-        requestedEndDate: requestedEndDate,
+        requestedEndDate: requestedEndDate.toISOString(),
         status: (index === 0 ? "pending" : (index === 1 ? "sent" : "confirmed")) as "pending" | "sent" | "confirmed",
         requestedById: userIds[index % userIds.length],
         pickupAddress: "Project Site, Construction Way, London",
         pickupContact: "Site Manager: 07700 900123",
         notes: `Please collect equipment by ${requestedEndDate.toLocaleDateString()}`,
         qrCode: `EQ-OFFHIRE-${hire.id}-${index}`,
+        createdAt: new Date().toISOString(),
+        requestDate: new Date().toISOString()
       };
     });
     
@@ -238,7 +276,8 @@ async function seedEquipmentHire() {
 // Function to execute on direct run
 async function main() {
   try {
-    await seedEquipmentHire();
+    // Pass true to force seeding even if data exists
+    await seedEquipmentHire(true);
     console.log("Completed equipment hire seeding");
   } catch (err) {
     console.error("Failed to seed equipment hire data:", err);
