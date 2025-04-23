@@ -70,12 +70,12 @@ export default function EquipmentList() {
 
   // Get equipment categories
   const { data: categories, isLoading: isLoadingCategories } = useQuery({
-    queryKey: ["/api/equipment-hire/categories"],
+    queryKey: ["/api/equipment/categories"],
   });
 
   // Get equipment items
   const { data: equipment, isLoading: isLoadingEquipment } = useQuery({
-    queryKey: ["/api/equipment-hire/equipment", { 
+    queryKey: ["/api/equipment/items", { 
       categoryId: categoryFilter,
       status: statusFilter,
       ownedStatus: ownedStatusFilter
