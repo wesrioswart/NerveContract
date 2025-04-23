@@ -177,8 +177,60 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
   };
 
   // Weekly tab content
-  const WeeklyTabContent = () => (
+  const WeeklyTabContent = () => {
+    const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+    const [showBudgetLine, setShowBudgetLine] = useState<boolean>(true);
+    const [chartType, setChartType] = useState<'line' | 'bar'>('line');
+    
+    return (
     <>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-muted/20 p-1 rounded-md">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className={`px-2 py-1 h-7 rounded-md ${chartType === 'line' ? 'bg-background shadow-sm' : ''}`}
+              onClick={() => setChartType('line')}
+            >
+              <LineChart className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs">Line</span>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className={`px-2 py-1 h-7 rounded-md ${chartType === 'bar' ? 'bg-background shadow-sm' : ''}`}
+              onClick={() => setChartType('bar')}
+            >
+              <BarChart3 className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs">Bar</span>
+            </Button>
+          </div>
+          
+          <div className="flex items-center ml-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setShowBudgetLine(!showBudgetLine)}
+            >
+              {showBudgetLine ? 'Hide Budget Line' : 'Show Budget Line'}
+            </Button>
+          </div>
+        </div>
+        
+        <div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-7 text-xs flex items-center gap-1.5"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export Data
+          </Button>
+        </div>
+      </div>
+      
       <div className="relative h-[300px]">
         {/* Y-axis labels */}
         <div className="absolute top-0 left-0 text-xs text-muted-foreground">
@@ -217,21 +269,57 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
           <div className="h-px bg-muted/30 w-full"></div>
         </div>
 
-        {/* Line chart */}
+        {/* Chart */}
         <div className="relative h-[200px] mt-10 mx-auto pl-8">
           <svg width="100%" height="200" className="overflow-visible">
-            {/* Line chart path */}
-            <polyline
-              points={weeklyData.map((week, i) => {
+            {/* Budget line */}
+            {showBudgetLine && (
+              <polyline
+                points={weeklyData.map((week, i) => {
+                  const x = 30 + i * 80;
+                  const y = 180 - (week.budget / maxValue) * 180;
+                  return `${x},${y}`;
+                }).join(' ')}
+                fill="none"
+                stroke="#22c55e"
+                strokeWidth="2"
+                strokeDasharray="4,2"
+                className="opacity-70"
+              />
+            )}
+            
+            {/* Line or bar chart based on selection */}
+            {chartType === 'line' ? (
+              <polyline
+                points={weeklyData.map((week, i) => {
+                  const x = 30 + i * 80;
+                  const y = getYPosition(week.value);
+                  return `${x},${y}`;
+                }).join(' ')}
+                fill="none"
+                stroke="#8b5cf6"
+                strokeWidth="2.5"
+                className="opacity-90"
+              />
+            ) : (
+              weeklyData.map((week, i) => {
                 const x = 30 + i * 80;
                 const y = getYPosition(week.value);
-                return `${x},${y}`;
-              }).join(' ')}
-              fill="none"
-              stroke="#8b5cf6"
-              strokeWidth="2.5"
-              className="opacity-90"
-            />
+                const barWidth = 40;
+                const barHeight = 180 - y;
+                return (
+                  <rect
+                    key={i}
+                    x={x - barWidth / 2}
+                    y={y}
+                    width={barWidth}
+                    height={barHeight}
+                    className={`${week.anomaly ? 'fill-red-400' : 'fill-violet-400'} opacity-80`}
+                    rx={4}
+                  />
+                );
+              })
+            )}
             
             {/* Data points */}
             {weeklyData.map((week, i) => {
@@ -239,19 +327,53 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
               const y = getYPosition(week.value);
               return (
                 <g key={i}>
-                  <circle 
-                    cx={x} 
-                    cy={y} 
-                    r="4"
-                    className={`${week.anomaly ? 'fill-red-500 stroke-white stroke-2' : 'fill-violet-500'}`}
-                  />
-                  {week.anomaly && (
-                    <circle 
-                      cx={x} 
-                      cy={y} 
-                      r="8"
-                      className="fill-red-500 opacity-30 animate-pulse"
-                    />
+                  {chartType === 'line' && (
+                    <>
+                      <circle 
+                        cx={x} 
+                        cy={y} 
+                        r="4"
+                        className={`${week.anomaly ? 'fill-red-500 stroke-white stroke-2' : 'fill-violet-500'} cursor-pointer`}
+                        onClick={() => setSelectedWeek(selectedWeek === i ? null : i)}
+                      />
+                      {week.anomaly && (
+                        <circle 
+                          cx={x} 
+                          cy={y} 
+                          r="8"
+                          className="fill-red-500 opacity-30 animate-pulse"
+                        />
+                      )}
+                    </>
+                  )}
+                  
+                  {/* Selected week indicator */}
+                  {selectedWeek === i && (
+                    <>
+                      <circle 
+                        cx={x} 
+                        cy={y} 
+                        r="6"
+                        className="fill-none stroke-primary stroke-2"
+                      />
+                      <rect
+                        x={x - 80}
+                        y={y - 70}
+                        width="160"
+                        height="60"
+                        rx="4"
+                        className="fill-background stroke-border"
+                      />
+                      <text x={x} y={y - 50} textAnchor="middle" className="fill-foreground text-xs font-medium">
+                        {week.week} ({week.date})
+                      </text>
+                      <text x={x} y={y - 35} textAnchor="middle" className="fill-muted-foreground text-xs">
+                        Spend: {formatCurrency(week.value)}
+                      </text>
+                      <text x={x} y={y - 20} textAnchor="middle" className="fill-muted-foreground text-xs">
+                        Budget: {formatCurrency(week.budget)}
+                      </text>
+                    </>
                   )}
                 </g>
               );
@@ -261,7 +383,12 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
           {/* X-axis labels */}
           <div className="flex justify-between pl-8 pr-16 mt-4">
             {weeklyData.map((week, index) => (
-              <div key={index} className="text-center" style={{ width: "60px" }}>
+              <div 
+                key={index} 
+                className={`text-center cursor-pointer hover:opacity-70 transition-opacity ${selectedWeek === index ? 'bg-muted/30 rounded' : ''}`} 
+                style={{ width: "60px" }}
+                onClick={() => setSelectedWeek(selectedWeek === index ? null : index)}
+              >
                 <div className="text-xs font-medium">{week.week}</div>
                 <div className="text-xs text-muted-foreground mt-1">
                   {formatCurrency(week.value)}
