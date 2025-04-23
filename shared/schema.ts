@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, boolean, jsonb, varchar, date, json, real } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean, jsonb, varchar, date, json, real, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -784,3 +784,250 @@ export type InsertStockLevel = z.infer<typeof insertStockLevelSchema>;
 
 export type StockTransaction = typeof stockTransactions.$inferSelect;
 export type InsertStockTransaction = z.infer<typeof insertStockTransactionSchema>;
+
+// Equipment Hire System
+
+// Equipment categories for classification
+export const equipmentCategories = pgTable("equipment_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  code: text("code").notNull().unique(), // Short code for quick reference
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Equipment master table
+export const equipmentItems = pgTable("equipment_items", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").notNull().references(() => equipmentCategories.id),
+  assetTag: text("asset_tag").unique(), // Company asset tag if owned
+  name: text("name").notNull(),
+  make: text("make").notNull(),
+  model: text("model").notNull(),
+  serialNumber: text("serial_number").unique(),
+  description: text("description"),
+  ownedStatus: text("owned_status", { enum: ["owned", "hired", "leased"] }).notNull(),
+  purchaseDate: date("purchase_date"),
+  purchasePrice: decimal("purchase_price", { precision: 10, scale: 2 }),
+  supplierRef: integer("supplier_ref").references(() => suppliers.id),
+  status: text("status", { 
+    enum: ["available", "on-hire", "under-repair", "off-hired", "disposed"] 
+  }).notNull().default("available"),
+  lastMaintenanceDate: date("last_maintenance_date"),
+  nextMaintenanceDate: date("next_maintenance_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: integer("created_by").references(() => users.id),
+});
+
+// Equipment Hire Records
+export const equipmentHires = pgTable("equipment_hires", {
+  id: serial("id").primaryKey(),
+  equipmentId: integer("equipment_id").notNull().references(() => equipmentItems.id),
+  projectId: integer("project_id").notNull().references(() => projects.id),
+  poId: integer("po_id").references(() => purchaseOrders.id),
+  supplierRef: integer("supplier_ref").references(() => suppliers.id),
+  hireReference: text("hire_reference").notNull(), // Supplier's reference number
+  startDate: date("start_date").notNull(),
+  expectedEndDate: date("expected_end_date").notNull(),
+  actualEndDate: date("actual_end_date"),
+  hireRate: decimal("hire_rate", { precision: 10, scale: 2 }).notNull(),
+  rateFrequency: text("rate_frequency", { 
+    enum: ["daily", "weekly", "monthly"] 
+  }).notNull().default("weekly"),
+  status: text("status", { 
+    enum: ["scheduled", "on-hire", "extended", "off-hire-requested", "returned", "disputed"] 
+  }).notNull().default("scheduled"),
+  requestedById: integer("requested_by_id").notNull().references(() => users.id),
+  programmeActivityId: integer("programme_activity_id").references(() => programmeActivities.id),
+  deliveryAddress: text("delivery_address"),
+  deliveryContact: text("delivery_contact"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Off-Hire Requests
+export const offHireRequests = pgTable("off_hire_requests", {
+  id: serial("id").primaryKey(),
+  hireId: integer("hire_id").notNull().references(() => equipmentHires.id),
+  reference: text("reference").notNull(), // Off-hire reference number (for tracking)
+  requestDate: timestamp("request_date").notNull().defaultNow(),
+  requestedEndDate: date("requested_end_date").notNull(),
+  actualEndDate: date("actual_end_date"),
+  status: text("status", { 
+    enum: ["pending", "sent", "confirmed", "disputed", "completed", "cancelled"] 
+  }).notNull().default("pending"),
+  requestedById: integer("requested_by_id").notNull().references(() => users.id),
+  confirmationNumber: text("confirmation_number"),
+  confirmationDate: timestamp("confirmation_date"),
+  pickupAddress: text("pickup_address"),
+  pickupContact: text("pickup_contact"),
+  notes: text("notes"),
+  // For mobile scanning
+  qrCode: text("qr_code").unique(),
+  barcode: text("barcode"),
+  scanDate: timestamp("scan_date"),
+  scanLocation: text("scan_location"),
+  scanLatitude: text("scan_latitude"),
+  scanLongitude: text("scan_longitude"),
+  scanById: integer("scan_by_id").references(() => users.id),
+  images: jsonb("images"), // URLs to any photos taken during scan/return process
+  confirmedById: integer("confirmed_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Hire Notifications
+export const hireNotifications = pgTable("hire_notifications", {
+  id: serial("id").primaryKey(),
+  hireId: integer("hire_id").notNull().references(() => equipmentHires.id),
+  offHireRequestId: integer("off_hire_request_id").references(() => offHireRequests.id),
+  type: text("type", { 
+    enum: ["hire-confirmation", "due-soon", "overdue", "off-hire-request", "return-confirmation"] 
+  }).notNull(),
+  message: text("message").notNull(),
+  sentDate: timestamp("sent_date").notNull().defaultNow(),
+  sentTo: text("sent_to").notNull(), // Email or other contact info
+  sentById: integer("sent_by_id").references(() => users.id),
+  status: text("status", { 
+    enum: ["pending", "sent", "delivered", "read", "action-taken", "failed"] 
+  }).notNull().default("pending"),
+  escalationLevel: integer("escalation_level").default(0), // 0=normal, 1=manager, 2=director
+  reminderCount: integer("reminder_count").default(0),
+  lastReminderDate: timestamp("last_reminder_date"),
+  responseDate: timestamp("response_date"),
+  responseMessage: text("response_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations
+export const equipmentCategoryRelations = relations(equipmentCategories, ({ many }) => ({
+  equipmentItems: many(equipmentItems),
+}));
+
+export const equipmentItemsRelations = relations(equipmentItems, ({ one, many }) => ({
+  category: one(equipmentCategories, {
+    fields: [equipmentItems.categoryId],
+    references: [equipmentCategories.id],
+  }),
+  supplier: one(suppliers, {
+    fields: [equipmentItems.supplierRef],
+    references: [suppliers.id],
+  }),
+  hires: many(equipmentHires),
+  createdByUser: one(users, {
+    fields: [equipmentItems.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const equipmentHiresRelations = relations(equipmentHires, ({ one, many }) => ({
+  equipment: one(equipmentItems, {
+    fields: [equipmentHires.equipmentId],
+    references: [equipmentItems.id],
+  }),
+  project: one(projects, {
+    fields: [equipmentHires.projectId],
+    references: [projects.id],
+  }),
+  purchaseOrder: one(purchaseOrders, {
+    fields: [equipmentHires.poId],
+    references: [purchaseOrders.id],
+  }),
+  supplier: one(suppliers, {
+    fields: [equipmentHires.supplierRef],
+    references: [suppliers.id],
+  }),
+  requestedBy: one(users, {
+    fields: [equipmentHires.requestedById],
+    references: [users.id],
+  }),
+  programmeActivity: one(programmeActivities, {
+    fields: [equipmentHires.programmeActivityId],
+    references: [programmeActivities.id],
+  }),
+  offHireRequests: many(offHireRequests),
+  notifications: many(hireNotifications),
+}));
+
+export const offHireRequestsRelations = relations(offHireRequests, ({ one, many }) => ({
+  hire: one(equipmentHires, {
+    fields: [offHireRequests.hireId],
+    references: [equipmentHires.id],
+  }),
+  requestedBy: one(users, {
+    fields: [offHireRequests.requestedById],
+    references: [users.id],
+  }),
+  scanBy: one(users, {
+    fields: [offHireRequests.scanById],
+    references: [users.id],
+  }),
+  confirmedBy: one(users, {
+    fields: [offHireRequests.confirmedById],
+    references: [users.id],
+  }),
+  notifications: many(hireNotifications),
+}));
+
+export const hireNotificationsRelations = relations(hireNotifications, ({ one }) => ({
+  hire: one(equipmentHires, {
+    fields: [hireNotifications.hireId],
+    references: [equipmentHires.id],
+  }),
+  offHireRequest: one(offHireRequests, {
+    fields: [hireNotifications.offHireRequestId],
+    references: [offHireRequests.id],
+  }),
+  sentBy: one(users, {
+    fields: [hireNotifications.sentById],
+    references: [users.id],
+  }),
+}));
+
+// Create insert schemas
+export const insertEquipmentCategorySchema = createInsertSchema(equipmentCategories).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertEquipmentItemSchema = createInsertSchema(equipmentItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertEquipmentHireSchema = createInsertSchema(equipmentHires).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertOffHireRequestSchema = createInsertSchema(offHireRequests).omit({
+  id: true,
+  requestDate: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertHireNotificationSchema = createInsertSchema(hireNotifications).omit({
+  id: true,
+  sentDate: true,
+  createdAt: true,
+});
+
+// Define types
+export type EquipmentCategory = typeof equipmentCategories.$inferSelect;
+export type InsertEquipmentCategory = z.infer<typeof insertEquipmentCategorySchema>;
+
+export type EquipmentItem = typeof equipmentItems.$inferSelect;
+export type InsertEquipmentItem = z.infer<typeof insertEquipmentItemSchema>;
+
+export type EquipmentHire = typeof equipmentHires.$inferSelect;
+export type InsertEquipmentHire = z.infer<typeof insertEquipmentHireSchema>;
+
+export type OffHireRequest = typeof offHireRequests.$inferSelect;
+export type InsertOffHireRequest = z.infer<typeof insertOffHireRequestSchema>;
+
+export type HireNotification = typeof hireNotifications.$inferSelect;
+export type InsertHireNotification = z.infer<typeof insertHireNotificationSchema>;
