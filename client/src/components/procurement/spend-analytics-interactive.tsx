@@ -21,7 +21,8 @@ import {
   Check,
   Table,
   Lightbulb,
-  Filter
+  Filter,
+  FileText
 } from "lucide-react";
 
 import {
@@ -212,6 +213,28 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
             </div>
           </div>
           
+          {/* AI Insights Banner */}
+          <div className="flex items-center justify-between mt-4 p-3 rounded-md bg-gradient-to-r from-indigo-50 via-violet-50 to-purple-50 border border-purple-100">
+            <div className="flex items-center">
+              <div className="bg-violet-100 rounded-full p-1.5 mr-3">
+                <Lightbulb className="h-5 w-5 text-violet-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-violet-700">AI-Powered Insight</h3>
+                <p className="text-xs text-violet-600 max-w-md">
+                  {resolvedAnomalies.length > 0 || implementedForecasts.length > 0 
+                    ? `You've addressed ${resolvedAnomalies.length} anomalies and implemented ${implementedForecasts.length} cost-saving recommendations.`
+                    : 'Recent analysis detected 3 spending anomalies with potential savings of £54,400 identified.'}
+                </p>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" className="text-violet-600 hover:text-violet-700 hover:bg-violet-100"
+              onClick={() => setActiveTab("insights")}>
+              View All Insights
+              <ArrowRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          </div>
+          
           <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t">
             <div className="flex items-center gap-2">
               <span>View:</span>
@@ -341,7 +364,7 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   </div>
                 </div>
                 
-                <div>
+                <div className="relative group">
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -350,6 +373,27 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                     <Download className="h-3.5 w-3.5" />
                     Export Data
                   </Button>
+                  
+                  {/* Export format dropdown */}
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg border border-border z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200">
+                    <div className="p-2">
+                      <div className="text-xs font-semibold mb-1 px-2 py-1 text-muted-foreground">Select Format</div>
+                      <div className="space-y-1">
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-xs h-7 px-2">
+                          <FileText className="h-3.5 w-3.5 mr-2" />
+                          PDF - Weekly Report
+                        </Button>
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-xs h-7 px-2">
+                          <Table className="h-3.5 w-3.5 mr-2" />
+                          CSV - Raw Data
+                        </Button>
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-xs h-7 px-2">
+                          <BarChart3 className="h-3.5 w-3.5 mr-2" />
+                          Excel - With Charts
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -516,13 +560,25 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                           {formatCurrency(week.value)}
                         </div>
                         {week.anomaly && (
-                          <Badge 
-                            variant="outline" 
-                            className="h-5 px-1 mt-1 text-[10px] border-red-200 bg-red-50 text-red-700"
-                          >
-                            <AlertCircle className="h-2.5 w-2.5 mr-0.5" /> 
-                            Anomaly
-                          </Badge>
+                          <div className="relative group">
+                            <Badge 
+                              variant="outline" 
+                              className="h-5 px-1 mt-1 text-[10px] border-red-200 bg-red-50 text-red-700"
+                            >
+                              <AlertCircle className="h-2.5 w-2.5 mr-0.5" /> 
+                              Anomaly
+                            </Badge>
+                            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 w-64 bg-white border border-gray-200 rounded-md p-3 shadow-lg text-left opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                              <div className="text-xs font-medium text-red-700 mb-1 flex items-center">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                Anomaly Details
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {week.anomalyReason || "Unexpected spending pattern detected"}
+                              </p>
+                              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-white border-r border-b border-gray-200"></div>
+                            </div>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -539,26 +595,57 @@ export default function SpendAnalyticsDashboard({ className }: SpendAnalyticsDas
                   <CardContent className="pt-2">
                     <div className="space-y-3">
                       {purchaseOrders.map((po, i) => (
-                        <div key={i} className="flex items-center justify-between border-b pb-2">
-                          <div>
-                            <p className="font-medium text-sm">{po.reference}</p>
-                            <p className="text-sm text-muted-foreground">{po.supplier}</p>
-                          </div>
-                          <div className="flex flex-col items-end">
-                            <Badge 
-                              className={`
-                                ${po.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                po.status === 'draft' ? 'bg-blue-100 text-blue-800' : 
-                                'bg-amber-100 text-amber-800'}
-                                mb-1
-                              `}
-                            >
-                              {po.status.charAt(0).toUpperCase() + po.status.slice(1)}
-                            </Badge>
-                            <div className="flex items-center">
-                              <Badge variant="outline" className="mr-2">{po.week}</Badge>
-                              <span className="font-semibold">{formatCurrency(po.amount)}</span>
+                        <div key={i} className="flex flex-col border-b pb-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-sm">{po.reference}</p>
+                              <p className="text-sm text-muted-foreground">{po.supplier}</p>
                             </div>
+                            <div className="flex flex-col items-end">
+                              <Badge 
+                                className={`
+                                  ${po.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                  po.status === 'draft' ? 'bg-blue-100 text-blue-800' : 
+                                  'bg-amber-100 text-amber-800'}
+                                  mb-1
+                                `}
+                              >
+                                {po.status.charAt(0).toUpperCase() + po.status.slice(1)}
+                              </Badge>
+                              <div className="flex items-center">
+                                <Badge variant="outline" className="mr-2">{po.week}</Badge>
+                                <span className="font-semibold">{formatCurrency(po.amount)}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Action buttons based on PO status */}
+                          <div className="flex justify-end gap-2 mt-2">
+                            {po.status === 'pending approval' && (
+                              <>
+                                <Button variant="outline" size="sm" className="h-7 text-xs">
+                                  <Check className="h-3 w-3 mr-1" /> Approve
+                                </Button>
+                                <Button variant="outline" size="sm" className="h-7 text-xs">
+                                  Request Changes
+                                </Button>
+                              </>
+                            )}
+                            {po.status === 'draft' && (
+                              <>
+                                <Button variant="outline" size="sm" className="h-7 text-xs">
+                                  Edit
+                                </Button>
+                                <Button variant="outline" size="sm" className="h-7 text-xs">
+                                  Submit
+                                </Button>
+                              </>
+                            )}
+                            {po.status === 'completed' && (
+                              <Button variant="outline" size="sm" className="h-7 text-xs">
+                                View Details
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))}
