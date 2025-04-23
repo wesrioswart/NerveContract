@@ -166,11 +166,11 @@ async function seedEquipmentHire() {
     
     const equipmentResult = await db.insert(equipmentItems).values(equipmentData).returning();
 
-    console.log(`Added ${equipmentItems.length} equipment items`);
+    console.log(`Added ${equipmentData.length} equipment items`);
     
     // Add equipment hires for items with status "on-hire"
     const today = new Date();
-    const onHireEquipment = equipmentItems.filter(item => item.status === "on-hire");
+    const onHireEquipment = equipmentData.filter(item => item.status === "on-hire");
     
     const hireData = onHireEquipment.map((item, index) => {
       // Set varied hire periods - some coming due, some overdue

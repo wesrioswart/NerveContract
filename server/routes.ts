@@ -8,6 +8,7 @@ import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarn
   insertProjectSchema, insertProgressReportSchema } from "@shared/schema";
 import * as procurementController from "./controllers/procurement-controller";
 import * as inventoryController from "./controllers/inventory-controller";
+import * as equipmentHireController from "./controllers/equipment-hire-controller";
 import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured } from "./utils/openai";
 import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
 import { parseProgrammeFile } from "./services/programme-parser";
@@ -1682,6 +1683,34 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   
   // Dashboard & Analytics
   app.get("/api/inventory/dashboard", requireAuth, inventoryController.getInventoryDashboard);
+
+  // Equipment Hire System Routes
+  // Categories
+  app.get("/api/equipment/categories", requireAuth, equipmentHireController.getAllEquipmentCategories);
+  
+  // Equipment Items
+  app.get("/api/equipment/items", requireAuth, equipmentHireController.getEquipmentItems);
+  app.get("/api/equipment/items/:id", requireAuth, equipmentHireController.getEquipmentItemById);
+  app.post("/api/equipment/items", requireAuth, equipmentHireController.createEquipmentItem);
+  app.patch("/api/equipment/items/:id", requireAuth, equipmentHireController.updateEquipmentItem);
+  
+  // Equipment Hires
+  app.get("/api/equipment/hires", requireAuth, equipmentHireController.getEquipmentHires);
+  app.get("/api/equipment/hires/:id", requireAuth, equipmentHireController.getHireById);
+  app.post("/api/equipment/hires", requireAuth, equipmentHireController.createEquipmentHire);
+  app.patch("/api/equipment/hires/:id", requireAuth, equipmentHireController.updateEquipmentHire);
+  
+  // Off-Hire Requests
+  app.get("/api/equipment/off-hire-requests", requireAuth, equipmentHireController.getOffHireRequests);
+  app.get("/api/equipment/off-hire-requests/:id", requireAuth, equipmentHireController.getOffHireRequestById);
+  app.post("/api/equipment/off-hire-requests", requireAuth, equipmentHireController.createOffHireRequest);
+  app.patch("/api/equipment/off-hire-requests/:id", requireAuth, equipmentHireController.updateOffHireRequest);
+  
+  // Mobile Scan Functionality - priority feature
+  app.post("/api/equipment/mobile-scan", requireAuth, equipmentHireController.mobileOffHireScan);
+  
+  // Dashboard Statistics
+  app.get("/api/equipment/dashboard", requireAuth, equipmentHireController.getEquipmentHireDashboardStats);
 
   const httpServer = createServer(app);
   return httpServer;
