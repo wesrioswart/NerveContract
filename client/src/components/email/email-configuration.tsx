@@ -20,8 +20,11 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { AnimatedButton } from '@/components/ui/animated-button';
 import { AnimationWrapper } from '@/components/ui/animation-wrapper';
-import { Loader2, Mail, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Loader2, Mail, ShieldCheck, ArrowRight, Plus, FileText, Send } from 'lucide-react';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 // Schema for email configuration
 const emailConfigSchema = z.object({
@@ -35,6 +38,143 @@ const emailConfigSchema = z.object({
 });
 
 type EmailConfigFormValues = z.infer<typeof emailConfigSchema>;
+
+function CustomMockEmailCreator() {
+  const { toast } = useToast();
+  const [subject, setSubject] = useState('');
+  const [content, setContent] = useState('');
+  const [emailType, setEmailType] = useState<string>('');
+  
+  // Add mock email mutation
+  const addMockEmailMutation = useMutation({
+    mutationFn: async (data: { subject: string; content: string; type?: string }) => {
+      const response = await apiRequest('POST', '/api/email/add-mock-email', data);
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Test Email Added',
+        description: 'Custom test email has been added successfully.',
+      });
+      // Clear form fields
+      setSubject('');
+      setContent('');
+    },
+    onError: (error) => {
+      toast({
+        title: 'Failed to Add Test Email',
+        description: `Error: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  const handleAddMockEmail = () => {
+    if (!subject.trim() || !content.trim()) {
+      toast({
+        title: 'Invalid Input',
+        description: 'Please provide both subject and content for the test email.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    addMockEmailMutation.mutate({
+      subject,
+      content,
+      type: emailType || undefined
+    });
+  };
+  
+  return (
+    <div className="mt-4 bg-blue-50 rounded-lg p-4 border border-blue-100">
+      <h3 className="text-lg font-medium text-blue-800 mb-3 flex items-center gap-2">
+        <FileText className="h-4 w-4" />
+        Create Custom Test Email
+      </h3>
+      
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-3">
+            <label htmlFor="mock-subject" className="block text-sm font-medium text-blue-700 mb-1">
+              Email Subject
+            </label>
+            <Input
+              id="mock-subject"
+              placeholder="Enter email subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="bg-white"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="mock-type" className="block text-sm font-medium text-blue-700 mb-1">
+              Email Type
+            </label>
+            <Select
+              value={emailType}
+              onValueChange={setEmailType}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                <SelectItem value="HIRE">HIRE</SelectItem>
+                <SelectItem value="OFFHIRE">OFFHIRE</SelectItem>
+                <SelectItem value="DELIVERY">DELIVERY</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <div>
+          <label htmlFor="mock-content" className="block text-sm font-medium text-blue-700 mb-1">
+            Email Content
+          </label>
+          <Textarea
+            id="mock-content"
+            placeholder="Enter email content"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={4}
+            className="bg-white"
+          />
+        </div>
+        
+        <div className="pt-2">
+          <Button
+            type="button"
+            variant="default"
+            onClick={handleAddMockEmail}
+            disabled={addMockEmailMutation.isPending || !subject.trim() || !content.trim()}
+            className="w-full"
+          >
+            {addMockEmailMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Adding Test Email...
+              </>
+            ) : (
+              <>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Test Email
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+      
+      <div className="mt-3 pt-3 border-t border-blue-200">
+        <p className="text-xs text-blue-600">
+          <strong>Tip:</strong> For equipment-related emails, either select a type or include "HIRE:", "OFFHIRE:", or "DELIVERY:" in the subject.
+          For project reference, use the format "Project: ABC123" in the subject.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function EmailConfiguration() {
   const [configSuccess, setConfigSuccess] = useState(false);
@@ -437,6 +577,65 @@ export default function EmailConfiguration() {
         </CardFooter>
       </Card>
       
+      <Card className="mb-6 mt-8">
+        <CardHeader>
+          <CardTitle>Test Mode</CardTitle>
+          <CardDescription>
+            Enable test mode to process mock emails without real server connection
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600 mb-4">
+            Test mode allows you to verify the email processing functionality without setting up 
+            an actual email server connection. When enabled, the system will process predefined 
+            test emails related to equipment hire.
+          </p>
+          
+          <div className="flex items-center w-full gap-4 mb-6">
+            <AnimatedButton 
+              disabled={enableMockModeMutation.isPending}
+              onClick={() => enableMockModeMutation.mutate()}
+              className="w-full"
+            >
+              {enableMockModeMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enabling Test Mode...
+                </>
+              ) : (
+                <div className="flex items-center">
+                  Enable Test Mode
+                  <InfoTooltip text="Enables mock mode with test emails for development and testing. No real email credentials needed." />
+                </div>
+              )}
+            </AnimatedButton>
+            
+            <AnimatedButton
+              variant="outline"
+              animation="subtle"
+              disabled={processEmailsMutation.isPending}
+              onClick={() => processEmailsMutation.mutate()}
+              className="w-full"
+            >
+              {processEmailsMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <div className="flex items-center">
+                  Process Test Emails
+                  <InfoTooltip text="Processes any test emails available in the system." />
+                </div>
+              )}
+            </AnimatedButton>
+          </div>
+          
+          <Separator className="my-4" />
+          <CustomMockEmailCreator />
+        </CardContent>
+      </Card>
+    
       <div className="mt-8 p-4 rounded-lg bg-amber-50 border border-amber-200">
         <h3 className="text-lg font-medium text-amber-800 mb-2">GDPR Compliance Notice</h3>
         <p className="text-amber-700">
