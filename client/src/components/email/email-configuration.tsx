@@ -176,7 +176,10 @@ export default function EmailConfiguration() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel className="flex items-center">
+                          Password
+                          <InfoTooltip text="Password for the email account. For security, consider using an app-specific password if your email provider supports it." />
+                        </FormLabel>
                         <FormControl>
                           <Input type="password" placeholder="••••••••" {...field} />
                         </FormControl>
@@ -195,7 +198,10 @@ export default function EmailConfiguration() {
                     name="host"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>IMAP Host</FormLabel>
+                        <FormLabel className="flex items-center">
+                          IMAP Host
+                          <InfoTooltip text="The incoming mail server address from your email provider (e.g., imap.gmail.com for Gmail or outlook.office365.com for Microsoft)." />
+                        </FormLabel>
                         <FormControl>
                           <Input placeholder="imap.example.com" {...field} />
                         </FormControl>
@@ -214,7 +220,10 @@ export default function EmailConfiguration() {
                     name="port"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Port</FormLabel>
+                        <FormLabel className="flex items-center">
+                          Port
+                          <InfoTooltip text="The connection port for your email server. Common values are 993 for secure IMAP (IMAPS) or 143 for standard IMAP." />
+                        </FormLabel>
                         <FormControl>
                           <Input type="number" placeholder="993" {...field} />
                         </FormControl>
@@ -236,7 +245,10 @@ export default function EmailConfiguration() {
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                          <FormLabel className="text-base">Use TLS</FormLabel>
+                          <FormLabel className="text-base flex items-center">
+                            Use TLS
+                            <InfoTooltip text="Enables Transport Layer Security encryption for secure communication with the email server. Recommended for all connections." />
+                          </FormLabel>
                           <FormDescription>
                             Enable secure TLS connection
                           </FormDescription>
@@ -259,7 +271,10 @@ export default function EmailConfiguration() {
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                          <FormLabel className="text-base">Verify SSL</FormLabel>
+                          <FormLabel className="text-base flex items-center">
+                            Verify SSL
+                            <InfoTooltip text="Verifies SSL certificates from the email server. Disable only in testing environments with self-signed certificates." />
+                          </FormLabel>
                           <FormDescription>
                             Verify SSL certificates
                           </FormDescription>
@@ -282,7 +297,10 @@ export default function EmailConfiguration() {
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                          <FormLabel className="text-base">Mark as Read</FormLabel>
+                          <FormLabel className="text-base flex items-center">
+                            Mark as Read
+                            <InfoTooltip text="Automatically marks emails as read after processing. Helps prevent duplicate processing if enabled." />
+                          </FormLabel>
                           <FormDescription>
                             Mark processed emails as read
                           </FormDescription>
@@ -339,7 +357,10 @@ export default function EmailConfiguration() {
                 Testing Connection...
               </>
             ) : (
-              <>Test Connection</>
+              <div className="flex items-center">
+                Test Connection
+                <InfoTooltip text="Tests connectivity to the email server with the provided credentials without processing any emails." />
+              </div>
             )}
           </AnimatedButton>
           
@@ -356,10 +377,11 @@ export default function EmailConfiguration() {
                 Processing...
               </>
             ) : (
-              <>
+              <div className="flex items-center">
                 Process New Emails
+                <InfoTooltip text="Immediately checks for and processes any new unread emails that match equipment formats." />
                 <ArrowRight className="ml-2 h-4 w-4" />
-              </>
+              </div>
             )}
           </AnimatedButton>
         </CardFooter>
