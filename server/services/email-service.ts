@@ -17,6 +17,9 @@ if (process.env.SENDGRID_API_KEY) {
 let emailConfig: any = null;
 let mockModeEnabled: boolean = false;
 
+// Store custom mock emails
+let customMockEmails: Array<{subject: string, content: string, timestamp: Date}> = [];
+
 interface EmailParams {
   to: string;
   from: string;
@@ -75,6 +78,42 @@ export async function disconnect() {
 }
 
 /**
+ * Add a custom mock email for testing
+ * @returns The added mock email
+ */
+export function addMockEmail(subject: string, content: string): {
+  subject: string;
+  content: string;
+  timestamp: Date;
+} {
+  const mockEmail = {
+    subject,
+    content,
+    timestamp: new Date()
+  };
+  
+  customMockEmails.push(mockEmail);
+  console.log(`Added custom mock email: "${subject}"`);
+  
+  return mockEmail;
+}
+
+/**
+ * Get all custom mock emails
+ */
+export function getCustomMockEmails(): Array<{subject: string, content: string, timestamp: Date}> {
+  return [...customMockEmails];
+}
+
+/**
+ * Clear all custom mock emails
+ */
+export function clearCustomMockEmails(): void {
+  customMockEmails = [];
+  console.log('Cleared all custom mock emails');
+}
+
+/**
  * Process incoming emails
  * @returns {Promise<{processedCount: number}>} Number of emails processed
  */
@@ -115,8 +154,8 @@ export async function processEmails(): Promise<{processedCount: number, processe
     console.log('Identifying document types based on subject keywords...');
     console.log('Looking for: CE, EW, TQ, NCR, HIRE, OFFHIRE, DELIVERY');
     
-    // Mock emails for demonstration purposes
-    const mockEmails = [
+    // Default mock emails for demonstration purposes
+    const defaultMockEmails = [
       {
         subject: 'HIRE: New Excavator Request - Project: ABC123',
         content: 'We need a large excavator for site clearance. Equipment details: JCB 3CX, 4-wheel drive, with bucket and breaker attachments. Required from 2023-06-01 to 2023-06-30.'
@@ -131,12 +170,23 @@ export async function processEmails(): Promise<{processedCount: number, processe
       }
     ];
     
+    // Combine default and custom mock emails
+    const allMockEmails = [
+      ...defaultMockEmails,
+      ...customMockEmails.map(email => ({
+        subject: email.subject,
+        content: email.content
+      }))
+    ];
+    
+    console.log(`Found ${allMockEmails.length} emails to process (${defaultMockEmails.length} default, ${customMockEmails.length} custom)`);
+    
     // Track processed emails and their status
     const processedEmails = [];
     let processedCount = 0;
     
     // Process each mock email
-    for (const email of mockEmails) {
+    for (const email of allMockEmails) {
       console.log(`\nProcessing email: ${email.subject}`);
       let processed = false;
       

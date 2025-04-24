@@ -48,6 +48,46 @@ export const EmailController = {
   },
   
   /**
+   * Add a custom mock email for testing
+   */
+  addMockEmail: async (req: Request, res: Response) => {
+    try {
+      const { subject, content, type } = req.body;
+      
+      if (!subject || !content) {
+        return res.status(400).json({ error: 'Subject and content are required' });
+      }
+      
+      // Validate the email type if provided
+      if (type && !['HIRE', 'OFFHIRE', 'DELIVERY'].includes(type.toUpperCase())) {
+        return res.status(400).json({ 
+          error: 'Invalid email type. Must be one of: HIRE, OFFHIRE, DELIVERY' 
+        });
+      }
+      
+      // Format the subject based on the type if provided
+      let formattedSubject = subject;
+      if (type) {
+        const typePrefix = type.toUpperCase() + ': ';
+        if (!formattedSubject.toUpperCase().startsWith(type.toUpperCase())) {
+          formattedSubject = typePrefix + formattedSubject;
+        }
+      }
+      
+      // Add the custom mock email
+      const addedEmail = emailService.addMockEmail(formattedSubject, content);
+      
+      res.status(200).json({
+        message: 'Mock email added successfully',
+        email: addedEmail
+      });
+    } catch (error) {
+      console.error('Failed to add mock email:', error);
+      res.status(500).json({ error: 'Failed to add mock email' });
+    }
+  },
+  
+  /**
    * Test connection to the email server
    */
   testConnection: async (_req: Request, res: Response) => {
