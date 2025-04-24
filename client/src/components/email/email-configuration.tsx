@@ -20,11 +20,39 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { AnimatedButton } from '@/components/ui/animated-button';
 import { AnimationWrapper } from '@/components/ui/animation-wrapper';
-import { Loader2, Mail, ShieldCheck, ArrowRight, Plus, FileText, Send } from 'lucide-react';
+import { 
+  Loader2, Mail, ShieldCheck, ArrowRight, Plus, FileText, Send, 
+  Save, BookMarked, Terminal, Trash, Play, Code, AlertCircle,
+  Check, X, PenTool 
+} from 'lucide-react';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger 
+} from '@/components/ui/accordion';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Schema for email configuration
 const emailConfigSchema = z.object({
@@ -44,6 +72,15 @@ function CustomMockEmailCreator() {
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
   const [emailType, setEmailType] = useState<string>('');
+  const [savedScenarios, setSavedScenarios] = useState<Array<{
+    name: string;
+    subject: string;
+    content: string;
+    type: string;
+  }>>([]);
+  const [scenarioName, setScenarioName] = useState('');
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const [processingResults, setProcessingResults] = useState<any>(null);
   
   // Add mock email mutation
   const addMockEmailMutation = useMutation({
@@ -69,6 +106,31 @@ function CustomMockEmailCreator() {
     },
   });
   
+  // Process test email mutation with results
+  const processTestEmailMutation = useMutation({
+    mutationFn: async (data: { subject: string; content: string; type?: string }) => {
+      // First add the mock email
+      await apiRequest('POST', '/api/email/add-mock-email', data);
+      // Then process emails
+      const response = await apiRequest('POST', '/api/email/process');
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Test Email Processed',
+        description: `Successfully processed the test email.`,
+      });
+      setProcessingResults(data);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Processing Failed',
+        description: `Failed to process test email: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+  
   const handleAddMockEmail = () => {
     if (!subject.trim() || !content.trim()) {
       toast({
@@ -86,12 +148,103 @@ function CustomMockEmailCreator() {
     });
   };
   
+  const handleSaveScenario = () => {
+    if (!scenarioName.trim() || !subject.trim() || !content.trim()) {
+      toast({
+        title: 'Invalid Input',
+        description: 'Please provide a name, subject, and content for the scenario.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    const newScenario = {
+      name: scenarioName,
+      subject,
+      content,
+      type: emailType
+    };
+    
+    setSavedScenarios([...savedScenarios, newScenario]);
+    setScenarioName('');
+    setShowSaveForm(false);
+    
+    toast({
+      title: 'Scenario Saved',
+      description: `Test scenario "${scenarioName}" has been saved for future use.`
+    });
+  };
+  
+  const loadScenario = (scenario: typeof savedScenarios[0]) => {
+    setSubject(scenario.subject);
+    setContent(scenario.content);
+    setEmailType(scenario.type);
+    
+    toast({
+      title: 'Scenario Loaded',
+      description: `Test scenario "${scenario.name}" has been loaded.`
+    });
+  };
+  
+  const deleteScenario = (index: number) => {
+    const newScenarios = [...savedScenarios];
+    const removedName = newScenarios[index].name;
+    newScenarios.splice(index, 1);
+    setSavedScenarios(newScenarios);
+    
+    toast({
+      title: 'Scenario Deleted',
+      description: `Test scenario "${removedName}" has been removed.`
+    });
+  };
+  
+  const handleTestEmail = () => {
+    if (!subject.trim() || !content.trim()) {
+      toast({
+        title: 'Invalid Input',
+        description: 'Please provide both subject and content for the test email.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    processTestEmailMutation.mutate({
+      subject,
+      content,
+      type: emailType === 'none' ? undefined : emailType
+    });
+  };
+  
+  // Generate a formatted subject line based on the email type for preview
+  const getFormattedSubjectPreview = () => {
+    if (!subject) return 'Subject preview will appear here';
+    
+    if (emailType === 'none' || !emailType) {
+      return subject;
+    }
+    
+    // Check if the subject already has the type prefix
+    if (subject.startsWith(`${emailType}:`)) {
+      return subject;
+    }
+    
+    return `${emailType}: ${subject}`;
+  };
+  
   return (
     <div className="mt-4 bg-blue-50 rounded-lg p-4 border border-blue-100">
       <h3 className="text-lg font-medium text-blue-800 mb-3 flex items-center gap-2">
         <FileText className="h-4 w-4" />
         Create Custom Test Email
       </h3>
+      
+      {/* Subject line preview */}
+      {subject && (
+        <div className="mb-4 p-3 bg-white rounded-lg border border-blue-200 shadow-sm">
+          <div className="text-xs font-medium text-blue-500 mb-1">Email Subject Preview:</div>
+          <div className="font-medium text-gray-800">{getFormattedSubjectPreview()}</div>
+        </div>
+      )}
       
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -143,7 +296,7 @@ function CustomMockEmailCreator() {
           />
         </div>
         
-        <div className="pt-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
           <Button
             type="button"
             variant="default"
@@ -163,8 +316,185 @@ function CustomMockEmailCreator() {
               </>
             )}
           </Button>
+          
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleTestEmail}
+            disabled={processTestEmailMutation.isPending || !subject.trim() || !content.trim()}
+            className="w-full"
+          >
+            {processTestEmailMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Play className="mr-2 h-4 w-4" />
+                Test & Process Now
+              </>
+            )}
+          </Button>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowSaveForm(true)}
+                disabled={!subject.trim() || !content.trim()}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Save Scenario
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Save Test Scenario</DialogTitle>
+                <DialogDescription>
+                  Give this test scenario a name to save it for future use.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div>
+                  <label htmlFor="scenario-name" className="block text-sm font-medium mb-1">
+                    Scenario Name
+                  </label>
+                  <Input
+                    id="scenario-name"
+                    value={scenarioName}
+                    onChange={(e) => setScenarioName(e.target.value)}
+                    placeholder="e.g., Equipment Hire Request"
+                    className="w-full"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="text-sm font-medium">Preview:</div>
+                  <div className="rounded-md bg-muted p-3">
+                    <div className="text-sm font-medium">{getFormattedSubjectPreview()}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {content.length > 60 ? content.substring(0, 60) + '...' : content}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="secondary" onClick={() => setShowSaveForm(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="button" 
+                  onClick={handleSaveScenario}
+                  disabled={!scenarioName.trim()}
+                >
+                  Save
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
+      
+      {/* Saved scenarios */}
+      {savedScenarios.length > 0 && (
+        <div className="mt-6">
+          <Accordion type="single" collapsible className="bg-white rounded-lg border border-blue-200">
+            <AccordionItem value="saved-scenarios">
+              <AccordionTrigger className="px-4 py-2 text-blue-700 hover:text-blue-900">
+                <div className="flex items-center gap-2">
+                  <BookMarked className="h-4 w-4" />
+                  <span>Saved Test Scenarios ({savedScenarios.length})</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 py-2">
+                <div className="space-y-2">
+                  {savedScenarios.map((scenario, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between p-2 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium">{scenario.name}</div>
+                        <div className="text-xs text-gray-600 truncate max-w-full">
+                          {scenario.type && scenario.type !== 'none' ? `[${scenario.type}] ` : ''}
+                          {scenario.subject}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => loadScenario(scenario)}
+                          className="h-8 px-2"
+                        >
+                          <PenTool className="h-4 w-4" />
+                          <span className="sr-only">Load</span>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => deleteScenario(index)}
+                          className="h-8 px-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      )}
+      
+      {/* Processing results */}
+      {processingResults && (
+        <div className="mt-6">
+          <Accordion type="single" collapsible className="bg-white rounded-lg border border-green-200">
+            <AccordionItem value="processing-results">
+              <AccordionTrigger className="px-4 py-2 text-green-700 hover:text-green-900">
+                <div className="flex items-center gap-2">
+                  <Terminal className="h-4 w-4" />
+                  <span>Processing Results</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 py-2">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-green-50 rounded-md">
+                      <div className="text-sm font-medium text-green-800 mb-1">Processed:</div>
+                      <div className="text-2xl font-bold text-green-700">
+                        {processingResults.processedCount || 0} emails
+                      </div>
+                    </div>
+                    <div className="p-3 bg-blue-50 rounded-md">
+                      <div className="text-sm font-medium text-blue-800 mb-1">Matched Rules:</div>
+                      <div className="text-2xl font-bold text-blue-700">
+                        {processingResults.matchedRules || 0} rules
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {processingResults.details && (
+                    <div className="mt-4">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Details:</h4>
+                      <div className="bg-gray-50 p-3 rounded-md overflow-x-auto">
+                        <pre className="text-xs text-gray-800">
+                          {JSON.stringify(processingResults.details, null, 2)}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      )}
       
       <div className="mt-3 pt-3 border-t border-blue-200">
         <p className="text-xs text-blue-600">
