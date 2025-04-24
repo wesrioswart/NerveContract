@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EmailConfiguration from '@/components/email/email-configuration';
 import { AnimationWrapper } from '@/components/ui/animation-wrapper';
-import { Inbox, Server, FileUp, AlertTriangle, Mail, MailCheck } from 'lucide-react';
+import { Inbox, Server, FileUp, AlertTriangle, Mail, MailCheck, Truck, Clock, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function EmailProcessorPage() {
   return (
@@ -31,6 +36,10 @@ export default function EmailProcessorPage() {
             <TabsTrigger value="instructions" className="flex items-center gap-2">
               <FileUp className="h-4 w-4" />
               How to Use
+            </TabsTrigger>
+            <TabsTrigger value="equipment" className="flex items-center gap-2">
+              <Truck className="h-4 w-4" />
+              Equipment Emails
             </TabsTrigger>
           </TabsList>
           
@@ -172,8 +181,215 @@ export default function EmailProcessorPage() {
               </div>
             </AnimationWrapper>
           </TabsContent>
+          
+          <TabsContent value="equipment">
+            <EquipmentEmailProcessor />
+          </TabsContent>
         </Tabs>
       </AnimationWrapper>
+    </div>
+  );
+}
+
+function EquipmentEmailProcessor() {
+  const { toast } = useToast();
+  const [processingStatus, setProcessingStatus] = useState<string | null>(null);
+  
+  // Process emails mutation
+  const processEmailsMutation = useMutation({
+    mutationFn: () => apiRequest('POST', '/api/email/process'),
+    onSuccess: () => {
+      setProcessingStatus('success');
+      toast({
+        title: 'Equipment Emails Processed',
+        description: 'Successfully processed equipment-related emails.',
+      });
+    },
+    onError: (error) => {
+      setProcessingStatus('error');
+      toast({
+        title: 'Processing Failed',
+        description: `Failed to process emails: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  const handleProcessEmails = () => {
+    setProcessingStatus('processing');
+    processEmailsMutation.mutate();
+  };
+  
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Card className="col-span-1 md:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Truck className="h-5 w-5" />
+            Equipment Email Processing
+          </CardTitle>
+          <CardDescription>
+            Process equipment hire, off-hire, and delivery confirmation emails
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h3 className="text-lg font-semibold text-blue-800 mb-2">Equipment Email Format</h3>
+              <p className="text-blue-700 mb-2">
+                To ensure proper processing, equipment-related emails must follow these subject line formats:
+              </p>
+              
+              <div className="space-y-3 mt-3">
+                <div className="bg-white p-3 rounded border border-blue-100">
+                  <h4 className="font-medium text-blue-900">New Equipment Hire Request:</h4>
+                  <code className="block text-sm bg-gray-50 p-2 rounded mt-1">
+                    HIRE: [Equipment Type] Request - Project: [Project Code]
+                  </code>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Example: "HIRE: Excavator 20T Request - Project: ABC123"
+                  </p>
+                </div>
+                
+                <div className="bg-white p-3 rounded border border-blue-100">
+                  <h4 className="font-medium text-blue-900">Equipment Off-Hire Request:</h4>
+                  <code className="block text-sm bg-gray-50 p-2 rounded mt-1">
+                    OFFHIRE: [Equipment Type] for return - Project: [Project Code] - Equipment ID: [ID]
+                  </code>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Example: "OFFHIRE: Excavator 20T for return - Project: ABC123 - Equipment ID: EQP-1234"
+                  </p>
+                </div>
+                
+                <div className="bg-white p-3 rounded border border-blue-100">
+                  <h4 className="font-medium text-blue-900">Equipment Delivery Confirmation:</h4>
+                  <code className="block text-sm bg-gray-50 p-2 rounded mt-1">
+                    DELIVERY: [Equipment Type] confirmation - Project: [Project Code] - Equipment ID: [ID]
+                  </code>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Example: "DELIVERY: Scaffold materials confirmation - Project: ABC123 - Equipment ID: EQP-5678"
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <h3 className="text-lg font-semibold text-amber-800 mb-2">Integration with Equipment Hire System</h3>
+              <p className="text-amber-700">
+                When equipment-related emails are processed, the system automatically:
+              </p>
+              <ul className="list-disc list-inside text-amber-700 mt-2">
+                <li>Creates hire request records for new equipment requests</li>
+                <li>Initiates off-hire processes for return requests</li>
+                <li>Updates delivery status for equipment received on site</li>
+                <li>Sends confirmation emails to suppliers</li>
+                <li>Notifies relevant project team members</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+        
+        <CardFooter>
+          <Button 
+            className="w-full"
+            size="lg"
+            onClick={handleProcessEmails}
+            disabled={processEmailsMutation.isPending}
+          >
+            {processEmailsMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Processing Equipment Emails...
+              </>
+            ) : (
+              <>
+                <Truck className="mr-2 h-5 w-5" />
+                Process Equipment Emails
+              </>
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Status Log</CardTitle>
+          <CardDescription>Recent email processing activity</CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          <div className="space-y-3">
+            {processingStatus === 'success' && (
+              <div className="p-3 bg-green-50 text-green-700 rounded-md border border-green-200">
+                <div className="flex items-center gap-2">
+                  <MailCheck className="h-4 w-4" />
+                  <span className="font-medium">Processing Completed</span>
+                </div>
+                <p className="mt-1 text-sm">
+                  Equipment emails were successfully processed. Check the equipment hire system for new requests.
+                </p>
+                <p className="text-xs text-green-600 mt-2">
+                  {new Date().toLocaleString()}
+                </p>
+              </div>
+            )}
+            
+            {processingStatus === 'error' && (
+              <div className="p-3 bg-red-50 text-red-700 rounded-md border border-red-200">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span className="font-medium">Processing Failed</span>
+                </div>
+                <p className="mt-1 text-sm">
+                  Failed to process equipment emails. Please check the server logs for details.
+                </p>
+                <p className="text-xs text-red-600 mt-2">
+                  {new Date().toLocaleString()}
+                </p>
+              </div>
+            )}
+            
+            {processingStatus === 'processing' && (
+              <div className="p-3 bg-blue-50 text-blue-700 rounded-md border border-blue-200">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="font-medium">Processing in Progress</span>
+                </div>
+                <p className="mt-1 text-sm">
+                  Currently processing equipment-related emails...
+                </p>
+                <p className="text-xs text-blue-600 mt-2">
+                  {new Date().toLocaleString()}
+                </p>
+              </div>
+            )}
+            
+            {!processingStatus && (
+              <div className="p-3 bg-gray-50 text-gray-500 rounded-md border border-gray-200">
+                <p className="text-center italic">
+                  No recent activity
+                </p>
+                <p className="text-center text-sm mt-1">
+                  Click "Process Equipment Emails" to check for new equipment-related emails
+                </p>
+              </div>
+            )}
+            
+            <div className="mt-6">
+              <h3 className="text-sm font-medium mb-2">Processing Steps:</h3>
+              <ol className="list-decimal list-inside text-sm text-gray-600 space-y-1">
+                <li>Connect to email server</li>
+                <li>Identify equipment emails by subject keywords</li>
+                <li>Extract project and equipment references</li>
+                <li>Process hire/off-hire requests</li>
+                <li>Update equipment hire database</li>
+                <li>Send confirmation emails</li>
+              </ol>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
