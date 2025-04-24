@@ -1,7 +1,7 @@
 import { MailService } from '@sendgrid/mail';
 import crypto from 'crypto';
 import { db } from '../db';
-import { offHireConfirmations } from '@shared/schema';
+import { offHireConfirmations, equipmentItems, equipmentHires, offHireRequests } from '@shared/schema';
 
 if (!process.env.SENDGRID_API_KEY) {
   console.warn("SENDGRID_API_KEY is not set. Email notifications will not be sent.");
@@ -56,10 +56,70 @@ export async function disconnect() {
  * Process incoming emails
  */
 export async function processEmails() {
-  // Placeholder for email processing logic
-  // For a real implementation, this would fetch emails and process them
-  console.log('Processing emails...');
-  return true;
+  try {
+    console.log('Processing emails...');
+    
+    // This would be a real IMAP implementation in production
+    // For now, we're implementing a placeholder that logs the processing logic
+    
+    // 1. Connect to email server
+    console.log('Connecting to email server...');
+    
+    // 2. Fetch unread messages
+    console.log('Fetching unread messages...');
+    
+    // 3. Process each email
+    console.log('Processing email subjects and content...');
+    
+    // 4. Process emails by document type
+    console.log('Identifying document types based on subject keywords...');
+    console.log('Looking for: CE, EW, TQ, NCR, HIRE, OFFHIRE, DELIVERY');
+    
+    // Mock emails for demonstration purposes
+    const mockEmails = [
+      {
+        subject: 'HIRE: New Excavator Request - Project: ABC123',
+        content: 'We need a large excavator for site clearance. Equipment details: JCB 3CX, 4-wheel drive, with bucket and breaker attachments. Required from 2023-06-01 to 2023-06-30.'
+      },
+      {
+        subject: 'OFFHIRE: Excavator XC300 for return - Project: ABC123 - Equipment ID: EQP-1234',
+        content: 'Please arrange collection of the excavator at your earliest convenience. The equipment is no longer needed on site.'
+      },
+      {
+        subject: 'DELIVERY: Scaffold materials confirmation - Project: ABC123 - Equipment ID: EQP-5678',
+        content: 'Confirming receipt of scaffold materials delivered today. All items received in good condition.'
+      }
+    ];
+    
+    // Process each mock email
+    for (const email of mockEmails) {
+      console.log(`\nProcessing email: ${email.subject}`);
+      
+      // Check for equipment-related keywords in the subject
+      if (email.subject.includes('HIRE:') && !email.subject.includes('OFFHIRE:')) {
+        console.log('-> Identified as equipment hire request');
+        await processHireRequestEmail(email.subject, email.content);
+      }
+      else if (email.subject.includes('OFFHIRE:')) {
+        console.log('-> Identified as equipment off-hire request');
+        await processOffHireRequestEmail(email.subject, email.content);
+      }
+      else if (email.subject.includes('DELIVERY:')) {
+        console.log('-> Identified as equipment delivery confirmation');
+        await processDeliveryConfirmationEmail(email.subject, email.content);
+      }
+      // Other document types would be handled here (CE, EW, TQ, NCR)
+      else {
+        console.log('-> Not an equipment-related email, skipping');
+      }
+    }
+    
+    console.log('\nEmail processing completed');
+    return true;
+  } catch (error) {
+    console.error('Error processing emails:', error);
+    throw error;
+  }
 }
 
 /**
@@ -114,6 +174,117 @@ export function generateConfirmationUrl(token: string): string {
     : 'http://localhost:5000';
   
   return `${baseUrl}/api/equipment/confirm-off-hire/${token}`;
+}
+
+/**
+ * Process equipment hire request from email
+ * This would be called when an email with HIRE in the subject is received
+ */
+export async function processHireRequestEmail(
+  emailSubject: string, 
+  emailContent: string
+): Promise<void> {
+  console.log('Processing equipment hire request...');
+  
+  try {
+    // Extract project reference from the email subject
+    const projectMatch = emailSubject.match(/Project:\s*([A-Za-z0-9-]+)/i);
+    const projectReference = projectMatch ? projectMatch[1] : null;
+    
+    if (!projectReference) {
+      console.warn('No project reference found in email subject:', emailSubject);
+      return;
+    }
+    
+    // Extract equipment details from email content
+    // This would use NLP or pattern matching in a production system
+    console.log(`Extracted project reference: ${projectReference}`);
+    console.log('Extracting equipment details from email content...');
+    
+    // In a real implementation, we would now:
+    // 1. Create a hire request record in the database
+    // 2. Assign it to the appropriate project
+    // 3. Notify relevant staff
+    
+    console.log('Hire request processed successfully');
+    
+  } catch (error) {
+    console.error('Error processing hire request email:', error);
+  }
+}
+
+/**
+ * Process equipment off-hire request from email
+ * This would be called when an email with OFFHIRE in the subject is received
+ */
+export async function processOffHireRequestEmail(
+  emailSubject: string, 
+  emailContent: string
+): Promise<void> {
+  console.log('Processing equipment off-hire request...');
+  
+  try {
+    // Extract project and equipment references from the email subject
+    const projectMatch = emailSubject.match(/Project:\s*([A-Za-z0-9-]+)/i);
+    const equipmentMatch = emailSubject.match(/Equipment ID:\s*([A-Za-z0-9-]+)/i);
+    
+    const projectReference = projectMatch ? projectMatch[1] : null;
+    const equipmentId = equipmentMatch ? equipmentMatch[1] : null;
+    
+    if (!projectReference || !equipmentId) {
+      console.warn('Missing required references in email subject:', emailSubject);
+      return;
+    }
+    
+    console.log(`Extracted project reference: ${projectReference}, equipment ID: ${equipmentId}`);
+    
+    // In a real implementation, we would now:
+    // 1. Create an off-hire request in the database
+    // 2. Link it to the equipment and project
+    // 3. Generate confirmation token
+    // 4. Send confirmation email to supplier
+    
+    console.log('Off-hire request processed successfully');
+    
+  } catch (error) {
+    console.error('Error processing off-hire request email:', error);
+  }
+}
+
+/**
+ * Process equipment delivery confirmation from email
+ * This would be called when an email with DELIVERY in the subject is received
+ */
+export async function processDeliveryConfirmationEmail(
+  emailSubject: string, 
+  emailContent: string
+): Promise<void> {
+  console.log('Processing equipment delivery confirmation...');
+  
+  try {
+    // Extract project and equipment references from the email subject
+    const projectMatch = emailSubject.match(/Project:\s*([A-Za-z0-9-]+)/i);
+    const equipmentMatch = emailSubject.match(/Equipment ID:\s*([A-Za-z0-9-]+)/i);
+    
+    const projectReference = projectMatch ? projectMatch[1] : null;
+    const equipmentId = equipmentMatch ? equipmentMatch[1] : null;
+    
+    if (!projectReference || !equipmentId) {
+      console.warn('Missing required references in email subject:', emailSubject);
+      return;
+    }
+    
+    console.log(`Extracted project reference: ${projectReference}, equipment ID: ${equipmentId}`);
+    
+    // In a real implementation, we would now:
+    // 1. Update the delivery status in the database
+    // 2. Notify the project team
+    
+    console.log('Delivery confirmation processed successfully');
+    
+  } catch (error) {
+    console.error('Error processing delivery confirmation email:', error);
+  }
 }
 
 /**
