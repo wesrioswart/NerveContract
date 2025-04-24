@@ -82,7 +82,7 @@ function CustomMockEmailCreator() {
     addMockEmailMutation.mutate({
       subject,
       content,
-      type: emailType || undefined
+      type: emailType === 'none' ? undefined : emailType
     });
   };
   
@@ -120,7 +120,7 @@ function CustomMockEmailCreator() {
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 <SelectItem value="HIRE">HIRE</SelectItem>
                 <SelectItem value="OFFHIRE">OFFHIRE</SelectItem>
                 <SelectItem value="DELIVERY">DELIVERY</SelectItem>
