@@ -207,6 +207,9 @@ function EquipmentEmailProcessor() {
     errorMessage?: string;
   }>>([]);
   
+  // State for detailed processing results
+  const [processingResults, setProcessingResults] = useState<any>(null);
+  
   // Process emails mutation
   const processEmailsMutation = useMutation({
     mutationFn: async () => {
@@ -218,6 +221,9 @@ function EquipmentEmailProcessor() {
       
       // Extract the count from the response
       const processedCount = data?.processedCount || 0;
+      
+      // Store the detailed processing results
+      setProcessingResults(data);
       
       // Add to processing history
       setProcessingHistory(prev => [
@@ -428,6 +434,81 @@ function EquipmentEmailProcessor() {
                 <li>Send confirmation emails</li>
               </ol>
             </div>
+            
+            {/* Show detailed processing results when available */}
+            {processingResults?.details && (
+              <div className="mt-6 border-t pt-4">
+                <h3 className="text-sm font-semibold mb-3 flex items-center">
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  Processing Results
+                  <Badge variant="outline" className="ml-2 text-xs">
+                    Test Mode {processingResults.details.mode === 'test' && <CheckCircle2 className="h-3 w-3 ml-1 text-green-500" />}
+                  </Badge>
+                </h3>
+                
+                <Accordion type="single" collapsible className="mb-4">
+                  <AccordionItem value="emails">
+                    <AccordionTrigger className="text-sm font-medium">
+                      Emails Processed ({processingResults.details.emailsProcessed.length})
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-2 max-h-40 overflow-y-auto mt-2">
+                        {processingResults.details.emailsProcessed.map((email: any, index: number) => (
+                          <div 
+                            key={index}
+                            className={`p-2 rounded-md text-xs border ${
+                              email.processed 
+                                ? 'bg-green-50 border-green-200 text-green-700' 
+                                : 'bg-amber-50 border-amber-200 text-amber-700'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {email.processed ? (
+                                <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0" />
+                              ) : (
+                                <XCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                              )}
+                              <span className="font-medium truncate">{email.subject}</span>
+                            </div>
+                            {email.error && (
+                              <div className="mt-1 text-red-600 pl-5">Error: {email.error}</div>
+                            )}
+                            <div className="pl-5 mt-1 text-gray-500">{new Date(email.timestamp).toLocaleString()}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="rules">
+                    <AccordionTrigger className="text-sm font-medium">
+                      Validation Rules
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-3 text-xs">
+                        <div>
+                          <h4 className="font-medium mb-1 text-blue-800">Production Mode Rules:</h4>
+                          <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                            {processingResults.details.validationRules.productionMode.map((rule: string, i: number) => (
+                              <li key={i}>{rule}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-medium mb-1 text-green-800">Test Mode Rules:</h4>
+                          <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                            {processingResults.details.validationRules.testMode.map((rule: string, i: number) => (
+                              <li key={i}>{rule}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            )}
             
             {processingHistory.length > 0 && (
               <div className="mt-6 border-t pt-4">

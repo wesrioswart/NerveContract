@@ -300,8 +300,18 @@ export async function processEmails(): Promise<{processedCount: number, processe
     return { 
       processedCount,
       processedEmails,
-      matchedRules: processedCount,
       details
+    } as {
+      processedCount: number;
+      processedEmails: any[];
+      details?: {
+        mode: string;
+        emailsProcessed: any[];
+        validationRules: {
+          productionMode: string[];
+          testMode: string[];
+        }
+      } | null
     };
   } catch (error) {
     console.error('Error processing emails:', error);
