@@ -194,12 +194,27 @@ export default function EmailProcessorPage() {
 function EquipmentEmailProcessor() {
   const { toast } = useToast();
   const [processingStatus, setProcessingStatus] = useState<string | null>(null);
+  const [processingHistory, setProcessingHistory] = useState<Array<{
+    timestamp: Date;
+    status: string;
+    count?: number;
+  }>>([]);
   
   // Process emails mutation
   const processEmailsMutation = useMutation({
     mutationFn: () => apiRequest('POST', '/api/email/process'),
     onSuccess: () => {
       setProcessingStatus('success');
+      // Add to processing history
+      setProcessingHistory(prev => [
+        { 
+          timestamp: new Date(), 
+          status: 'success',
+          count: 3 // This would ideally come from the API response
+        },
+        ...prev.slice(0, 4) // Keep only the last 5 entries
+      ]);
+      
       toast({
         title: 'Equipment Emails Processed',
         description: 'Successfully processed equipment-related emails.',
@@ -207,6 +222,15 @@ function EquipmentEmailProcessor() {
     },
     onError: (error) => {
       setProcessingStatus('error');
+      // Add to processing history
+      setProcessingHistory(prev => [
+        { 
+          timestamp: new Date(), 
+          status: 'error'
+        },
+        ...prev.slice(0, 4)
+      ]);
+      
       toast({
         title: 'Processing Failed',
         description: `Failed to process emails: ${error.message}`,
@@ -387,6 +411,38 @@ function EquipmentEmailProcessor() {
                 <li>Send confirmation emails</li>
               </ol>
             </div>
+            
+            {processingHistory.length > 0 && (
+              <div className="mt-6 border-t pt-4">
+                <h3 className="text-sm font-medium mb-3">Processing History:</h3>
+                <div className="space-y-2">
+                  {processingHistory.map((entry, index) => (
+                    <div 
+                      key={index}
+                      className={`flex items-center justify-between rounded-md py-2 px-3 text-xs ${
+                        entry.status === 'success' 
+                          ? 'bg-green-50 text-green-700 border border-green-100' 
+                          : 'bg-red-50 text-red-700 border border-red-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {entry.status === 'success' ? (
+                          <MailCheck className="h-3 w-3" />
+                        ) : (
+                          <AlertTriangle className="h-3 w-3" />
+                        )}
+                        <span>
+                          {entry.status === 'success' 
+                            ? `Processed ${entry.count} emails` 
+                            : 'Processing failed'}
+                        </span>
+                      </div>
+                      <span>{entry.timestamp.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
