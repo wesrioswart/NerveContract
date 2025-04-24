@@ -89,7 +89,10 @@ export default function EmailConfiguration() {
   
   // Test connection mutation
   const testConnectionMutation = useMutation({
-    mutationFn: () => apiRequest('GET', '/api/email/test-connection'),
+    mutationFn: async () => {
+      const response = await apiRequest('GET', '/api/email/test-connection');
+      return await response.json();
+    },
     onSuccess: () => {
       toast({
         title: 'Connection Successful',
@@ -107,7 +110,10 @@ export default function EmailConfiguration() {
   
   // Process emails mutation
   const processEmailsMutation = useMutation({
-    mutationFn: () => apiRequest('POST', '/api/email/process'),
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/email/process');
+      return await response.json();
+    },
     onSuccess: (data) => {
       toast({
         title: 'Emails Processed',
@@ -125,7 +131,10 @@ export default function EmailConfiguration() {
   
   // Enable mock mode mutation
   const enableMockModeMutation = useMutation({
-    mutationFn: () => apiRequest('POST', '/api/email/enable-mock-mode'),
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/email/enable-mock-mode');
+      return await response.json();
+    },
     onSuccess: () => {
       toast({
         title: 'Mock Mode Enabled',
