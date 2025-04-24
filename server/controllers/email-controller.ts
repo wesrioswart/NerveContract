@@ -54,9 +54,13 @@ export const EmailController = {
    */
   processEmails: async (_req: Request, res: Response) => {
     try {
-      await emailService.processEmails();
+      const result = await emailService.processEmails();
       
-      res.status(200).json({ message: 'Emails processed successfully' });
+      res.status(200).json({
+        message: 'Emails processed successfully',
+        processedCount: result.processedCount,
+        processedEmails: result.processedEmails
+      });
     } catch (error) {
       console.error('Failed to process emails:', error);
       res.status(500).json({ error: 'Failed to process emails' });

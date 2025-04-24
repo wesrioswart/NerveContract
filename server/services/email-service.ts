@@ -54,8 +54,9 @@ export async function disconnect() {
 
 /**
  * Process incoming emails
+ * @returns {Promise<{processedCount: number}>} Number of emails processed
  */
-export async function processEmails() {
+export async function processEmails(): Promise<{processedCount: number, processedEmails: any[]}> {
   try {
     console.log('Processing emails...');
     
@@ -91,31 +92,51 @@ export async function processEmails() {
       }
     ];
     
+    // Track processed emails and their status
+    const processedEmails = [];
+    let processedCount = 0;
+    
     // Process each mock email
     for (const email of mockEmails) {
       console.log(`\nProcessing email: ${email.subject}`);
+      let processed = false;
       
       // Check for equipment-related keywords in the subject
       if (email.subject.includes('HIRE:') && !email.subject.includes('OFFHIRE:')) {
         console.log('-> Identified as equipment hire request');
         await processHireRequestEmail(email.subject, email.content);
+        processed = true;
       }
       else if (email.subject.includes('OFFHIRE:')) {
         console.log('-> Identified as equipment off-hire request');
         await processOffHireRequestEmail(email.subject, email.content);
+        processed = true;
       }
       else if (email.subject.includes('DELIVERY:')) {
         console.log('-> Identified as equipment delivery confirmation');
         await processDeliveryConfirmationEmail(email.subject, email.content);
+        processed = true;
       }
       // Other document types would be handled here (CE, EW, TQ, NCR)
       else {
         console.log('-> Not an equipment-related email, skipping');
       }
+      
+      if (processed) {
+        processedCount++;
+        processedEmails.push({
+          subject: email.subject,
+          processed: true,
+          timestamp: new Date()
+        });
+      }
     }
     
-    console.log('\nEmail processing completed');
-    return true;
+    console.log(`\nEmail processing completed. Processed ${processedCount} emails.`);
+    return { 
+      processedCount,
+      processedEmails
+    };
   } catch (error) {
     console.error('Error processing emails:', error);
     throw error;
