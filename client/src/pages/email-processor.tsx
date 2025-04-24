@@ -202,31 +202,40 @@ function EquipmentEmailProcessor() {
   
   // Process emails mutation
   const processEmailsMutation = useMutation({
-    mutationFn: () => apiRequest('POST', '/api/email/process'),
-    onSuccess: () => {
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/email/process');
+      return await response.json();
+    },
+    onSuccess: (data) => {
       setProcessingStatus('success');
+      
+      // Extract the count from the response
+      const processedCount = data?.processedCount || 0;
+      
       // Add to processing history
       setProcessingHistory(prev => [
         { 
           timestamp: new Date(), 
           status: 'success',
-          count: 3 // This would ideally come from the API response
+          count: processedCount
         },
         ...prev.slice(0, 4) // Keep only the last 5 entries
       ]);
       
       toast({
         title: 'Equipment Emails Processed',
-        description: 'Successfully processed equipment-related emails.',
+        description: `Successfully processed ${processedCount} equipment-related email${processedCount !== 1 ? 's' : ''}.`,
       });
     },
     onError: (error) => {
       setProcessingStatus('error');
-      // Add to processing history
+      
+      // Add to processing history with detailed error info
       setProcessingHistory(prev => [
         { 
           timestamp: new Date(), 
-          status: 'error'
+          status: 'error',
+          errorMessage: error.message
         },
         ...prev.slice(0, 4)
       ]);
