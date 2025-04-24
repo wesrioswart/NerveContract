@@ -253,20 +253,25 @@ function CustomMockEmailCreator() {
     });
   };
   
-  // Generate a formatted subject line based on the email type for preview
+  // Generate a formatted subject line based on the email type and project reference for preview
   const getFormattedSubjectPreview = () => {
     if (!subject) return 'Subject preview will appear here';
     
-    if (emailType === 'none' || !emailType) {
-      return subject;
+    let preview = subject;
+    
+    // Add email type if not already included
+    if (emailType && emailType !== 'none' && !subject.startsWith(`${emailType}:`)) {
+      preview = `${emailType}: ${preview}`;
     }
     
-    // Check if the subject already has the type prefix
-    if (subject.startsWith(`${emailType}:`)) {
-      return subject;
+    // Add project reference if not already included
+    if (projectReference && !preview.includes(`Project: ${projectReference}`)) {
+      if (!preview.match(/Project:\s*[A-Za-z0-9-]+/i)) {
+        preview = `${preview} - Project: ${projectReference}`;
+      }
     }
     
-    return `${emailType}: ${subject}`;
+    return preview;
   };
   
   return (
@@ -575,6 +580,11 @@ function CustomMockEmailCreator() {
                           {scenario.type && scenario.type !== 'none' ? `[${scenario.type}] ` : ''}
                           {scenario.subject}
                         </div>
+                        {scenario.projectReference && (
+                          <div className="text-xs text-blue-600 mt-1">
+                            Project: {scenario.projectReference}
+                          </div>
+                        )}
                       </div>
                       <div className="flex gap-2">
                         <Button 
@@ -653,7 +663,8 @@ function CustomMockEmailCreator() {
       <div className="mt-3 pt-3 border-t border-blue-200">
         <p className="text-xs text-blue-600">
           <strong>Tip:</strong> For equipment-related emails, either select a type or include "HIRE:", "OFFHIRE:", or "DELIVERY:" in the subject.
-          For project reference, use the format "Project: ABC123" in the subject.
+          Either select a project from the dropdown or use the format "Project: ABC123" in the subject. 
+          In test mode, the system will automatically find and extract project references from the email content.
         </p>
       </div>
     </div>
