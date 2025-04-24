@@ -194,10 +194,12 @@ export default function EmailProcessorPage() {
 function EquipmentEmailProcessor() {
   const { toast } = useToast();
   const [processingStatus, setProcessingStatus] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [processingHistory, setProcessingHistory] = useState<Array<{
     timestamp: Date;
     status: string;
     count?: number;
+    errorMessage?: string;
   }>>([]);
   
   // Process emails mutation
@@ -229,6 +231,7 @@ function EquipmentEmailProcessor() {
     },
     onError: (error) => {
       setProcessingStatus('error');
+      setErrorMessage(error.message);
       
       // Add to processing history with detailed error info
       setProcessingHistory(prev => [
@@ -375,7 +378,7 @@ function EquipmentEmailProcessor() {
                   <span className="font-medium">Processing Failed</span>
                 </div>
                 <p className="mt-1 text-sm">
-                  Failed to process equipment emails. Please check the server logs for details.
+                  Failed to process equipment emails: {errorMessage || 'Unknown error occurred'}
                 </p>
                 <p className="text-xs text-red-600 mt-2">
                   {new Date().toLocaleString()}
@@ -443,7 +446,9 @@ function EquipmentEmailProcessor() {
                         <span>
                           {entry.status === 'success' 
                             ? `Processed ${entry.count} emails` 
-                            : 'Processing failed'}
+                            : entry.errorMessage 
+                              ? `Error: ${entry.errorMessage}`
+                              : 'Processing failed'}
                         </span>
                       </div>
                       <span>{entry.timestamp.toLocaleString()}</span>

@@ -60,11 +60,23 @@ export async function processEmails(): Promise<{processedCount: number, processe
   try {
     console.log('Processing emails...');
     
+    // Check if email configuration is available
+    if (!emailConfig) {
+      throw new Error('Email service not configured. Please set up the email configuration first.');
+    }
+    
     // This would be a real IMAP implementation in production
     // For now, we're implementing a placeholder that logs the processing logic
     
     // 1. Connect to email server
     console.log('Connecting to email server...');
+    
+    // Simulate connection verification
+    if (emailConfig.server && emailConfig.port) {
+      console.log(`Connecting to ${emailConfig.server}:${emailConfig.port}...`);
+    } else {
+      throw new Error('Invalid email server configuration: missing server or port');
+    }
     
     // 2. Fetch unread messages
     console.log('Fetching unread messages...');
@@ -101,32 +113,42 @@ export async function processEmails(): Promise<{processedCount: number, processe
       console.log(`\nProcessing email: ${email.subject}`);
       let processed = false;
       
-      // Check for equipment-related keywords in the subject
-      if (email.subject.includes('HIRE:') && !email.subject.includes('OFFHIRE:')) {
-        console.log('-> Identified as equipment hire request');
-        await processHireRequestEmail(email.subject, email.content);
-        processed = true;
-      }
-      else if (email.subject.includes('OFFHIRE:')) {
-        console.log('-> Identified as equipment off-hire request');
-        await processOffHireRequestEmail(email.subject, email.content);
-        processed = true;
-      }
-      else if (email.subject.includes('DELIVERY:')) {
-        console.log('-> Identified as equipment delivery confirmation');
-        await processDeliveryConfirmationEmail(email.subject, email.content);
-        processed = true;
-      }
-      // Other document types would be handled here (CE, EW, TQ, NCR)
-      else {
-        console.log('-> Not an equipment-related email, skipping');
-      }
-      
-      if (processed) {
-        processedCount++;
+      try {
+        // Check for equipment-related keywords in the subject
+        if (email.subject.includes('HIRE:') && !email.subject.includes('OFFHIRE:')) {
+          console.log('-> Identified as equipment hire request');
+          await processHireRequestEmail(email.subject, email.content);
+          processed = true;
+        }
+        else if (email.subject.includes('OFFHIRE:')) {
+          console.log('-> Identified as equipment off-hire request');
+          await processOffHireRequestEmail(email.subject, email.content);
+          processed = true;
+        }
+        else if (email.subject.includes('DELIVERY:')) {
+          console.log('-> Identified as equipment delivery confirmation');
+          await processDeliveryConfirmationEmail(email.subject, email.content);
+          processed = true;
+        }
+        // Other document types would be handled here (CE, EW, TQ, NCR)
+        else {
+          console.log('-> Not an equipment-related email, skipping');
+        }
+        
+        if (processed) {
+          processedCount++;
+          processedEmails.push({
+            subject: email.subject,
+            processed: true,
+            timestamp: new Date()
+          });
+        }
+      } catch (emailProcessError) {
+        console.error(`Error processing email "${email.subject}":`, emailProcessError);
         processedEmails.push({
           subject: email.subject,
-          processed: true,
+          processed: false,
+          error: emailProcessError.message,
           timestamp: new Date()
         });
       }
