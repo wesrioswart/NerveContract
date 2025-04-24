@@ -35,6 +35,19 @@ export const EmailController = {
   },
   
   /**
+   * Enable mock mode for testing without real email credentials
+   */
+  enableMockMode: async (_req: Request, res: Response) => {
+    try {
+      emailService.enableMockMode();
+      res.status(200).json({ message: 'Email service mock mode enabled' });
+    } catch (error) {
+      console.error('Failed to enable mock mode:', error);
+      res.status(500).json({ error: 'Failed to enable mock mode' });
+    }
+  },
+  
+  /**
    * Test connection to the email server
    */
   testConnection: async (_req: Request, res: Response) => {

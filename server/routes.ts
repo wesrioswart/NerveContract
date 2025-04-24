@@ -1402,6 +1402,7 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   
   // Email Service routes
   app.post("/api/email/initialize", EmailController.initializeEmailService);
+  app.post("/api/email/enable-mock-mode", EmailController.enableMockMode);
   app.get("/api/email/test-connection", EmailController.testConnection);
   app.post("/api/email/process", EmailController.processEmails);
 

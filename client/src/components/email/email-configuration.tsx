@@ -108,16 +108,35 @@ export default function EmailConfiguration() {
   // Process emails mutation
   const processEmailsMutation = useMutation({
     mutationFn: () => apiRequest('POST', '/api/email/process'),
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: 'Emails Processed',
-        description: 'Successfully processed new emails.',
+        description: `Successfully processed ${data.processedCount} emails.`,
       });
     },
     onError: (error) => {
       toast({
         title: 'Processing Failed',
         description: `Failed to process emails: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Enable mock mode mutation
+  const enableMockModeMutation = useMutation({
+    mutationFn: () => apiRequest('POST', '/api/email/enable-mock-mode'),
+    onSuccess: () => {
+      toast({
+        title: 'Mock Mode Enabled',
+        description: 'Email service is now in mock mode for testing.',
+      });
+      setConfigSuccess(true);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Failed to Enable Mock Mode',
+        description: `Error: ${error.message}`,
         variant: 'destructive',
       });
     },
@@ -343,13 +362,13 @@ export default function EmailConfiguration() {
           </Form>
         </CardContent>
         
-        <CardFooter className="flex flex-col sm:flex-row gap-4">
+        <CardFooter className="flex flex-wrap gap-4">
           <AnimatedButton
             variant="outline"
             animation="subtle"
             disabled={!canTestConnection || testConnectionMutation.isPending}
             onClick={() => testConnectionMutation.mutate()}
-            className="w-full"
+            className="flex-1"
           >
             {testConnectionMutation.isPending ? (
               <>
@@ -369,7 +388,7 @@ export default function EmailConfiguration() {
             animation="subtle"
             disabled={!canTestConnection || processEmailsMutation.isPending}
             onClick={() => processEmailsMutation.mutate()}
-            className="w-full"
+            className="flex-1"
           >
             {processEmailsMutation.isPending ? (
               <>
@@ -384,6 +403,28 @@ export default function EmailConfiguration() {
               </div>
             )}
           </AnimatedButton>
+
+          <div className="w-full md:w-auto">
+            <AnimatedButton
+              variant="secondary"
+              animation="subtle"
+              disabled={enableMockModeMutation.isPending}
+              onClick={() => enableMockModeMutation.mutate()}
+              className="w-full"
+            >
+              {enableMockModeMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enabling Mock Mode...
+                </>
+              ) : (
+                <div className="flex items-center">
+                  Enable Test Mode
+                  <InfoTooltip text="Enables mock mode with test emails for development and testing. No real email credentials needed." />
+                </div>
+              )}
+            </AnimatedButton>
+          </div>
         </CardFooter>
       </Card>
       

@@ -15,6 +15,7 @@ if (process.env.SENDGRID_API_KEY) {
 
 // Configuration for email service
 let emailConfig: any = null;
+let mockModeEnabled: boolean = false;
 
 interface EmailParams {
   to: string;
@@ -29,7 +30,28 @@ interface EmailParams {
  */
 export function initialize(config: any) {
   emailConfig = config;
-  console.log('Email service initialized with config:', JSON.stringify(config, null, 2));
+  
+  // Check if this is mock mode configuration
+  if (config && config.mockMode === true) {
+    mockModeEnabled = true;
+    console.log('Email service initialized in MOCK MODE');
+  } else {
+    mockModeEnabled = false;
+    console.log('Email service initialized with config:', JSON.stringify(config, null, 2));
+  }
+}
+
+/**
+ * Enable mock mode for testing without email server
+ */
+export function enableMockMode() {
+  mockModeEnabled = true;
+  emailConfig = { 
+    mockMode: true,
+    server: 'mock.example.com',
+    port: 993
+  };
+  console.log('Email service MOCK MODE enabled');
 }
 
 /**
@@ -65,17 +87,22 @@ export async function processEmails(): Promise<{processedCount: number, processe
       throw new Error('Email service not configured. Please set up the email configuration first.');
     }
     
-    // This would be a real IMAP implementation in production
-    // For now, we're implementing a placeholder that logs the processing logic
-    
-    // 1. Connect to email server
-    console.log('Connecting to email server...');
-    
-    // Simulate connection verification
-    if (emailConfig.server && emailConfig.port) {
-      console.log(`Connecting to ${emailConfig.server}:${emailConfig.port}...`);
+    // Check for mock mode
+    if (mockModeEnabled) {
+      console.log('Running in MOCK MODE - using test emails instead of connecting to server');
     } else {
-      throw new Error('Invalid email server configuration: missing server or port');
+      // This would be a real IMAP implementation in production
+      // For now, we're implementing a placeholder that logs the processing logic
+      
+      // 1. Connect to email server
+      console.log('Connecting to email server...');
+      
+      // Simulate connection verification
+      if (emailConfig.server && emailConfig.port) {
+        console.log(`Connecting to ${emailConfig.server}:${emailConfig.port}...`);
+      } else {
+        throw new Error('Invalid email server configuration: missing server or port');
+      }
     }
     
     // 2. Fetch unread messages
@@ -143,12 +170,12 @@ export async function processEmails(): Promise<{processedCount: number, processe
             timestamp: new Date()
           });
         }
-      } catch (emailProcessError) {
-        console.error(`Error processing email "${email.subject}":`, emailProcessError);
+      } catch (error: any) {
+        console.error(`Error processing email "${email.subject}":`, error);
         processedEmails.push({
           subject: email.subject,
           processed: false,
-          error: emailProcessError.message,
+          error: error.message || 'Unknown processing error',
           timestamp: new Date()
         });
       }
