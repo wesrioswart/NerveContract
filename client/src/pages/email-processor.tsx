@@ -58,6 +58,9 @@ export default function EmailProcessorPage() {
                     <li>Programme Updates (.mpp, .xml)</li>
                     <li>Technical Queries (TQ)</li>
                     <li>Non-Conformance Reports (NCR)</li>
+                    <li>Equipment Hire Requests (HIRE)</li>
+                    <li>Equipment Off-Hire Requests (OFFHIRE)</li>
+                    <li>Equipment Delivery Confirmations (DELIVERY)</li>
                   </ul>
                 </div>
               </AnimationWrapper>
@@ -134,6 +137,9 @@ export default function EmailProcessorPage() {
                       <li><strong>Programme Updates:</strong> Include "Programme" or attach .mpp/.xml files</li>
                       <li><strong>Technical Queries:</strong> Include "TQ:" or "Technical Query" in subject</li>
                       <li><strong>NCRs:</strong> Include "NCR:" or "Non-Conformance" in subject</li>
+                      <li><strong>Equipment Hire:</strong> Include "HIRE:" for new equipment hire requests</li>
+                      <li><strong>Equipment Off-Hire:</strong> Include "OFFHIRE:" for equipment return requests</li>
+                      <li><strong>Equipment Delivery:</strong> Include "DELIVERY:" for delivery confirmations</li>
                     </ul>
                   </div>
                   
@@ -143,8 +149,14 @@ export default function EmailProcessorPage() {
                       For automatic project assignment, instruct senders to include project references 
                       in the email subject using the format:
                     </p>
-                    <div className="bg-gray-100 p-3 rounded text-gray-700 font-mono">
+                    <div className="bg-gray-100 p-3 rounded text-gray-700 font-mono mb-2">
                       Subject: EW: Safety concern at site entrance - Project: ABC123
+                    </div>
+                    <p className="text-gray-600 mb-1">
+                      Equipment-related emails follow the same format:
+                    </p>
+                    <div className="bg-gray-100 p-3 rounded text-gray-700 font-mono">
+                      Subject: OFFHIRE: Excavator XC300 for return - Project: ABC123 - Equipment ID: EQP-1234
                     </div>
                   </div>
                   
