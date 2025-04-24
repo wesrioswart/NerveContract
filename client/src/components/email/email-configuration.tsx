@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,14 +16,14 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { AnimatedButton } from '@/components/ui/animated-button';
 import { AnimationWrapper } from '@/components/ui/animation-wrapper';
 import { 
   Loader2, Mail, ShieldCheck, ArrowRight, Plus, FileText, Send, 
   Save, BookMarked, Terminal, Trash, Play, Code, AlertCircle,
-  Check, X, PenTool 
+  Check, X, PenTool, HelpCircle, Clipboard, Info, Building
 } from 'lucide-react';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Textarea } from '@/components/ui/textarea';
@@ -53,6 +53,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 
 // Schema for email configuration
 const emailConfigSchema = z.object({
@@ -72,15 +77,26 @@ function CustomMockEmailCreator() {
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
   const [emailType, setEmailType] = useState<string>('');
+  const [projectReference, setProjectReference] = useState<string>('');
   const [savedScenarios, setSavedScenarios] = useState<Array<{
     name: string;
     subject: string;
     content: string;
     type: string;
+    projectReference?: string;
   }>>([]);
   const [scenarioName, setScenarioName] = useState('');
   const [showSaveForm, setShowSaveForm] = useState(false);
   const [processingResults, setProcessingResults] = useState<any>(null);
+  
+  // Fetch projects for the dropdown
+  const { data: projects, isLoading: projectsLoading } = useQuery({
+    queryKey: ['/api/projects'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/projects');
+      return await response.json();
+    },
+  });
   
   // Add mock email mutation
   const addMockEmailMutation = useMutation({
