@@ -157,8 +157,17 @@ function CustomMockEmailCreator() {
       return;
     }
     
+    // Include project reference in the email if selected
+    let finalSubject = subject;
+    if (projectReference && !subject.includes(`Project: ${projectReference}`)) {
+      // Check if the subject already contains any project reference
+      if (!subject.match(/Project:\s*[A-Za-z0-9-]+/i)) {
+        finalSubject = subject + ` - Project: ${projectReference}`;
+      }
+    }
+    
     addMockEmailMutation.mutate({
-      subject,
+      subject: finalSubject,
       content,
       type: emailType === 'none' ? undefined : emailType
     });
@@ -178,7 +187,8 @@ function CustomMockEmailCreator() {
       name: scenarioName,
       subject,
       content,
-      type: emailType
+      type: emailType,
+      projectReference
     };
     
     setSavedScenarios([...savedScenarios, newScenario]);
@@ -195,6 +205,9 @@ function CustomMockEmailCreator() {
     setSubject(scenario.subject);
     setContent(scenario.content);
     setEmailType(scenario.type);
+    if (scenario.projectReference) {
+      setProjectReference(scenario.projectReference);
+    }
     
     toast({
       title: 'Scenario Loaded',
@@ -224,8 +237,17 @@ function CustomMockEmailCreator() {
       return;
     }
     
+    // Include project reference in the email if selected
+    let finalSubject = subject;
+    if (projectReference && !subject.includes(`Project: ${projectReference}`)) {
+      // Check if the subject already contains any project reference
+      if (!subject.match(/Project:\s*[A-Za-z0-9-]+/i)) {
+        finalSubject = subject + ` - Project: ${projectReference}`;
+      }
+    }
+    
     processTestEmailMutation.mutate({
-      subject,
+      subject: finalSubject,
       content,
       type: emailType === 'none' ? undefined : emailType
     });
@@ -293,6 +315,44 @@ function CustomMockEmailCreator() {
                 <SelectItem value="HIRE">HIRE</SelectItem>
                 <SelectItem value="OFFHIRE">OFFHIRE</SelectItem>
                 <SelectItem value="DELIVERY">DELIVERY</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-2">
+            <label htmlFor="project-reference" className="block text-sm font-medium text-blue-700 mb-1 flex items-center">
+              Project Reference
+              <InfoTooltip text="Select a valid project to reference in your test email" />
+            </label>
+            <Select
+              value={projectReference}
+              onValueChange={setProjectReference}
+              disabled={projectsLoading}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Select project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projectsLoading ? (
+                  <SelectItem value="loading" disabled>
+                    <div className="flex items-center">
+                      <Loader2 className="h-3 w-3 animate-spin mr-2" />
+                      Loading projects...
+                    </div>
+                  </SelectItem>
+                ) : projects && projects.length > 0 ? (
+                  projects.map((project: any) => (
+                    <SelectItem key={project.id} value={project.reference || project.code || `C-${project.id}`}>
+                      {project.name} - {project.reference || project.code || `C-${project.id}`}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="none" disabled>No projects available</SelectItem>
+                )}
+                <SelectItem value="C-121">Westfield Project - C-121</SelectItem>
+                <SelectItem value="ABC123">Example Project - ABC123</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -411,6 +471,84 @@ function CustomMockEmailCreator() {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
+
+      {/* Test Information Panel */}
+      <div className="mt-6">
+        <Alert className="bg-green-50 border-green-200">
+          <HelpCircle className="h-4 w-4 text-green-600" />
+          <AlertTitle className="text-green-800">Test Data Reference</AlertTitle>
+          <AlertDescription>
+            <div className="mt-2 text-sm text-green-700">
+              <p className="mb-2">Use the following reference data when creating test emails:</p>
+              
+              <div className="mt-3 space-y-3">
+                <div>
+                  <h4 className="font-medium flex items-center gap-1">
+                    <Building className="h-3.5 w-3.5" />
+                    Project References:
+                  </h4>
+                  <div className="ml-5 mt-1 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">
+                    <div className="text-xs flex items-center">
+                      <Clipboard className="h-3 w-3 mr-1 text-green-600" />
+                      <span className="font-medium">C-121</span> - Westfield Project
+                    </div>
+                    <div className="text-xs flex items-center">
+                      <Clipboard className="h-3 w-3 mr-1 text-green-600" />
+                      <span className="font-medium">ABC123</span> - Example Project
+                    </div>
+                    {projects && projects.length > 0 && projects.slice(0, 4).map((project: any) => (
+                      <div key={project.id} className="text-xs flex items-center">
+                        <Clipboard className="h-3 w-3 mr-1 text-green-600" />
+                        <span className="font-medium">{project.reference || project.code || `C-${project.id}`}</span>
+                        - {project.name}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium flex items-center gap-1">
+                    <Clipboard className="h-3.5 w-3.5" />
+                    Equipment IDs:
+                  </h4>
+                  <div className="ml-5 mt-1 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">
+                    <div className="text-xs flex items-center">
+                      <Clipboard className="h-3 w-3 mr-1 text-green-600" />
+                      <span className="font-medium">EQP-1234</span> - Excavator 20T
+                    </div>
+                    <div className="text-xs flex items-center">
+                      <Clipboard className="h-3 w-3 mr-1 text-green-600" />
+                      <span className="font-medium">EQP-5678</span> - Scaffold materials
+                    </div>
+                    <div className="text-xs flex items-center">
+                      <Clipboard className="h-3 w-3 mr-1 text-green-600" />
+                      <span className="font-medium">EQP-ABCD</span> - Generator 50kVA
+                    </div>
+                    <div className="text-xs flex items-center">
+                      <Clipboard className="h-3 w-3 mr-1 text-green-600" />
+                      <span className="font-medium">EQP-9012</span> - Telehandler JCB
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium flex items-center gap-1">
+                    <Info className="h-3.5 w-3.5" />
+                    Test Mode Features:
+                  </h4>
+                  <ul className="ml-5 mt-1 text-xs space-y-1 list-disc list-inside">
+                    <li>Case-insensitive keyword matching (hire, HIRE, Hire all work)</li>
+                    <li>Flexible format recognition (variations in subject line format)</li>
+                    <li>Smart content extraction (finds references in email body)</li>
+                    <li>Default fallback values when references are missing</li>
+                    <li>Detailed processing results with extracted information</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </AlertDescription>
+        </Alert>
       </div>
       
       {/* Saved scenarios */}
