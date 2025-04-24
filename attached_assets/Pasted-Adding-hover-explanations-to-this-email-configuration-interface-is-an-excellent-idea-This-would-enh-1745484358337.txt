@@ -1,0 +1,53 @@
+Adding hover explanations to this email configuration interface is an excellent idea. This would enhance user understanding and reduce potential setup errors. Here's how I would approach it:
+For each field in the form, you could add tooltip explanations that appear when users hover over either the field label or a small info icon next to it:
+
+Email Address
+
+Tooltip: "The email address that will receive equipment requests and documentation. This should be a dedicated address used only for system processing."
+
+
+Password
+
+Tooltip: "Password for the email account. For security, consider using an app-specific password if your email provider supports it."
+
+
+IMAP Host
+
+Tooltip: "The incoming mail server address from your email provider (e.g., imap.gmail.com for Gmail or outlook.office365.com for Microsoft)."
+
+
+Port
+
+Tooltip: "The connection port for your email server. Common values are 993 for secure IMAP (IMAPS) or 143 for standard IMAP."
+
+
+Use TLS
+
+Tooltip: "Enables Transport Layer Security encryption for secure communication with the email server. Recommended for all connections."
+
+
+Verify SSL
+
+Tooltip: "Verifies SSL certificates from the email server. Disable only in testing environments with self-signed certificates."
+
+
+Mark as Read
+
+Tooltip: "Automatically marks emails as read after processing. Helps prevent duplicate processing if enabled."
+
+
+
+For the buttons at the bottom, you could also add explanatory tooltips:
+
+Test Connection
+
+Tooltip: "Tests connectivity to the email server with the provided credentials without processing any emails."
+
+
+Process New Emails
+
+Tooltip: "Immediately checks for and processes any new unread emails that match equipment formats."
+
+
+
+These tooltips would significantly improve user experience by providing context and guidance directly where needed, without cluttering the interface. It's especially helpful for users who might be setting up the system for the first time or administrators who don't frequently access this configuration screen

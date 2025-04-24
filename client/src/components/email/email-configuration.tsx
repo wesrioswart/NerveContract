@@ -21,6 +21,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { AnimatedButton } from '@/components/ui/animated-button';
 import { AnimationWrapper } from '@/components/ui/animation-wrapper';
 import { Loader2, Mail, ShieldCheck, ArrowRight } from 'lucide-react';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 
 // Schema for email configuration
 const emailConfigSchema = z.object({
@@ -65,9 +66,10 @@ export default function EmailConfiguration() {
       };
       
       // Remove the flattened property
-      delete apiData.rejectUnauthorized;
+      const finalApiData: any = apiData;
+      delete finalApiData.rejectUnauthorized;
       
-      return apiRequest('POST', '/api/email/initialize', apiData);
+      return apiRequest('POST', '/api/email/initialize', finalApiData);
     },
     onSuccess: () => {
       toast({
@@ -92,7 +94,6 @@ export default function EmailConfiguration() {
       toast({
         title: 'Connection Successful',
         description: 'Successfully connected to the email server.',
-        variant: 'success',
       });
     },
     onError: (error) => {
@@ -111,7 +112,6 @@ export default function EmailConfiguration() {
       toast({
         title: 'Emails Processed',
         description: 'Successfully processed new emails.',
-        variant: 'success',
       });
     },
     onError: (error) => {
@@ -154,7 +154,10 @@ export default function EmailConfiguration() {
                     name="user"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email Address</FormLabel>
+                        <FormLabel className="flex items-center">
+                          Email Address
+                          <InfoTooltip text="The email address that will receive equipment requests and documentation. This should be a dedicated address used only for system processing." />
+                        </FormLabel>
                         <FormControl>
                           <Input placeholder="email@example.com" {...field} />
                         </FormControl>
