@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EmailConfiguration from '@/components/email/email-configuration';
 import { AnimationWrapper } from '@/components/ui/animation-wrapper';
-import { Inbox, Server, FileUp, AlertTriangle, Mail, MailCheck, Truck, Clock, Loader2 } from 'lucide-react';
+import { 
+  Inbox, Server, FileUp, AlertTriangle, Mail, MailCheck, Truck, Clock, Loader2,
+  CheckCircle2, XCircle, Info, ChevronDown, ChevronUp, HelpCircle, MessageSquare
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
