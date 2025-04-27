@@ -79,6 +79,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   const utilityItems = [
     { path: "/email-processor", label: "Email Processor", icon: Mail, badge: "New" },
     { path: "/settings", label: "Settings", icon: Settings },
+    { path: "/api/pdf/overview", label: "NEC4 Overview PDF", icon: FileText, badge: "PDF" },
   ];
   
   // Function to render nav items
@@ -87,19 +88,12 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
       const Icon = item.icon;
       const isActive = location === item.path;
       
-      return (
-        <Link 
-          key={item.path} 
-          href={item.path}
-          title={collapsed ? item.label : undefined}
-          className={cn(
-            "flex items-center rounded transition duration-200 ease-in-out",
-            collapsed ? "justify-center p-2" : "gap-3 p-3",
-            activeHighlight && isActive 
-              ? "bg-blue-100 text-blue-700 font-medium" 
-              : "text-gray-800 hover:bg-blue-50",
-          )}
-        >
+      // Check if this is a PDF or external link
+      const isPdfLink = item.path.includes('/api/pdf/');
+      
+      // Common content for both link types
+      const linkContent = (
+        <>
           <Icon className={cn(
             "w-5 h-5", 
             isActive ? "text-blue-500" : "text-gray-500"
@@ -115,6 +109,42 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
               )}
             </div>
           )}
+        </>
+      );
+      
+      // Common class names
+      const linkClassNames = cn(
+        "flex items-center rounded transition duration-200 ease-in-out",
+        collapsed ? "justify-center p-2" : "gap-3 p-3",
+        activeHighlight && isActive 
+          ? "bg-blue-100 text-blue-700 font-medium" 
+          : "text-gray-800 hover:bg-blue-50",
+      );
+      
+      // For PDF downloads, use an anchor tag with download attribute
+      if (isPdfLink) {
+        return (
+          <a 
+            key={item.path}
+            href={item.path}
+            download
+            title={collapsed ? item.label : undefined}
+            className={linkClassNames}
+          >
+            {linkContent}
+          </a>
+        );
+      }
+      
+      // For regular links, use the Link component
+      return (
+        <Link 
+          key={item.path} 
+          href={item.path}
+          title={collapsed ? item.label : undefined}
+          className={linkClassNames}
+        >
+          {linkContent}
         </Link>
       );
     });
