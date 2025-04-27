@@ -41,7 +41,7 @@ export function RfiEmailProcessor() {
   const processEmailsMutation = useMutation({
     mutationFn: async (testModeData?: any) => {
       const endpoint = '/api/email/process' + (testMode ? '/test' : '');
-      const response = await apiRequest('POST', endpoint, testModeData);
+      const response = await apiRequest('POST', endpoint, testModeData || {});
       return await response.json();
     },
     onSuccess: (data) => {

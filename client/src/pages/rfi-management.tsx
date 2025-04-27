@@ -154,16 +154,16 @@ export default function RfiManagementPage() {
         new Date(plannedResponseDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       
       if (isOverdue) {
-        return <Badge variant="destructive">Overdue</Badge>;
+        return <BadgeWithColors variant="destructive">Overdue</BadgeWithColors>;
       } else if (isDueSoon) {
-        return <Badge variant="warning">Due Soon</Badge>;
+        return <BadgeWithColors variant="warning">Due Soon</BadgeWithColors>;
       } else {
-        return <Badge variant="outline">Open</Badge>;
+        return <BadgeWithColors variant="outline">Open</BadgeWithColors>;
       }
     } else if (status === 'Responded') {
-      return <Badge variant="success">Responded</Badge>;
+      return <BadgeWithColors variant="success">Responded</BadgeWithColors>;
     } else {
-      return <Badge variant="secondary">Closed</Badge>;
+      return <BadgeWithColors variant="secondary">Closed</BadgeWithColors>;
     }
   };
   
@@ -171,17 +171,17 @@ export default function RfiManagementPage() {
   const getCEStatusBadge = (ceStatus: string) => {
     switch (ceStatus) {
       case 'Not a CE':
-        return <Badge variant="outline">Not a CE</Badge>;
+        return <BadgeWithColors variant="outline">Not a CE</BadgeWithColors>;
       case 'PMI Issued':
-        return <Badge variant="warning">PMI Issued</Badge>;
+        return <BadgeWithColors variant="warning">PMI Issued</BadgeWithColors>;
       case 'NCE Raised':
-        return <Badge variant="info">NCE Raised</Badge>;
+        return <BadgeWithColors variant="info">NCE Raised</BadgeWithColors>;
       case 'Raise a CE':
-        return <Badge variant="outline" className="bg-purple-100 text-purple-800">Raise a CE</Badge>;
+        return <BadgeWithColors variant="outline" className="bg-purple-100 text-purple-800">Raise a CE</BadgeWithColors>;
       case 'Under Review':
-        return <Badge variant="secondary">Under Review</Badge>;
+        return <BadgeWithColors variant="secondary">Under Review</BadgeWithColors>;
       case 'Closed':
-        return <Badge variant="secondary">Closed</Badge>;
+        return <BadgeWithColors variant="secondary">Closed</BadgeWithColors>;
       default:
         return null;
     }
@@ -493,7 +493,7 @@ export default function RfiManagementPage() {
                     <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                     Open
                   </span>
-                  <Badge variant="outline">{rfis.filter((rfi: any) => rfi.status === 'Open').length}</Badge>
+                  <BadgeWithColors variant="outline">{rfis.filter((rfi: any) => rfi.status === 'Open').length}</BadgeWithColors>
                 </h3>
                 
                 <div className="space-y-2">
@@ -522,7 +522,7 @@ export default function RfiManagementPage() {
                     <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                     Responded
                   </span>
-                  <Badge variant="outline">{rfis.filter((rfi: any) => rfi.status === 'Responded').length}</Badge>
+                  <BadgeWithColors variant="outline">{rfis.filter((rfi: any) => rfi.status === 'Responded').length}</BadgeWithColors>
                 </h3>
                 
                 <div className="space-y-2">
@@ -551,7 +551,7 @@ export default function RfiManagementPage() {
                     <span className="w-2 h-2 bg-gray-500 rounded-full"></span>
                     Closed
                   </span>
-                  <Badge variant="outline">{rfis.filter((rfi: any) => rfi.status === 'Closed').length}</Badge>
+                  <BadgeWithColors variant="outline">{rfis.filter((rfi: any) => rfi.status === 'Closed').length}</BadgeWithColors>
                 </h3>
                 
                 <div className="space-y-2">
