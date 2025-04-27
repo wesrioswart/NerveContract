@@ -2,12 +2,22 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedDatabase } from "./seed";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Define __dirname equivalent for ESM modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 // Increase JSON payload limit to 10MB for larger files
 app.use(express.json({ limit: '10mb' }));
 // Increase URL-encoded payload limit to 10MB
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// Set up view engine for templates
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 
 app.use((req, res, next) => {
   const start = Date.now();

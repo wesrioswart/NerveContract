@@ -237,29 +237,36 @@ export const getRfiHtmlPreview = async (req: Request, res: Response) => {
     });
     const avgResponseDays = totalWithDates > 0 ? (totalDays / totalWithDates).toFixed(1) : 'N/A';
     
-    // Prepare data for HTML template
+    // Prepare data for HTML template - Converting format to match our EJS template
+    const rfisFormatted = projectRfis.map(item => ({
+      ...item.rfi,
+      createdAt: item.rfi.createdAt,
+      plannedResponseDate: item.rfi.plannedResponseDate,
+      responseDate: item.rfi.responseDate,
+      closedDate: item.rfi.closedDate,
+      gpsMacsCode: item.rfi.gpsMacsCode || null,
+      ceStatus: item.rfi.ceStatus || 'Not a CE'
+    }));
+
+    // Calculate numbers for metrics
+    const open = rfisFormatted.filter(r => r.status === 'Open').length;
+    const overdue = rfisFormatted.filter(r => 
+      r.status === 'Open' && new Date(r.plannedResponseDate) < new Date()
+    ).length;
+    const ceRelated = rfisFormatted.filter(r => 
+      r.ceStatus && r.ceStatus !== 'Not a CE'
+    ).length;
+
     const data = {
       project,
-      rfiData: projectRfis.map(item => ({
-        reference: item.rfi.reference,
-        title: item.rfi.title,
-        status: item.rfi.status.charAt(0).toUpperCase() + item.rfi.status.slice(1),
-        createdAt: item.rfi.createdAt ? format(new Date(item.rfi.createdAt), 'dd MMM yyyy') : 'N/A',
-        responseDate: item.rfi.responseDate ? format(new Date(item.rfi.responseDate), 'dd MMM yyyy') : 'N/A',
-        period: item.period?.name || 'N/A',
-        transmittalMethod: item.rfi.transmittalMethod || 'N/A',
-        gpsMacsCode: 'N/A',
-        description: item.rfi.description || 'No description provided',
-        ceStatus: item.rfi.ceStatus || 'none',
-        contractualDays: item.rfi.contractualReplyPeriod || 'N/A',
-      })),
+      rfis: rfisFormatted,
       metrics: {
         total,
+        open,
         responded,
-        pending,
-        avgResponseDays
-      },
-      generatedDate: format(new Date(), 'dd MMM yyyy')
+        overdue,
+        ceRelated
+      }
     };
 
     // Send the HTML template with RFI data
