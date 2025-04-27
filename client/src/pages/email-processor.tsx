@@ -46,6 +46,10 @@ export default function EmailProcessorPage() {
               <Truck className="h-4 w-4" />
               Equipment Emails
             </TabsTrigger>
+            <TabsTrigger value="rfi" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              RFI Emails
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="configuration">
@@ -75,6 +79,7 @@ export default function EmailProcessorPage() {
                     <li>Equipment Hire Requests (HIRE)</li>
                     <li>Equipment Off-Hire Requests (OFFHIRE)</li>
                     <li>Equipment Delivery Confirmations (DELIVERY)</li>
+                    <li>Requests for Information (RFI)</li>
                   </ul>
                 </div>
               </AnimationWrapper>
@@ -154,6 +159,7 @@ export default function EmailProcessorPage() {
                       <li><strong>Equipment Hire:</strong> Include "HIRE:" for new equipment hire requests</li>
                       <li><strong>Equipment Off-Hire:</strong> Include "OFFHIRE:" for equipment return requests</li>
                       <li><strong>Equipment Delivery:</strong> Include "DELIVERY:" for delivery confirmations</li>
+                      <li><strong>Requests for Information:</strong> Include "RFI:" for information requests</li>
                     </ul>
                   </div>
                   
@@ -165,6 +171,12 @@ export default function EmailProcessorPage() {
                     </p>
                     <div className="bg-gray-100 p-3 rounded text-gray-700 font-mono mb-2">
                       Subject: EW: Safety concern at site entrance - Project: ABC123
+                    </div>
+                    <p className="text-gray-600 mb-1">
+                      RFI emails should include the project reference:
+                    </p>
+                    <div className="bg-gray-100 p-3 rounded text-gray-700 font-mono mb-2">
+                      Subject: RFI: Clarification on foundation details - Project: ABC123
                     </div>
                     <p className="text-gray-600 mb-1">
                       Equipment-related emails follow the same format:
@@ -189,6 +201,10 @@ export default function EmailProcessorPage() {
           
           <TabsContent value="equipment">
             <EquipmentEmailProcessor />
+          </TabsContent>
+            
+          <TabsContent value="rfi">
+            <RfiEmailProcessor />
           </TabsContent>
         </Tabs>
       </AnimationWrapper>
