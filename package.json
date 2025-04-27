@@ -67,6 +67,7 @@
     "html2pdf.js": "^0.10.3",
     "imap": "^0.8.19",
     "input-otp": "^1.2.4",
+    "jsdom": "^26.1.0",
     "lucide-react": "^0.453.0",
     "mailparser": "^3.7.2",
     "memorystore": "^1.6.7",
