@@ -1,6 +1,7 @@
 import express from 'express';
 import { requireAuth, requireProjectAccess } from '../middleware/auth-middleware';
 import * as rfiController from '../controllers/rfi-controller';
+import { generateRfiPdf, getRfiHtmlPreview } from '../controllers/rfi-pdf-controller';
 
 export const rfiRouter = express.Router();
 
@@ -29,6 +30,10 @@ rfiRouter.delete('/rfis/:id/comments/:commentId', requireAuth, rfiController.del
 
 // RFI metrics for dashboard
 rfiRouter.get('/projects/:projectId/rfi-metrics', requireAuth, rfiController.getRfiMetrics);
+
+// RFI client-facing preview and PDF
+rfiRouter.get('/projects/:projectId/rfis/preview', getRfiHtmlPreview);
+rfiRouter.get('/projects/:projectId/rfis/pdf', generateRfiPdf);
 
 export function setupRfiRoutes(app: express.Express): void {
   app.use('/api', rfiRouter);
