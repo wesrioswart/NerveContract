@@ -401,6 +401,14 @@ export default function RfiManagementPage() {
                 <SlidersHorizontal className="h-4 w-4" />
                 Kanban View
               </TabsTrigger>
+              <TabsTrigger value="preview" className="flex items-center gap-2">
+                <Eye className="h-4 w-4" />
+                Preview
+              </TabsTrigger>
+              <TabsTrigger value="download" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Download
+              </TabsTrigger>
             </TabsList>
           </div>
           
@@ -623,6 +631,105 @@ export default function RfiManagementPage() {
                       </Card>
                     ))}
                 </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="preview" className="p-4">
+            <div className="bg-white rounded-lg border shadow-sm p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">RFI Preview</h2>
+                  <p className="text-gray-500">Client-facing preview of RFI data for the current project</p>
+                </div>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  onClick={() => {
+                    if (currentProject) {
+                      window.open(`/api/projects/${currentProject.id}/rfis/preview`, '_blank');
+                    }
+                  }}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open in New Tab
+                </Button>
+              </div>
+              
+              <div className="bg-gray-50 border rounded-md p-4 text-center">
+                <iframe 
+                  src={currentProject ? `/api/projects/${currentProject.id}/rfis/preview` : ''}
+                  className="w-full h-[500px] border rounded"
+                  title="RFI Preview"
+                ></iframe>
+              </div>
+              
+              <div className="mt-4 text-sm text-gray-500">
+                <p>This view provides a client-friendly presentation of all RFIs for the current project.</p>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="download" className="p-4">
+            <div className="bg-white rounded-lg border shadow-sm p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">RFI Download</h2>
+                  <p className="text-gray-500">Generate and download PDF reports for RFIs</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Complete RFI Report</CardTitle>
+                    <CardDescription>Comprehensive report with all RFI data for the current project</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-500 mb-4">
+                      This report includes all RFIs with their current status, response details, and CE status.
+                    </p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      className="w-full flex items-center justify-center gap-2"
+                      onClick={() => {
+                        if (currentProject) {
+                          window.open(`/api/projects/${currentProject.id}/rfis/pdf`, '_blank');
+                        }
+                      }}
+                    >
+                      <FileText className="h-4 w-4" />
+                      Download PDF
+                    </Button>
+                  </CardFooter>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Email Report</CardTitle>
+                    <CardDescription>Send RFI report to project stakeholders</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Email the RFI report to stakeholders involved in the project.
+                    </p>
+                    <Input
+                      type="email"
+                      placeholder="recipient@example.com"
+                      className="mb-2"
+                    />
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      variant="outline"
+                      className="w-full flex items-center justify-center gap-2"
+                    >
+                      <Mail className="h-4 w-4" />
+                      Send Email
+                    </Button>
+                  </CardFooter>
+                </Card>
               </div>
             </div>
           </TabsContent>
