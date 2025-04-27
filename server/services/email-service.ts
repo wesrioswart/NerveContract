@@ -1,7 +1,7 @@
 import { MailService } from '@sendgrid/mail';
 import crypto from 'crypto';
 import { db } from '../db';
-import { offHireConfirmations, equipmentItems, equipmentHires, offHireRequests } from '@shared/schema';
+import { offHireConfirmations, equipmentItems, equipmentHires, offHireRequests, rfis } from '@shared/schema';
 
 if (!process.env.SENDGRID_API_KEY) {
   console.warn("SENDGRID_API_KEY is not set. Email notifications will not be sent.");
@@ -152,7 +152,7 @@ export async function processEmails(): Promise<{processedCount: number, processe
     
     // 4. Process emails by document type
     console.log('Identifying document types based on subject keywords...');
-    console.log('Looking for: CE, EW, TQ, NCR, HIRE, OFFHIRE, DELIVERY');
+    console.log('Looking for: CE, EW, TQ, NCR, RFI, HIRE, OFFHIRE, DELIVERY');
     
     // Default mock emails for demonstration purposes
     const defaultMockEmails = [
