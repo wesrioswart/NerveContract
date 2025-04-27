@@ -395,7 +395,10 @@ export const usersRelations = relations(users, ({ many }) => ({
 
 export const projectsRelations = relations(projects, ({ many }) => ({
   teams: many(nec4Teams),
-  userAssignments: many(usersToProjects)
+  userAssignments: many(usersToProjects),
+  periods: many(projectPeriods),
+  rfis: many(rfis),
+  progressReports: many(progressReports)
 }));
 
 // Create insert schemas
@@ -421,6 +424,146 @@ export type InsertNec4Team = z.infer<typeof insertNec4TeamSchema>;
 
 export type Nec4TeamMember = typeof nec4TeamMembers.$inferSelect;
 export type InsertNec4TeamMember = z.infer<typeof insertNec4TeamMemberSchema>;
+
+// Project Periods
+export const projectPeriods = pgTable("project_period", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => projects.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  status: text("status").notNull().default("Active"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertProjectPeriodSchema = createInsertSchema(projectPeriods).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ProjectPeriod = typeof projectPeriods.$inferSelect;
+export type InsertProjectPeriod = z.infer<typeof insertProjectPeriodSchema>;
+
+// RFI Tables
+export const rfis = pgTable("rfi", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => projects.id),
+  reference: text("reference").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  transmittalMethod: text("transmittal_method").notNull(),
+  submissionDate: date("submission_date").notNull(),
+  contractualReplyPeriod: integer("contractual_reply_period").notNull(),
+  plannedResponseDate: date("planned_response_date").notNull(),
+  responseDate: date("response_date"),
+  response: text("response"),
+  status: text("status").notNull().default("Open"),
+  ceStatus: text("ce_status"),
+  ceReference: text("ce_reference"),
+  periodId: integer("period_id").references(() => projectPeriods.id),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const rfiAttachments = pgTable("rfi_attachment", {
+  id: serial("id").primaryKey(),
+  rfiId: integer("rfi_id").notNull().references(() => rfis.id, { onDelete: "cascade" }),
+  fileName: text("file_name").notNull(),
+  filePath: text("file_path").notNull(),
+  fileSize: integer("file_size").notNull(),
+  fileType: text("file_type").notNull(),
+  uploadedBy: integer("uploaded_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const rfiComments = pgTable("rfi_comment", {
+  id: serial("id").primaryKey(),
+  rfiId: integer("rfi_id").notNull().references(() => rfis.id, { onDelete: "cascade" }),
+  comment: text("comment").notNull(),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Define relations
+export const rfisRelations = relations(rfis, ({ many, one }) => ({
+  project: one(projects, {
+    fields: [rfis.projectId],
+    references: [projects.id]
+  }),
+  period: one(projectPeriods, {
+    fields: [rfis.periodId],
+    references: [projectPeriods.id]
+  }),
+  creator: one(users, {
+    fields: [rfis.createdBy],
+    references: [users.id]
+  }),
+  attachments: many(rfiAttachments),
+  comments: many(rfiComments),
+}));
+
+export const rfiAttachmentsRelations = relations(rfiAttachments, ({ one }) => ({
+  rfi: one(rfis, {
+    fields: [rfiAttachments.rfiId],
+    references: [rfis.id]
+  }),
+  uploader: one(users, {
+    fields: [rfiAttachments.uploadedBy],
+    references: [users.id]
+  }),
+}));
+
+export const rfiCommentsRelations = relations(rfiComments, ({ one }) => ({
+  rfi: one(rfis, {
+    fields: [rfiComments.rfiId],
+    references: [rfis.id]
+  }),
+  creator: one(users, {
+    fields: [rfiComments.createdBy],
+    references: [users.id]
+  }),
+}));
+
+export const projectPeriodsRelations = relations(projectPeriods, ({ many, one }) => ({
+  project: one(projects, {
+    fields: [projectPeriods.projectId],
+    references: [projects.id]
+  }),
+  rfis: many(rfis),
+}));
+
+// Relations already defined above
+
+// Create insert schemas
+export const insertRfiSchema = createInsertSchema(rfis).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertRfiAttachmentSchema = createInsertSchema(rfiAttachments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertRfiCommentSchema = createInsertSchema(rfiComments).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Define RFI types
+export type RFI = typeof rfis.$inferSelect;
+export type InsertRFI = z.infer<typeof insertRfiSchema>;
+
+export type RFIAttachment = typeof rfiAttachments.$inferSelect;
+export type InsertRFIAttachment = z.infer<typeof insertRfiAttachmentSchema>;
+
+export type RFIComment = typeof rfiComments.$inferSelect;
+export type InsertRFIComment = z.infer<typeof insertRfiCommentSchema>;
 
 export type UserToProject = typeof usersToProjects.$inferSelect;
 
