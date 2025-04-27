@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import path from "path";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarningSchema, 
@@ -19,7 +20,6 @@ import { setupRfiRoutes } from "./routes/rfi-routes";
 import { requireAuth, requireProjectAccess, hasProjectAccess } from "./middleware/auth-middleware";
 import { populateForm, compareProgrammes } from "./controllers/ai-assistant-controller";
 import { exportProcurementReport, downloadReport } from "./controllers/export-controller";
-import path from "path";
 import fs from "fs";
 import multer from "multer";
 import passport from './auth/passport-config';
@@ -1720,6 +1720,24 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
 
   // Setup RFI Management Routes
   setupRfiRoutes(app);
+
+  // PDF Overview Download route
+  app.get('/api/pdf/overview', (req: Request, res: Response) => {
+    try {
+      const pdfPath = path.resolve('./NEC4-Platform-Overview.pdf');
+      if (fs.existsSync(pdfPath)) {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=NEC4-Platform-Overview.pdf');
+        const fileStream = fs.createReadStream(pdfPath);
+        fileStream.pipe(res);
+      } else {
+        res.status(404).json({ message: 'PDF file not found' });
+      }
+    } catch (error) {
+      console.error('Error serving PDF:', error);
+      res.status(500).json({ message: 'Error serving PDF file' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
