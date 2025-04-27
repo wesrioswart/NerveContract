@@ -14,7 +14,10 @@ import {
   SlidersHorizontal,
   ArrowUpDown,
   HelpCircle,
-  ClipboardList
+  ClipboardList,
+  Eye,
+  ExternalLink,
+  Mail
 } from 'lucide-react';
 import { AnimationWrapper } from '@/components/ui/animation-wrapper';
 import { BadgeWithColors } from '@/components/ui/badge-with-colors';
@@ -45,6 +48,20 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+// Helper function to format dates
+const formatDate = (dateStr: string | null) => {
+  if (!dateStr) return 'N/A';
+  return new Date(dateStr).toLocaleDateString();
+};
+
+// Helper to calculate days between two dates (positive if overdue, negative if due in future)
+const calculateDaysDiff = (date1: string, date2: string) => {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  const diffTime = d2.getTime() - d1.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
+
 export default function RfiManagementPage() {
   const { currentProject } = useProject();
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,6 +69,13 @@ export default function RfiManagementPage() {
   const [periodFilter, setPeriodFilter] = useState('all');
   const [sortBy, setSortBy] = useState('created');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [selectedRfi, setSelectedRfi] = useState<any>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  
+  const showRfiDetails = (rfi: any) => {
+    setSelectedRfi(rfi);
+    setShowDetailsDialog(true);
+  };
   
   const { data: rfis = [], isLoading, error } = useQuery({
     queryKey: ['/api/rfis', currentProject?.id],
@@ -502,12 +526,21 @@ export default function RfiManagementPage() {
                     .map((rfi: any) => (
                       <Card key={rfi.id} className="shadow-sm">
                         <CardHeader className="p-3 pb-1">
-                          <CardTitle className="text-sm">{rfi.title}</CardTitle>
+                          <CardTitle className="text-sm flex items-center justify-between">
+                            <span>{rfi.title}</span>
+                            <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => showRfiDetails(rfi)}>
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                              <span className="text-xs">View</span>
+                            </Button>
+                          </CardTitle>
                           <CardDescription className="text-xs">{rfi.reference}</CardDescription>
                         </CardHeader>
                         <CardContent className="p-3 pt-0">
                           <div className="flex items-center justify-between text-xs">
-                            <span>Due: {new Date(rfi.plannedResponseDate).toLocaleDateString()}</span>
+                            <div className="flex flex-col">
+                              <span>Due: {formatDate(rfi.plannedResponseDate)}</span>
+                              <span>Reply period: {rfi.contractualReplyPeriod || 5} days</span>
+                            </div>
                             {getCEStatusBadge(rfi.ceStatus)}
                           </div>
                         </CardContent>
