@@ -564,12 +564,21 @@ export default function RfiManagementPage() {
                     .map((rfi: any) => (
                       <Card key={rfi.id} className="shadow-sm">
                         <CardHeader className="p-3 pb-1">
-                          <CardTitle className="text-sm">{rfi.title}</CardTitle>
+                          <CardTitle className="text-sm flex items-center justify-between">
+                            <span>{rfi.title}</span>
+                            <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => showRfiDetails(rfi)}>
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                              <span className="text-xs">View</span>
+                            </Button>
+                          </CardTitle>
                           <CardDescription className="text-xs">{rfi.reference}</CardDescription>
                         </CardHeader>
                         <CardContent className="p-3 pt-0">
                           <div className="flex items-center justify-between text-xs">
-                            <span>Responded: {rfi.responseDate ? new Date(rfi.responseDate).toLocaleDateString() : 'N/A'}</span>
+                            <div className="flex flex-col">
+                              <span>Responded: {formatDate(rfi.responseDate)}</span>
+                              <span>Days to respond: {rfi.responseDate ? calculateDaysDiff(rfi.createdAt, rfi.responseDate) : 'N/A'}</span>
+                            </div>
                             {getCEStatusBadge(rfi.ceStatus)}
                           </div>
                         </CardContent>
@@ -593,12 +602,21 @@ export default function RfiManagementPage() {
                     .map((rfi: any) => (
                       <Card key={rfi.id} className="shadow-sm">
                         <CardHeader className="p-3 pb-1">
-                          <CardTitle className="text-sm">{rfi.title}</CardTitle>
+                          <CardTitle className="text-sm flex items-center justify-between">
+                            <span>{rfi.title}</span>
+                            <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => showRfiDetails(rfi)}>
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                              <span className="text-xs">View</span>
+                            </Button>
+                          </CardTitle>
                           <CardDescription className="text-xs">{rfi.reference}</CardDescription>
                         </CardHeader>
                         <CardContent className="p-3 pt-0">
                           <div className="flex items-center justify-between text-xs">
-                            <span>Closed: {rfi.closedDate ? new Date(rfi.closedDate).toLocaleDateString() : 'N/A'}</span>
+                            <div className="flex flex-col">
+                              <span>Closed: {formatDate(rfi.closedDate)}</span>
+                              <span>GPS MACS: {rfi.gpsMacsCode || 'Not assigned'}</span>
+                            </div>
                             {getCEStatusBadge(rfi.ceStatus)}
                           </div>
                         </CardContent>
@@ -610,6 +628,130 @@ export default function RfiManagementPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* RFI Details Dialog */}
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent className="max-w-3xl">
+          {selectedRfi && (
+            <>
+              <DialogHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <DialogTitle className="text-xl font-semibold">
+                      {selectedRfi.reference}
+                    </DialogTitle>
+                    <DialogDescription className="text-base font-medium mt-1">
+                      {selectedRfi.title}
+                    </DialogDescription>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    {getStatusBadge(selectedRfi.status, selectedRfi.plannedResponseDate)}
+                    {getCEStatusBadge(selectedRfi.ceStatus)}
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-3">RFI Details</h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-gray-500">Created</p>
+                      <p>{formatDate(selectedRfi.createdAt)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Period</p>
+                      <p>{periods.find((p: any) => p.id === selectedRfi.periodId)?.name || 'Not assigned'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Planned Response</p>
+                      <p>{formatDate(selectedRfi.plannedResponseDate)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Actual Response</p>
+                      <p>{formatDate(selectedRfi.responseDate)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Contractual Reply Period</p>
+                      <p>{selectedRfi.contractualReplyPeriod || 5} days</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Days Due/Beyond</p>
+                      {selectedRfi.responseDate ? (
+                        <p className={`font-medium ${
+                          calculateDaysDiff(selectedRfi.createdAt, selectedRfi.responseDate) <= 
+                          (selectedRfi.contractualReplyPeriod || 5) ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {calculateDaysDiff(selectedRfi.createdAt, selectedRfi.responseDate)} days
+                        </p>
+                      ) : (
+                        <p>N/A</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-semibold mb-3">Additional Information</h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-gray-500">Originator</p>
+                      <p>{selectedRfi.originator || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">GPS MACS Code</p>
+                      <p>{selectedRfi.gpsMacsCode || 'Not assigned'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Transmittal Method</p>
+                      <div className="flex items-center gap-1">
+                        {selectedRfi.transmittalMethod === 'Email' ? 
+                          <Mail className="h-4 w-4 text-blue-500" /> : 
+                          <ExternalLink className="h-4 w-4 text-blue-500" />
+                        }
+                        <span>{selectedRfi.transmittalMethod || 'Email'}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Closed Date</p>
+                      <p>{formatDate(selectedRfi.closedDate)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                <h3 className="text-sm font-semibold mb-2">Description</h3>
+                <div className="bg-gray-50 p-3 rounded-md text-sm">
+                  {selectedRfi.description || 'No description provided.'}
+                </div>
+              </div>
+              
+              {selectedRfi.response && (
+                <div className="mt-4">
+                  <h3 className="text-sm font-semibold mb-2">Response</h3>
+                  <div className="bg-gray-50 p-3 rounded-md text-sm">
+                    {selectedRfi.response}
+                  </div>
+                </div>
+              )}
+              
+              <div className="mt-4">
+                <h3 className="text-sm font-semibold mb-2">Comments</h3>
+                <div className="bg-gray-50 p-3 rounded-md text-sm">
+                  {selectedRfi.comments || 'No comments.'}
+                </div>
+              </div>
+              
+              <DialogFooter className="mt-6">
+                <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
+                  Close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
