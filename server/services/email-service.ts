@@ -167,6 +167,10 @@ export async function processEmails(): Promise<{processedCount: number, processe
       {
         subject: 'DELIVERY: Scaffold materials confirmation - Project: ABC123 - Equipment ID: EQP-5678',
         content: 'Confirming receipt of scaffold materials delivered today. All items received in good condition.'
+      },
+      {
+        subject: 'RFI: Foundation design clarification - Project: C-121',
+        content: 'We need clarification on the foundation design for the east wing. Based on the soil survey results, we may need to adjust the depth of the piles. Please provide guidance on the minimum required depth considering the new soil conditions.'
       }
     ];
     
@@ -186,12 +190,13 @@ export async function processEmails(): Promise<{processedCount: number, processe
     let processedCount = 0;
     
     // Helper function to identify email type more flexibly in test mode
-    const identifyEmailType = (subject: string, isMockMode: boolean): 'HIRE' | 'OFFHIRE' | 'DELIVERY' | null => {
+    const identifyEmailType = (subject: string, isMockMode: boolean): 'HIRE' | 'OFFHIRE' | 'DELIVERY' | 'RFI' | null => {
       // In production mode, strict format checking
       if (!isMockMode) {
         if (subject.includes('HIRE:') && !subject.includes('OFFHIRE:')) return 'HIRE';
         if (subject.includes('OFFHIRE:')) return 'OFFHIRE';
         if (subject.includes('DELIVERY:')) return 'DELIVERY';
+        if (subject.includes('RFI:')) return 'RFI';
         return null;
       }
       
@@ -202,6 +207,7 @@ export async function processEmails(): Promise<{processedCount: number, processe
       if (subject.includes('HIRE:') && !subject.includes('OFFHIRE:')) return 'HIRE';
       if (subject.includes('OFFHIRE:')) return 'OFFHIRE';
       if (subject.includes('DELIVERY:')) return 'DELIVERY';
+      if (subject.includes('RFI:')) return 'RFI';
       
       // Check for keywords with more flexibility (test mode rules)
       if (subjectLower.includes('hire') && !subjectLower.includes('offhire') && 
@@ -216,6 +222,10 @@ export async function processEmails(): Promise<{processedCount: number, processe
       
       if (subjectLower.includes('delivery') || subjectLower.includes('delivered')) {
         return 'DELIVERY';
+      }
+      
+      if (subjectLower.includes('rfi') || subjectLower.includes('request for information')) {
+        return 'RFI';
       }
       
       return null;
@@ -245,11 +255,16 @@ export async function processEmails(): Promise<{processedCount: number, processe
           await processDeliveryConfirmationEmail(email.subject, email.content);
           processed = true;
         }
+        else if (emailType === 'RFI') {
+          console.log('-> Identified as Request for Information (RFI)');
+          await processRfiEmail(email.subject, email.content);
+          processed = true;
+        }
         // Other document types would be handled here (CE, EW, TQ, NCR)
         else {
-          console.log('-> Not an equipment-related email, skipping');
+          console.log('-> Not a recognized email type, skipping');
           if (mockModeEnabled) {
-            console.log('   Tip: In test mode, include keywords like "hire", "offhire", or "delivery" in the subject');
+            console.log('   Tip: In test mode, include keywords like "hire", "offhire", "delivery", or "rfi" in the subject');
           }
         }
         
@@ -285,12 +300,12 @@ export async function processEmails(): Promise<{processedCount: number, processe
       })),
       validationRules: {
         productionMode: [
-          "Subject must include 'HIRE:', 'OFFHIRE:', or 'DELIVERY:' prefix",
+          "Subject must include 'HIRE:', 'OFFHIRE:', 'DELIVERY:', or 'RFI:' prefix",
           "Project reference must be specified with 'Project: CODE' format",
           "Equipment reference must be specified with 'Equipment ID: CODE' format"
         ],
         testMode: [
-          "Subject can include variations of 'hire', 'offhire', or 'delivery'",
+          "Subject can include variations of 'hire', 'offhire', 'delivery', or 'rfi'/'request for information'",
           "Project reference will be extracted from content if possible, or default to C-121",
           "Equipment reference will be generated if not found"
         ]
@@ -808,4 +823,95 @@ export async function sendOffHireNotificationEmail({
     text: textContent,
     html: htmlContent,
   });
+}
+
+/**
+ * Process RFI email
+ * This would be called when an email with RFI: in the subject is received
+ */
+export async function processRfiEmail(
+  emailSubject: string, 
+  emailContent: string
+): Promise<void> {
+  console.log('Processing RFI email...');
+  
+  try {
+    // Extract project reference from the email subject or content
+    let projectReference: string | null = null;
+    let title: string | null = null;
+    
+    // Try to find project reference in subject using strict format
+    const projectMatch = emailSubject.match(/Project:\s*([A-Za-z0-9-]+)/i);
+    if (projectMatch) {
+      projectReference = projectMatch[1];
+    }
+    
+    // Try to extract title from the subject
+    const titleMatch = emailSubject.match(/RFI:\s*([^-]+)(?:-|$)/i);
+    if (titleMatch) {
+      title = titleMatch[1].trim();
+    }
+    
+    // If not found in subject with strict format, try content for project
+    if (!projectReference) {
+      // Look for project keywords in content
+      const contentProjectMatch = emailContent.match(/[Pp]roject(?:\s*(?:reference|ref|id|code|number))?:\s*([A-Za-z0-9-]+)/i) 
+                               || emailContent.match(/[Pp]roject(?:\s*(?:reference|ref|id|code|number))?(?:\s+is)?(?:\s*:)?\s*([A-Za-z0-9-]+)/i)
+                               || emailContent.match(/[Ff]or\s+(?:the\s+)?[Pp]roject(?:\s*:)?\s*([A-Za-z0-9-]+)/i);
+                               
+      if (contentProjectMatch) {
+        projectReference = contentProjectMatch[1];
+      }
+    }
+    
+    // In test mode, be more forgiving
+    if (mockModeEnabled) {
+      if (!projectReference) {
+        projectReference = "C-121";
+        console.log("Using default project reference C-121 (test mode only)");
+      }
+      
+      if (!title) {
+        title = "Request for Information";
+        console.log(`Using default title "${title}" (test mode only)`);
+      }
+    } 
+    else if (!projectReference) {
+      console.warn('No project reference found in email subject or content:', emailSubject);
+      return;
+    }
+    
+    console.log(`Extracted project reference: ${projectReference}, title: ${title || 'Unknown'}`);
+    console.log('RFI content:', emailContent.substring(0, 100) + '...');
+    
+    // In a real implementation, we would now:
+    // 1. Find the project ID in the database based on the reference
+    // 2. Generate a unique RFI reference
+    // 3. Create an RFI record in the database
+    // 4. Set default response period
+    // 5. Notify relevant project team members
+    
+    // Get the project ID for the reference
+    const project = { id: 1, name: 'Westfield Development Project' }; // This would be a database lookup in production
+    
+    // Generate a unique reference
+    const rfiRef = `RFI-${Math.floor(1000 + Math.random() * 9000)}`;
+    
+    // Create a new RFI record
+    const currentDate = new Date();
+    const responsePeriodDays = 7; // Default response period
+    const plannedResponseDate = new Date(currentDate);
+    plannedResponseDate.setDate(plannedResponseDate.getDate() + responsePeriodDays);
+    
+    console.log(`Creating RFI with reference ${rfiRef}`);
+    console.log(`Project ID: ${project.id}`);
+    console.log(`Planned response date: ${plannedResponseDate.toISOString().split('T')[0]}`);
+    
+    // In production, this would insert a record using the RFI controller
+    
+    console.log('RFI processed successfully');
+    
+  } catch (error) {
+    console.error('Error processing RFI email:', error);
+  }
 }
