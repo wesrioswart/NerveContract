@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EmailConfiguration from '@/components/email/email-configuration';
 import { AnimationWrapper } from '@/components/ui/animation-wrapper';
+import { RfiEmailProcessor } from '@/components/email/rfi-email-processor';
 import { 
   Inbox, Server, FileUp, AlertTriangle, Mail, MailCheck, Truck, Clock, Loader2,
   CheckCircle2, XCircle, Info, ChevronDown, ChevronUp, HelpCircle, MessageSquare
