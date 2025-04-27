@@ -19,7 +19,8 @@ import {
   Package2,
   Building,
   Truck,
-  QrCode
+  QrCode,
+  MessageSquare
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +54,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/compensation-events", label: "Compensation Events", icon: CheckCircle },
     { path: "/early-warnings", label: "Early Warnings", icon: AlertTriangle },
     { path: "/ncr-tqr", label: "NCRs & TQRs", icon: FileWarning },
+    { path: "/rfi-management", label: "RFI Management", icon: MessageSquare, badge: "New" },
   ];
 
   // Programme items
