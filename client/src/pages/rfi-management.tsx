@@ -62,6 +62,13 @@ const calculateDaysDiff = (date1: string, date2: string) => {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
+// Format date in a more readable format (DD/MM/YYYY)
+const formatDateDDMMYYYY = (dateStr: string | null) => {
+  if (!dateStr) return 'N/A';
+  const date = new Date(dateStr);
+  return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+};
+
 export default function RfiManagementPage() {
   const { currentProject } = useProject();
   const [searchQuery, setSearchQuery] = useState('');
@@ -757,8 +764,13 @@ export default function RfiManagementPage() {
                     </DialogDescription>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    {getStatusBadge(selectedRfi.status, selectedRfi.plannedResponseDate)}
-                    {getCEStatusBadge(selectedRfi.ceStatus)}
+                    {/* Only show one status badge */}
+                    {selectedRfi.status === 'Closed' 
+                      ? <BadgeWithColors variant="secondary">Closed</BadgeWithColors>
+                      : getStatusBadge(selectedRfi.status, selectedRfi.plannedResponseDate)
+                    }
+                    {/* Only show CE status badge if it's not also "Closed" to avoid duplication */}
+                    {selectedRfi.ceStatus !== 'Closed' && getCEStatusBadge(selectedRfi.ceStatus)}
                   </div>
                 </div>
               </DialogHeader>
@@ -769,7 +781,7 @@ export default function RfiManagementPage() {
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-gray-500">Created</p>
-                      <p>{formatDate(selectedRfi.createdAt)}</p>
+                      <p>{formatDateDDMMYYYY(selectedRfi.createdAt)}</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Period</p>
@@ -777,25 +789,33 @@ export default function RfiManagementPage() {
                     </div>
                     <div>
                       <p className="text-gray-500">Planned Response</p>
-                      <p>{formatDate(selectedRfi.plannedResponseDate)}</p>
+                      <p>{formatDateDDMMYYYY(selectedRfi.plannedResponseDate)}</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Actual Response</p>
-                      <p>{formatDate(selectedRfi.responseDate)}</p>
+                      <p>{formatDateDDMMYYYY(selectedRfi.responseDate)}</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Contractual Reply Period</p>
                       <p>{selectedRfi.contractualReplyPeriod || 5} days</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Days Due/Beyond</p>
+                      <p className="text-gray-500">Response Time</p>
                       {selectedRfi.responseDate ? (
-                        <p className={`font-medium ${
-                          calculateDaysDiff(selectedRfi.createdAt, selectedRfi.responseDate) <= 
-                          (selectedRfi.contractualReplyPeriod || 5) ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {calculateDaysDiff(selectedRfi.createdAt, selectedRfi.responseDate)} days
-                        </p>
+                        (() => {
+                          const actualDays = calculateDaysDiff(selectedRfi.createdAt, selectedRfi.responseDate);
+                          const contractualDays = selectedRfi.contractualReplyPeriod || 5;
+                          const daysDiff = contractualDays - actualDays;
+                          
+                          return (
+                            <p className={`font-medium ${daysDiff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {actualDays} days
+                              {daysDiff > 0 && ` (${daysDiff} days early)`}
+                              {daysDiff < 0 && ` (${Math.abs(daysDiff)} days late)`}
+                              {daysDiff === 0 && ` (on time)`}
+                            </p>
+                          );
+                        })()
                       ) : (
                         <p>N/A</p>
                       )}
@@ -826,7 +846,7 @@ export default function RfiManagementPage() {
                     </div>
                     <div>
                       <p className="text-gray-500">Closed Date</p>
-                      <p>{formatDate(selectedRfi.closedDate)}</p>
+                      <p>{formatDateDDMMYYYY(selectedRfi.closedDate)}</p>
                     </div>
                   </div>
                 </div>
