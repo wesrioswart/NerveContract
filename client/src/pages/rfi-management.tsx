@@ -84,6 +84,7 @@ export default function RfiManagementPage() {
   const [selectedRfi, setSelectedRfi] = useState<any>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   
   const showRfiDetails = (rfi: any) => {
     setSelectedRfi(rfi);
@@ -407,9 +408,9 @@ export default function RfiManagementPage() {
                 </SelectContent>
               </Select>
               
-              <Dialog>
+              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" className="gap-2" onClick={() => setShowCreateDialog(true)}>
                     <Plus className="h-4 w-4" />
                     New RFI
                   </Button>
@@ -426,7 +427,13 @@ export default function RfiManagementPage() {
                   <p className="text-sm text-gray-500">RFI form will be implemented in a future update.</p>
                   
                   <DialogFooter>
-                    <Button variant="outline" className="mr-2">Cancel</Button>
+                    <Button 
+                      variant="outline" 
+                      className="mr-2" 
+                      onClick={() => setShowCreateDialog(false)}
+                    >
+                      Cancel
+                    </Button>
                     <Button>Create RFI</Button>
                   </DialogFooter>
                 </DialogContent>
@@ -936,7 +943,7 @@ export default function RfiManagementPage() {
       
       {/* RFI Edit Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {selectedRfi && (
             <>
               <DialogHeader>
@@ -953,9 +960,9 @@ export default function RfiManagementPage() {
                 </div>
               </DialogHeader>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div>
                       <Label htmlFor="title">Title</Label>
                       <Input 
@@ -1001,30 +1008,11 @@ export default function RfiManagementPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
-                    <div>
-                      <Label htmlFor="periodId">Period</Label>
-                      <Select 
-                        value={selectedRfi.periodId?.toString()} 
-                        onValueChange={(value) => setSelectedRfi({...selectedRfi, periodId: parseInt(value)})}
-                      >
-                        <SelectTrigger id="periodId">
-                          <SelectValue placeholder="Select period" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {periods.map((period: any) => (
-                            <SelectItem key={period.id} value={period.id.toString()}>
-                              {period.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
                 </div>
                 
                 <div>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div>
                       <Label htmlFor="plannedResponseDate">Planned Response Date</Label>
                       <Input 
@@ -1053,25 +1041,16 @@ export default function RfiManagementPage() {
                         onChange={(e) => setSelectedRfi({...selectedRfi, originator: e.target.value})}
                       />
                     </div>
-                    
-                    <div>
-                      <Label htmlFor="gpsMacsCode">GPS MACS Code</Label>
-                      <Input 
-                        id="gpsMacsCode"
-                        value={selectedRfi.gpsMacsCode || ''}
-                        onChange={(e) => setSelectedRfi({...selectedRfi, gpsMacsCode: e.target.value})}
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
               
-              <div className="space-y-4 mt-4">
+              <div className="space-y-3 mt-4">
                 <div>
                   <Label htmlFor="description">Description</Label>
                   <Textarea 
                     id="description"
-                    className="min-h-[100px]"
+                    className="min-h-[80px]"
                     value={selectedRfi.description || ''}
                     onChange={(e) => setSelectedRfi({...selectedRfi, description: e.target.value})}
                   />
@@ -1081,24 +1060,14 @@ export default function RfiManagementPage() {
                   <Label htmlFor="response">Response</Label>
                   <Textarea 
                     id="response"
-                    className="min-h-[100px]"
+                    className="min-h-[80px]"
                     value={selectedRfi.response || ''}
                     onChange={(e) => setSelectedRfi({...selectedRfi, response: e.target.value})}
                   />
                 </div>
-                
-                <div>
-                  <Label htmlFor="comments">Comments</Label>
-                  <Textarea 
-                    id="comments"
-                    className="min-h-[80px]"
-                    value={selectedRfi.comments || ''}
-                    onChange={(e) => setSelectedRfi({...selectedRfi, comments: e.target.value})}
-                  />
-                </div>
               </div>
               
-              <DialogFooter className="mt-6">
+              <DialogFooter className="mt-4 sticky bottom-0 bg-white pt-2 pb-0">
                 <div className="flex justify-end gap-2">
                   <Button 
                     variant="outline" 
@@ -1107,7 +1076,25 @@ export default function RfiManagementPage() {
                     Cancel
                   </Button>
                   <Button 
-                    onClick={() => updateRfiMutation.mutate(selectedRfi)}
+                    onClick={() => {
+                      // Create a clean version of the RFI without circular references or complex objects
+                      const cleanRfi = {
+                        id: selectedRfi.id,
+                        title: selectedRfi.title,
+                        reference: selectedRfi.reference,
+                        status: selectedRfi.status,
+                        ceStatus: selectedRfi.ceStatus,
+                        description: selectedRfi.description,
+                        response: selectedRfi.response,
+                        comments: selectedRfi.comments,
+                        contractualReplyPeriod: selectedRfi.contractualReplyPeriod,
+                        plannedResponseDate: selectedRfi.plannedResponseDate,
+                        periodId: selectedRfi.periodId,
+                        originator: selectedRfi.originator,
+                        gpsMacsCode: selectedRfi.gpsMacsCode
+                      };
+                      updateRfiMutation.mutate(cleanRfi);
+                    }}
                     disabled={updateRfiMutation.isPending}
                     className="gap-2"
                   >
