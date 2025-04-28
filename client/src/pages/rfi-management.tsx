@@ -52,6 +52,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 
 // Helper function to format dates
 const formatDate = (dateStr: string | null) => {
@@ -76,6 +77,7 @@ const formatDateDDMMYYYY = (dateStr: string | null) => {
 
 export default function RfiManagementPage() {
   const { currentProject } = useProject();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [periodFilter, setPeriodFilter] = useState('all');
@@ -412,6 +414,7 @@ export default function RfiManagementPage() {
                 variant="outline" 
                 className="gap-2"
                 onClick={() => {
+                  const { toast } = useToast();
                   // Simple direct dialog implementation
                   const dialog = document.createElement('dialog');
                   dialog.className = 'fixed inset-0 z-50 p-4 bg-black/30 flex items-center justify-center';
@@ -451,7 +454,7 @@ export default function RfiManagementPage() {
                   const createBtn = dialog.querySelector('#create-btn');
                   if (createBtn) {
                     createBtn.addEventListener('click', () => {
-                      // Show feedback toast
+                      // Show feedback toast - use the toast function from parent scope
                       toast({
                         title: "Demo Feature",
                         description: "This feature will be implemented in the next update.",
