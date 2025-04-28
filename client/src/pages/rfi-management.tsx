@@ -410,37 +410,48 @@ export default function RfiManagementPage() {
               
               <Button 
                 variant="outline" 
-                className="gap-2" 
-                onClick={() => setShowCreateDialog(true)}
+                className="gap-2"
+                onClick={() => {
+                  // Simple direct dialog implementation
+                  const dialog = document.createElement('dialog');
+                  dialog.className = 'fixed inset-0 z-50 p-4 bg-black/30 flex items-center justify-center';
+                  dialog.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                      <h2 class="text-xl font-semibold mb-2">Create New RFI</h2>
+                      <p class="text-gray-500 mb-4">Add a new Request for Information to the current project.</p>
+                      <p class="text-sm text-gray-500 my-6">RFI form will be implemented in a future update.</p>
+                      <div class="flex justify-end gap-2 mt-4">
+                        <button id="cancel-btn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Create RFI</button>
+                      </div>
+                    </div>
+                  `;
+                  document.body.appendChild(dialog);
+                  
+                  // Show the dialog
+                  dialog.showModal();
+                  
+                  // Add event listener to close the dialog
+                  const cancelBtn = dialog.querySelector('#cancel-btn');
+                  if (cancelBtn) {
+                    cancelBtn.addEventListener('click', () => {
+                      dialog.close();
+                      document.body.removeChild(dialog);
+                    });
+                  }
+                  
+                  // Also close the dialog when clicking outside
+                  dialog.addEventListener('click', (e) => {
+                    if (e.target === dialog) {
+                      dialog.close();
+                      document.body.removeChild(dialog);
+                    }
+                  });
+                }}
               >
                 <Plus className="h-4 w-4" />
                 New RFI
               </Button>
-              
-              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Create New RFI</DialogTitle>
-                    <DialogDescription>
-                      Add a new Request for Information to the current project.
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  {/* Form content would go here */}
-                  <p className="text-sm text-gray-500">RFI form will be implemented in a future update.</p>
-                  
-                  <DialogFooter>
-                    <Button 
-                      variant="outline" 
-                      className="mr-2" 
-                      onClick={() => setShowCreateDialog(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button>Create RFI</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
             </div>
           </div>
         </div>
