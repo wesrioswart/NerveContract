@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 import { useProject } from '@/contexts/project-context';
 import { 
   MessageSquare, 
@@ -17,7 +18,9 @@ import {
   ClipboardList,
   Eye,
   ExternalLink,
-  Mail
+  Mail,
+  Pencil,
+  Save
 } from 'lucide-react';
 import { AnimationWrapper } from '@/components/ui/animation-wrapper';
 import { BadgeWithColors } from '@/components/ui/badge-with-colors';
@@ -25,6 +28,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { 
   Select, 
   SelectContent, 
@@ -78,11 +83,44 @@ export default function RfiManagementPage() {
   const [sortOrder, setSortOrder] = useState('desc');
   const [selectedRfi, setSelectedRfi] = useState<any>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   
   const showRfiDetails = (rfi: any) => {
     setSelectedRfi(rfi);
     setShowDetailsDialog(true);
   };
+  
+  const showRfiEdit = (rfi: any) => {
+    setSelectedRfi(rfi);
+    setShowEditDialog(true);
+  };
+  
+  // Mutation to update an RFI
+  const updateRfiMutation = useMutation({
+    mutationFn: async (rfiData: any) => {
+      if (!currentProject) throw new Error('No project selected');
+      
+      const response = await fetch(`/api/rfis/${rfiData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(rfiData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update RFI');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate the RFIs query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/rfis', currentProject?.id] });
+      setShowEditDialog(false);
+      setShowDetailsDialog(true); // Show the details dialog with updated information
+    },
+  });
   
   const { data: rfis = [], isLoading, error } = useQuery({
     queryKey: ['/api/rfis', currentProject?.id],
@@ -876,9 +914,209 @@ export default function RfiManagementPage() {
               </div>
               
               <DialogFooter className="mt-6">
-                <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
-                  Close
-                </Button>
+                <div className="flex w-full justify-between">
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => {
+                      setShowDetailsDialog(false);
+                      showRfiEdit(selectedRfi);
+                    }}
+                  >
+                    Edit RFI
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
+                    Close
+                  </Button>
+                </div>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* RFI Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-3xl">
+          {selectedRfi && (
+            <>
+              <DialogHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+                      <Pencil className="h-5 w-5" />
+                      Edit RFI {selectedRfi.reference}
+                    </DialogTitle>
+                    <DialogDescription className="mt-1">
+                      Update the information for this Request for Information
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="title">Title</Label>
+                      <Input 
+                        id="title"
+                        value={selectedRfi.title}
+                        onChange={(e) => setSelectedRfi({...selectedRfi, title: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <Select 
+                        value={selectedRfi.status} 
+                        onValueChange={(value) => setSelectedRfi({...selectedRfi, status: value})}
+                      >
+                        <SelectTrigger id="status">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Open">Open</SelectItem>
+                          <SelectItem value="Responded">Responded</SelectItem>
+                          <SelectItem value="Closed">Closed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="ceStatus">CE Status</Label>
+                      <Select 
+                        value={selectedRfi.ceStatus} 
+                        onValueChange={(value) => setSelectedRfi({...selectedRfi, ceStatus: value})}
+                      >
+                        <SelectTrigger id="ceStatus">
+                          <SelectValue placeholder="Select CE status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Not a CE">Not a CE</SelectItem>
+                          <SelectItem value="PMI Issued">PMI Issued</SelectItem>
+                          <SelectItem value="NCE Raised">NCE Raised</SelectItem>
+                          <SelectItem value="Raise a CE">Raise a CE</SelectItem>
+                          <SelectItem value="Under Review">Under Review</SelectItem>
+                          <SelectItem value="Closed">Closed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="periodId">Period</Label>
+                      <Select 
+                        value={selectedRfi.periodId?.toString()} 
+                        onValueChange={(value) => setSelectedRfi({...selectedRfi, periodId: parseInt(value)})}
+                      >
+                        <SelectTrigger id="periodId">
+                          <SelectValue placeholder="Select period" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {periods.map((period: any) => (
+                            <SelectItem key={period.id} value={period.id.toString()}>
+                              {period.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="plannedResponseDate">Planned Response Date</Label>
+                      <Input 
+                        id="plannedResponseDate"
+                        type="date"
+                        value={selectedRfi.plannedResponseDate ? new Date(selectedRfi.plannedResponseDate).toISOString().split('T')[0] : ''}
+                        onChange={(e) => setSelectedRfi({...selectedRfi, plannedResponseDate: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="contractualReplyPeriod">Contractual Reply Period (days)</Label>
+                      <Input 
+                        id="contractualReplyPeriod"
+                        type="number"
+                        value={selectedRfi.contractualReplyPeriod || 5}
+                        onChange={(e) => setSelectedRfi({...selectedRfi, contractualReplyPeriod: parseInt(e.target.value)})}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="originator">Originator</Label>
+                      <Input 
+                        id="originator"
+                        value={selectedRfi.originator || ''}
+                        onChange={(e) => setSelectedRfi({...selectedRfi, originator: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="gpsMacsCode">GPS MACS Code</Label>
+                      <Input 
+                        id="gpsMacsCode"
+                        value={selectedRfi.gpsMacsCode || ''}
+                        onChange={(e) => setSelectedRfi({...selectedRfi, gpsMacsCode: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea 
+                    id="description"
+                    className="min-h-[100px]"
+                    value={selectedRfi.description || ''}
+                    onChange={(e) => setSelectedRfi({...selectedRfi, description: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="response">Response</Label>
+                  <Textarea 
+                    id="response"
+                    className="min-h-[100px]"
+                    value={selectedRfi.response || ''}
+                    onChange={(e) => setSelectedRfi({...selectedRfi, response: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="comments">Comments</Label>
+                  <Textarea 
+                    id="comments"
+                    className="min-h-[80px]"
+                    value={selectedRfi.comments || ''}
+                    onChange={(e) => setSelectedRfi({...selectedRfi, comments: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <DialogFooter className="mt-6">
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowEditDialog(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={() => updateRfiMutation.mutate(selectedRfi)}
+                    disabled={updateRfiMutation.isPending}
+                    className="gap-2"
+                  >
+                    {updateRfiMutation.isPending && (
+                      <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+                    )}
+                    Save Changes
+                  </Button>
+                </div>
               </DialogFooter>
             </>
           )}
