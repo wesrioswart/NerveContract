@@ -24,6 +24,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ProjectProvider } from "./contexts/project-context";
 import { UserProvider, useUser } from "./contexts/user-context";
+import { SidebarProvider } from "./contexts/sidebar-context";
 import FloatingAssistant from "./components/ai-assistant/floating-assistant";
 import { Loader2 } from "lucide-react";
 
@@ -90,58 +91,60 @@ function AppContent() {
 
   return (
     <ProjectProvider>
-      <div className="app-container flex h-screen overflow-hidden bg-gray-50">
-        <Sidebar 
-          user={user} 
-          onLogout={logout} 
-          collapsed={sidebarCollapsed}
-          onToggle={toggleSidebar}
-        />
-        
-        <div className={cn(
-          "flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
-          sidebarCollapsed ? "ml-16" : "ml-64"
-        )}>
-          <Header 
+      <SidebarProvider>
+        <div className="app-container flex h-screen overflow-hidden bg-gray-50">
+          <Sidebar 
             user={user} 
-            onToggleSidebar={toggleSidebar}
-            sidebarCollapsed={sidebarCollapsed}
+            onLogout={logout} 
+            collapsed={sidebarCollapsed}
+            onToggle={toggleSidebar}
           />
           
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="container mx-auto max-w-7xl">
-              <Switch>
-                <Route path="/" component={Dashboard} />
-                <Route path="/ai-assistant" component={AIAssistant} />
-                <Route path="/compensation-events" component={CompensationEvents} />
-                <Route path="/early-warnings" component={EarlyWarnings} />
-                <Route path="/ncr-tqr" component={NCRTqr} />
-                <Route path="/programme" component={Programme} />
-                <Route path="/programme-management" component={ProgrammeManagement} />
-                <Route path="/payment-certificates" component={PaymentCertificates} />
-                <Route path="/reports" component={Reports} />
-                <Route path="/templates" component={Templates} />
-                <Route path="/procurement" component={Procurement} />
-                <Route path="/suppliers" component={Suppliers} />
-                <Route path="/inventory" component={Inventory} />
-                <Route path="/equipment-hire" component={EquipmentHire} />
-                <Route path="/email-processor" component={EmailProcessor} />
-                <Route path="/rfi-management" component={RfiManagement} />
-                <Route component={NotFound} />
-              </Switch>
-            </div>
-          </main>
+          <div className={cn(
+            "flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+            sidebarCollapsed ? "ml-16" : "ml-64"
+          )}>
+            <Header 
+              user={user} 
+              onToggleSidebar={toggleSidebar}
+              sidebarCollapsed={sidebarCollapsed}
+            />
+            
+            <main className="flex-1 overflow-y-auto p-6">
+              <div className="container mx-auto max-w-7xl">
+                <Switch>
+                  <Route path="/" component={Dashboard} />
+                  <Route path="/ai-assistant" component={AIAssistant} />
+                  <Route path="/compensation-events" component={CompensationEvents} />
+                  <Route path="/early-warnings" component={EarlyWarnings} />
+                  <Route path="/ncr-tqr" component={NCRTqr} />
+                  <Route path="/programme" component={Programme} />
+                  <Route path="/programme-management" component={ProgrammeManagement} />
+                  <Route path="/payment-certificates" component={PaymentCertificates} />
+                  <Route path="/reports" component={Reports} />
+                  <Route path="/templates" component={Templates} />
+                  <Route path="/procurement" component={Procurement} />
+                  <Route path="/suppliers" component={Suppliers} />
+                  <Route path="/inventory" component={Inventory} />
+                  <Route path="/equipment-hire" component={EquipmentHire} />
+                  <Route path="/email-processor" component={EmailProcessor} />
+                  <Route path="/rfi-management" component={RfiManagement} />
+                  <Route component={NotFound} />
+                </Switch>
+              </div>
+            </main>
+          </div>
+          
+          {/* Floating AI Assistant */}
+          {isAuthenticated && user && (
+            <FloatingAssistant
+              userId={user.id}
+              currentForm={currentForm}
+              currentData={currentFormData}
+            />
+          )}
         </div>
-        
-        {/* Floating AI Assistant */}
-        {isAuthenticated && user && (
-          <FloatingAssistant
-            userId={user.id}
-            currentForm={currentForm}
-            currentData={currentFormData}
-          />
-        )}
-      </div>
+      </SidebarProvider>
     </ProjectProvider>
   );
 }

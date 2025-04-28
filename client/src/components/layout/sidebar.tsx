@@ -20,10 +20,17 @@ import {
   Building,
   Truck,
   QrCode,
-  MessageSquare
+  MessageSquare,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { useEffect } from "react";
+import { ActivityBadge } from "@/components/ui/activity-badge";
+import { CollapsibleSection } from "@/components/layout/collapsible-section";
+import { useSidebar } from "@/contexts/sidebar-context";
+import { useProject } from "@/contexts/project-context";
 
 type SidebarProps = {
   user: any;
@@ -34,6 +41,15 @@ type SidebarProps = {
 
 export default function Sidebar({ user, onLogout, collapsed = false, onToggle }: SidebarProps) {
   const [location] = useLocation();
+  const { activityCounts, setProjectId } = useSidebar();
+  const { currentProject } = useProject();
+  
+  // Update project ID in sidebar context when current project changes
+  useEffect(() => {
+    if (currentProject) {
+      setProjectId(currentProject.id);
+    }
+  }, [currentProject, setProjectId]);
   
   // NEC4 Templates - Placed prominently at the top
   const templateItems = [
@@ -51,10 +67,35 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
 
   // Contract management items
   const contractNavItems = [
-    { path: "/compensation-events", label: "Compensation Events", icon: CheckCircle },
-    { path: "/early-warnings", label: "Early Warnings", icon: AlertTriangle },
-    { path: "/ncr-tqr", label: "NCRs & TQRs", icon: FileWarning },
-    { path: "/rfi-management", label: "RFI Management", icon: MessageSquare, badge: "New" },
+    { 
+      path: "/compensation-events", 
+      label: "Compensation Events", 
+      icon: CheckCircle, 
+      activityCount: activityCounts.compensationEvents,
+      activityVariant: "warning"
+    },
+    { 
+      path: "/early-warnings", 
+      label: "Early Warnings", 
+      icon: AlertTriangle, 
+      activityCount: activityCounts.earlyWarnings,
+      activityVariant: "danger"
+    },
+    { 
+      path: "/ncr-tqr", 
+      label: "NCRs & TQRs", 
+      icon: FileWarning, 
+      activityCount: activityCounts.ncrs,
+      activityVariant: "warning"
+    },
+    { 
+      path: "/rfi-management", 
+      label: "RFI Management", 
+      icon: MessageSquare, 
+      badge: "New", 
+      activityCount: activityCounts.rfis,
+      activityVariant: "danger"
+    },
   ];
 
   // Programme items
@@ -70,9 +111,23 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   // Procurement & Supplier items
   const procurementNavItems = [
     { path: "/procurement", label: "Procurement", icon: ShoppingCart },
-    { path: "/suppliers", label: "Supplier Accounts", icon: Building, badge: "New" },
+    { 
+      path: "/suppliers", 
+      label: "Supplier Accounts", 
+      icon: Building, 
+      badge: "New",
+      activityCount: activityCounts.pendingSuppliers,
+      activityVariant: "default"
+    },
     { path: "/inventory", label: "Inventory", icon: Package2 },
-    { path: "/equipment-hire", label: "Equipment Hire", icon: Truck, badge: "New" },
+    { 
+      path: "/equipment-hire", 
+      label: "Equipment Hire", 
+      icon: Truck, 
+      badge: "New",
+      activityCount: activityCounts.equipmentHire,
+      activityVariant: "warning"
+    },
   ];
 
   // Utility items
@@ -102,19 +157,36 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
           {!collapsed && (
             <div className="flex items-center justify-between w-full">
               <span className="text-sm font-medium">{item.label}</span>
-              {item.badge && (
-                <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 text-[10px] py-0 px-1.5">
-                  {item.badge}
-                </Badge>
-              )}
+              <div className="flex items-center gap-1.5">
+                {item.activityCount > 0 && (
+                  <ActivityBadge 
+                    count={item.activityCount} 
+                    variant={item.activityVariant || "default"} 
+                  />
+                )}
+                {item.badge && (
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 text-[10px] py-0 px-1.5">
+                    {item.badge}
+                  </Badge>
+                )}
+              </div>
             </div>
+          )}
+          
+          {/* For collapsed sidebar, show activity badge but not text badge */}
+          {collapsed && item.activityCount > 0 && (
+            <ActivityBadge 
+              count={item.activityCount} 
+              variant={item.activityVariant || "default"} 
+              className="absolute -top-1 -right-1"
+            />
           )}
         </>
       );
       
       // Common class names
       const linkClassNames = cn(
-        "flex items-center rounded transition duration-200 ease-in-out",
+        "flex items-center rounded transition duration-200 ease-in-out relative",
         collapsed ? "justify-center p-2" : "gap-3 p-3",
         activeHighlight && isActive 
           ? "bg-blue-100 text-blue-700 font-medium" 
@@ -150,6 +222,18 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     });
   };
 
+  // Calculate total activity count for contract management
+  const contractManagementCount = 
+    activityCounts.compensationEvents + 
+    activityCounts.earlyWarnings + 
+    activityCounts.rfis + 
+    activityCounts.ncrs;
+  
+  // Calculate total activity count for resources section
+  const resourcesCount = 
+    activityCounts.pendingSuppliers + 
+    activityCounts.equipmentHire;
+
   return (
     <div 
       className={cn(
@@ -173,6 +257,14 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
         )}
       </div>
       
+      {/* Project Context */}
+      {!collapsed && currentProject && (
+        <div className="px-4 py-2 border-b border-gray-200 bg-blue-50">
+          <p className="text-xs text-gray-500 font-medium">CURRENT PROJECT</p>
+          <p className="text-sm font-semibold text-blue-700 truncate">{currentProject.name}</p>
+        </div>
+      )}
+      
       {/* Main Navigation - with overflow scrolling */}
       <div className={cn(
         "py-4 flex-grow overflow-y-auto", 
@@ -181,12 +273,9 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
         <nav className="flex flex-col space-y-1">
           {/* NEC4 Templates Section - Placed at the top */}
           {!collapsed ? (
-            <>
-              <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
-                NEC4 Templates
-              </h4>
+            <CollapsibleSection title="NEC4 Templates" section="templates" collapsed={collapsed}>
               {renderNavItems(templateItems)}
-            </>
+            </CollapsibleSection>
           ) : (
             // Show only the Daily Site Report when collapsed
             renderNavItems([templateItems[0]])
@@ -200,42 +289,64 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
           {!collapsed && <Separator className="my-3" />}
           
           {/* Contract Management */}
-          {!collapsed && (
-            <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
-              Contract Management
-            </h4>
+          {!collapsed ? (
+            <CollapsibleSection 
+              title="Contract Management" 
+              section="contractManagement" 
+              activityCount={contractManagementCount}
+              collapsed={collapsed}
+            >
+              {renderNavItems(contractNavItems)}
+            </CollapsibleSection>
+          ) : (
+            renderNavItems(contractNavItems)
           )}
-          {renderNavItems(contractNavItems)}
           
           {!collapsed && <Separator className="my-3" />}
           
           {/* Programme Management */}
-          {!collapsed && (
-            <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
-              Programme
-            </h4>
+          {!collapsed ? (
+            <CollapsibleSection 
+              title="Programme" 
+              section="programme" 
+              collapsed={collapsed}
+            >
+              {renderNavItems(programmeNavItems)}
+            </CollapsibleSection>
+          ) : (
+            renderNavItems(programmeNavItems)
           )}
-          {renderNavItems(programmeNavItems)}
           
           {!collapsed && <Separator className="my-3" />}
           
           {/* Financial Management */}
-          {!collapsed && (
-            <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
-              Financial
-            </h4>
+          {!collapsed ? (
+            <CollapsibleSection 
+              title="Financial" 
+              section="financial" 
+              collapsed={collapsed}
+            >
+              {renderNavItems(financialNavItems)}
+            </CollapsibleSection>
+          ) : (
+            renderNavItems(financialNavItems)
           )}
-          {renderNavItems(financialNavItems)}
           
           {!collapsed && <Separator className="my-3" />}
           
           {/* Procurement & Inventory */}
-          {!collapsed && (
-            <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">
-              Resources
-            </h4>
+          {!collapsed ? (
+            <CollapsibleSection 
+              title="Resources" 
+              section="resources" 
+              activityCount={resourcesCount}
+              collapsed={collapsed}
+            >
+              {renderNavItems(procurementNavItems)}
+            </CollapsibleSection>
+          ) : (
+            renderNavItems(procurementNavItems)
           )}
-          {renderNavItems(procurementNavItems)}
         </nav>
       </div>
       
@@ -246,7 +357,17 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
       )}>
         {/* Utility Items */}
         <div className="mb-2 space-y-1">
-          {renderNavItems(utilityItems, false)}
+          {!collapsed ? (
+            <CollapsibleSection 
+              title="Utilities" 
+              section="utility" 
+              collapsed={collapsed}
+            >
+              {renderNavItems(utilityItems, false)}
+            </CollapsibleSection>
+          ) : (
+            renderNavItems([utilityItems[0]], false)  // Just show email processor when collapsed
+          )}
         </div>
         
         {/* Logout Button */}
