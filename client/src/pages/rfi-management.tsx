@@ -408,13 +408,16 @@ export default function RfiManagementPage() {
                 </SelectContent>
               </Select>
               
+              <Button 
+                variant="outline" 
+                className="gap-2" 
+                onClick={() => setShowCreateDialog(true)}
+              >
+                <Plus className="h-4 w-4" />
+                New RFI
+              </Button>
+              
               <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="gap-2" onClick={() => setShowCreateDialog(true)}>
-                    <Plus className="h-4 w-4" />
-                    New RFI
-                  </Button>
-                </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Create New RFI</DialogTitle>
