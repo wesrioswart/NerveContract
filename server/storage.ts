@@ -336,7 +336,7 @@ export class MemStorage implements IStorage {
     });
 
     this.createEarlyWarning({
-      projectId: project.id,
+      projectId: project1.id,
       reference: "EW-016",
       description: "Potential utility clash at southwest corner",
       ownerId: user.id,
@@ -350,7 +350,7 @@ export class MemStorage implements IStorage {
 
     // Create demo non-conformance reports
     this.createNonConformanceReport({
-      projectId: project.id,
+      projectId: project1.id,
       reference: "NCR-008",
       description: "Concrete mix does not meet specification",
       location: "Block A Foundation",
@@ -365,7 +365,7 @@ export class MemStorage implements IStorage {
 
     // Create demo programme milestones
     this.createProgrammeMilestone({
-      projectId: project.id,
+      projectId: project1.id,
       name: "Project Start",
       plannedDate: new Date("2023-04-10"),
       actualDate: new Date("2023-04-10"),
@@ -375,7 +375,7 @@ export class MemStorage implements IStorage {
     });
 
     this.createProgrammeMilestone({
-      projectId: project.id,
+      projectId: project1.id,
       name: "Foundations",
       plannedDate: new Date("2023-05-15"),
       actualDate: new Date("2023-05-15"),
@@ -385,7 +385,7 @@ export class MemStorage implements IStorage {
     });
 
     this.createProgrammeMilestone({
-      projectId: project.id,
+      projectId: project1.id,
       name: "Structure",
       plannedDate: new Date("2023-07-20"),
       actualDate: null,
@@ -395,7 +395,7 @@ export class MemStorage implements IStorage {
     });
 
     this.createProgrammeMilestone({
-      projectId: project.id,
+      projectId: project1.id,
       name: "Services",
       plannedDate: new Date("2023-09-05"),
       actualDate: null,
@@ -405,7 +405,7 @@ export class MemStorage implements IStorage {
     });
 
     this.createProgrammeMilestone({
-      projectId: project.id,
+      projectId: project1.id,
       name: "Completion",
       plannedDate: new Date("2023-12-15"),
       actualDate: null,
@@ -416,7 +416,7 @@ export class MemStorage implements IStorage {
 
     // Create demo payment certificate
     this.createPaymentCertificate({
-      projectId: project.id,
+      projectId: project1.id,
       reference: "PC-003",
       amount: 234500,
       dueDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
