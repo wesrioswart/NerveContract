@@ -249,6 +249,32 @@ export const insertProgrammeActivitySchema = createInsertSchema(programmeActivit
   id: true,
 });
 
+// Z-Clauses (Project-specific contract amendments)
+export const zClauses = pgTable("z_clauses", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => projects.id),
+  clauseNumber: text("clause_number").notNull(), // e.g., "Z1.1", "Z2.3"
+  title: text("title").notNull(),
+  clauseText: text("clause_text").notNull(),
+  explanation: text("explanation").notNull(),
+  actionableBy: text("actionable_by").notNull(),
+  timeframe: text("timeframe"),
+  riskTrigger: text("risk_trigger"),
+  relatedClauses: json("related_clauses").$type<string[]>().default([]),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertZClauseSchema = createInsertSchema(zClauses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ZClause = typeof zClauses.$inferSelect;
+export type InsertZClause = z.infer<typeof insertZClauseSchema>;
+
 export const activityRelationships = pgTable("activity_relationships", {
   id: serial("id").primaryKey(),
   predecessorId: integer("predecessor_id").notNull().references(() => programmeActivities.id),
