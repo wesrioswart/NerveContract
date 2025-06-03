@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,17 @@ import ProgressReportTemplate from '@/components/document-templates/progress-rep
 import DailySiteReportTemplate from '@/components/document-templates/daily-site-report-template';
 
 export default function TemplatesPage() {
+  const [location] = useLocation();
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
+  
+  // Check for template parameter in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const templateParam = urlParams.get('template');
+    if (templateParam) {
+      setActiveTemplate(templateParam);
+    }
+  }, [location]);
   
   // Template options for the dropdown
   const templateOptions = [

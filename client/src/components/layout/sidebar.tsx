@@ -23,11 +23,18 @@ import {
   MessageSquare,
   ChevronDown,
   ChevronRight,
-  Users
+  Users,
+  Calendar,
+  BarChart2,
+  DollarSign,
+  AlertOctagon,
+  HelpCircle,
+  Zap
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { useEffect } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect, useState } from "react";
 import { ActivityBadge } from "@/components/ui/activity-badge";
 import { CollapsibleSection } from "@/components/layout/collapsible-section";
 import { useSidebar } from "@/contexts/sidebar-context";
@@ -41,9 +48,10 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ user, onLogout, collapsed = false, onToggle }: SidebarProps) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { activityCounts, setProjectId } = useSidebar();
   const { currentProject } = useProject();
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   
   // Update project ID in sidebar context when current project changes
   useEffect(() => {
@@ -52,6 +60,24 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     }
   }, [currentProject, setProjectId]);
   
+  // Template selector options for quick access
+  const templateOptions = [
+    { value: 'daily-site-report', label: 'Daily Site Report', icon: Calendar },
+    { value: 'progress-report', label: 'Progress Report', icon: BarChart2 },
+    { value: 'pmi', label: 'Project Manager\'s Instruction', icon: FileText },
+    { value: 'early-warning', label: 'Early Warning Notice', icon: AlertTriangle },
+    { value: 'compensation-event', label: 'Compensation Event', icon: DollarSign },
+    { value: 'ncr', label: 'Non-Conformance Report', icon: AlertOctagon },
+    { value: 'technical-query', label: 'Technical Query', icon: HelpCircle },
+    { value: 'payment-application', label: 'Payment Application', icon: Receipt },
+  ];
+
+  // Handle template selection from dropdown
+  const handleTemplateSelect = (value: string) => {
+    setSelectedTemplate(value);
+    setLocation(`/templates?template=${value}`);
+  };
+
   // NEC4 Templates - Placed prominently at the top
   const templateItems = [
     { path: "/templates/daily-site-report", label: "Daily Site Report", icon: Clipboard },
@@ -281,6 +307,30 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
           {/* NEC4 Templates Section - Placed at the top */}
           {!collapsed ? (
             <CollapsibleSection title="NEC4 Templates" section="templates" collapsed={collapsed}>
+              {/* Quick Template Selector */}
+              <div className="mb-3 px-2">
+                <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+                  <SelectTrigger className="w-full h-8 text-xs">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-3 w-3 text-blue-500" />
+                      <SelectValue placeholder="Quick Create" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templateOptions.map((template) => {
+                      const IconComponent = template.icon;
+                      return (
+                        <SelectItem key={template.value} value={template.value}>
+                          <div className="flex items-center gap-2">
+                            <IconComponent className="h-3 w-3" />
+                            <span className="text-xs">{template.label}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
               {renderNavItems(templateItems)}
             </CollapsibleSection>
           ) : (
