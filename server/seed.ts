@@ -6,17 +6,37 @@ import {
   earlyWarnings,
   nonConformanceReports,
   programmeMilestones,
-  paymentCertificates
+  paymentCertificates,
+  nec4Teams,
+  nec4TeamMembers,
+  chatMessages,
+  technicalQueries,
+  rfis,
+  usersToProjects
 } from "@shared/schema";
 
 async function seedDatabase() {
   console.log("Seeding database...");
 
-  // Check if any users exist already
-  const existingUsers = await db.select({ count: { value: users.id } }).from(users);
-  if (existingUsers.length > 0 && existingUsers[0].count.value > 0) {
-    console.log("Database already has data, skipping seeding");
-    return;
+  // Clear existing data to ensure fresh seeding (in correct order for foreign keys)
+  try {
+    console.log("Clearing existing data...");
+    await db.delete(rfis);
+    await db.delete(technicalQueries);
+    await db.delete(chatMessages);
+    await db.delete(nec4TeamMembers);
+    await db.delete(nec4Teams);
+    await db.delete(paymentCertificates);
+    await db.delete(programmeMilestones);
+    await db.delete(nonConformanceReports);
+    await db.delete(earlyWarnings);
+    await db.delete(compensationEvents);
+    await db.delete(usersToProjects);
+    await db.delete(projects);
+    await db.delete(users);
+    console.log("Database cleared successfully");
+  } catch (error) {
+    console.log("No existing data to clear or error:", error);
   }
 
   try {
@@ -92,6 +112,37 @@ async function seedDatabase() {
         raisedAt: new Date("2023-05-01"),
         responseDeadline: new Date("2023-05-15"),
         implementedDate: new Date("2023-05-22"),
+        attachments: null
+      },
+      // Northern Gateway Interchange compensation events
+      {
+        projectId: project2.id,
+        reference: "CE-NGI-003",
+        title: "Additional environmental monitoring requirements",
+        description: "Environmental agency requested enhanced monitoring during construction near protected wetlands",
+        clauseReference: "60.1(7)",
+        estimatedValue: 28000,
+        actualValue: null,
+        status: "Assessment Due",
+        raisedBy: user.id,
+        raisedAt: new Date("2024-03-15"),
+        responseDeadline: new Date("2024-03-29"),
+        implementedDate: null,
+        attachments: null
+      },
+      {
+        projectId: project2.id,
+        reference: "CE-NGI-002",
+        title: "Traffic management system upgrade",
+        description: "Local authority required enhanced traffic control systems during peak construction",
+        clauseReference: "60.1(1)",
+        estimatedValue: 85000,
+        actualValue: 82500,
+        status: "Implemented",
+        raisedBy: user.id,
+        raisedAt: new Date("2024-02-20"),
+        responseDeadline: new Date("2024-03-05"),
+        implementedDate: new Date("2024-03-18"),
         attachments: null
       }
     ]);
