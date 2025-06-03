@@ -13,6 +13,7 @@ import { Search, RefreshCw, ChartBar, ChevronDown, ChevronRight, Filter, Clock, 
 export default function AIAssistant() {
   // For MVP, we'll assume project ID 1
   const projectId = 1;
+  const [currentProjectId, setCurrentProjectId] = useState(1);
   const userId = 1;
   
   const [documentText, setDocumentText] = useState("");
@@ -277,6 +278,26 @@ const NEC4_CLAUSE_LIBRARY = {
           relatedClauses: ["C50.2", "C63.1"]
         }
       }
+    },
+    "Option E: Cost reimbursable contract": {
+      clauses: {
+        "E11.2": {
+          text: "The Contractor is paid the Defined Cost plus the Fee.",
+          explanation: "Under Option E, the Contractor is reimbursed for all actual defined costs incurred plus a fee. This requires detailed cost substantiation and record keeping.",
+          actionableBy: "Project Manager",
+          timeframe: "As costs are incurred",
+          riskTrigger: "Poor cost records or inadequate substantiation can lead to payment disputes",
+          relatedClauses: ["E50.2", "E63.1", "11.2(23)"]
+        },
+        "E30.3": {
+          text: "The Contractor submits accounts to the Project Manager in the form stated in the Scope.",
+          explanation: "Regular submission of detailed cost accounts is mandatory under Option E contracts.",
+          actionableBy: "Contractor",
+          timeframe: "As stated in the Scope (typically monthly)",
+          riskTrigger: "Late or inadequate account submissions can delay payments",
+          relatedClauses: ["E50.2", "50.1"]
+        }
+      }
     }
   },
   "Secondary Option Clauses": {
@@ -341,11 +362,29 @@ const NEC4_CLAUSE_LIBRARY = {
   }
 };
 
-// Project context for the current project (would come from project data in real implementation)
-const PROJECT_OPTIONS = {
-  mainOption: "C", // Target contract with activity schedule
-  secondaryOptions: ["X1", "X2", "X7"], // Price adjustment, changes in law, delay damages
-  zClauses: ["Z1.1", "Z2.3"] // Custom amendments
+// Project data structure
+const PROJECTS = {
+  1: {
+    name: "Westfield Development Project",
+    contractRef: "NEC4-2024-001",
+    client: "Westfield Development Corporation",
+    mainOption: "C", // Target contract with activity schedule
+    secondaryOptions: ["X1", "X2", "X7"], // Price adjustment, changes in law, delay damages
+    zClauses: ["Z1.1", "Z2.3"] // Custom amendments
+  },
+  2: {
+    name: "Northern Gateway Interchange",
+    contractRef: "NEC4-2025-002", 
+    client: "National Infrastructure Agency",
+    mainOption: "E", // Cost reimbursable contract
+    secondaryOptions: ["X2", "X9", "X15", "X18"], // Changes in law, transfer of rights, contractor's design, limitation of liability
+    zClauses: ["Z1.1", "Z2.1"] // Custom amendments
+  }
+};
+
+// Get project options based on current project ID
+const getProjectOptions = (projectId: number) => {
+  return PROJECTS[projectId as keyof typeof PROJECTS];
 };
 
 // Clause Library Component
