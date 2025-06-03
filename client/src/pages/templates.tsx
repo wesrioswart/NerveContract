@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt, BarChart2, Calendar, FileText } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt, BarChart2, Calendar, FileText, ChevronDown } from "lucide-react";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { AnimationWrapper } from "@/components/ui/animation-wrapper";
@@ -19,6 +20,18 @@ import DailySiteReportTemplate from '@/components/document-templates/daily-site-
 
 export default function TemplatesPage() {
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
+  
+  // Template options for the dropdown
+  const templateOptions = [
+    { value: 'daily-site-report', label: 'Daily Site Report', icon: Calendar },
+    { value: 'progress-report', label: 'Progress Report', icon: BarChart2 },
+    { value: 'pmi', label: 'Project Manager\'s Instruction (PMI)', icon: FileText },
+    { value: 'early-warning', label: 'Early Warning Notice', icon: AlertTriangle },
+    { value: 'compensation-event', label: 'Compensation Event', icon: DollarSign },
+    { value: 'ncr', label: 'Non-Conformance Report', icon: AlertOctagon },
+    { value: 'technical-query', label: 'Technical Query', icon: HelpCircle },
+    { value: 'payment-application', label: 'Payment Application', icon: Receipt },
+  ];
   
   // Function to render the selected template
   const renderTemplate = () => {
@@ -51,9 +64,46 @@ export default function TemplatesPage() {
   
   return (
     <div className="container mx-auto py-6 w-full">
-      <AnimationWrapper as="h1" type="slideIn" className="text-3xl font-bold mb-6">
-        NEC4 Document Templates
-      </AnimationWrapper>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+        <div>
+          <AnimationWrapper as="h1" type="slideIn" className="text-3xl font-bold">
+            NEC4 Document Templates
+          </AnimationWrapper>
+          <p className="text-gray-600 mt-2">Create and manage professional NEC4 contract documents</p>
+        </div>
+        
+        {/* Quick Template Selector */}
+        <div className="flex flex-col sm:flex-row gap-3 items-start lg:items-center">
+          <Select value={activeTemplate || ""} onValueChange={setActiveTemplate}>
+            <SelectTrigger className="w-full sm:w-80">
+              <SelectValue placeholder="Select a template to get started" />
+            </SelectTrigger>
+            <SelectContent>
+              {templateOptions.map((template) => {
+                const IconComponent = template.icon;
+                return (
+                  <SelectItem key={template.value} value={template.value}>
+                    <div className="flex items-center gap-2">
+                      <IconComponent className="h-4 w-4" />
+                      {template.label}
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+          
+          {activeTemplate && (
+            <Button 
+              variant="outline" 
+              onClick={() => setActiveTemplate(null)}
+              className="whitespace-nowrap"
+            >
+              View All Templates
+            </Button>
+          )}
+        </div>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 w-full">
         {/* Template Card - PMI */}

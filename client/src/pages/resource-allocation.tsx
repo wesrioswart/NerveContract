@@ -65,7 +65,7 @@ interface ResourceAllocation {
   updatedAt?: string;
 }
 
-export default function ResourceAllocationPage() {
+function ResourceAllocationPage() {
   const { currentProject } = useProject();
   const { toast } = useToast();
   const [uploadDialog, setUploadDialog] = useState(false);
@@ -633,4 +633,4 @@ export default function ResourceAllocationPage() {
   );
 }
 
-export default ResourceAllocation;
+export default ResourceAllocationPage;
