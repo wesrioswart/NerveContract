@@ -1,0 +1,19 @@
+How it would work when expanded:
+Main Option Clauses + "Project Relevant" Tag: When Jane expands this, the system would ideally:
+Clearly highlight or prioritize "Option C (Target Contract)" because that's what's active for Westfield Development Project.
+Other Main Options (A, B, D, E, F) might still be visible (perhaps slightly greyed out or de-emphasized) for general reference, but Option C would be prominent.
+Secondary Option Clauses + "Project Relevant" Tag: Similarly, when expanded, it would highlight/prioritize X1, X2, and X7. Other available secondary option clauses could still be listed for general reference.
+Project Z-Clauses + "Project Relevant" Tag: This section would be entirely specific to the Westfield Development Project. When expanded, it would show the details of those "2 custom amendments." If she switched to Project Alpha, this section would show Project Alpha's Z-clauses.
+In essence, for a multi-project scenario:
+
+Global Project Selection: The user selects the active project they want to focus on (likely outside the AI Contract Assistant screen).
+Contextual Clause Library:
+The "Project Context" banner in the Clause Library dynamically updates to display the contractual makeup (Main Option, chosen Secondary Options, Z-Clauses) of the selected project.
+The "Project Relevant" tags indicate that when sections like "Main Option Clauses" or "Secondary Option Clauses" are expanded, the library will intelligently prioritize, highlight, or primarily display the clauses and options that are actually in use for that specific, active project.
+The "Core Clauses" section would generally remain the same, as these apply to all NEC4 ECC contracts, though even here, some "Practical Meanings" or "Risk Alerts" might subtly change if a Z-Clause in the active project modifies a core clause's application.
+Why this approach is strong:
+
+Clarity: Users always know which project's contractual context they are viewing.
+Relevance: It filters out the noise of inapplicable clauses, allowing users to focus on what matters for the project at hand.
+Efficiency: Users don't have to manually remember or cross-reference which options apply to which project; the system does it for them.
+Consistency: The UI pattern remains consistent, just the data and contextual highlighting change.
