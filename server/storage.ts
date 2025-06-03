@@ -140,6 +140,10 @@ export interface IStorage {
   createProgressReport(report: InsertProgressReport): Promise<ProgressReport>;
   updateProgressReport(id: number, report: Partial<ProgressReport>): Promise<ProgressReport>;
   deleteProgressReport(id: number): Promise<void>;
+  
+  // Resource Allocations
+  getResourceAllocationsByProject(projectId: number): Promise<any[]>;
+  createResourceAllocation(allocation: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -1334,6 +1338,62 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(progressReports)
       .where(eq(progressReports.id, id));
+  }
+
+  // Resource Allocations - Demo implementation
+  async getResourceAllocationsByProject(projectId: number): Promise<any[]> {
+    // Return demo data for resource allocations
+    return [
+      {
+        id: 1,
+        projectId,
+        periodName: "Week 23",
+        weekCommencing: "2024-06-03",
+        teamMembers: [
+          {
+            id: 1,
+            name: "John Smith",
+            role: "Site Manager",
+            company: "Main Contractor Ltd",
+            hours: 40,
+            isSubcontractor: false
+          },
+          {
+            id: 2,
+            name: "Sarah Johnson",
+            role: "Quality Inspector",
+            company: "Quality Solutions",
+            hours: 35,
+            isSubcontractor: true
+          },
+          {
+            id: 3,
+            name: "Mike Wilson",
+            role: "Plant Operator",
+            company: "Main Contractor Ltd",
+            hours: 42,
+            isSubcontractor: false
+          }
+        ],
+        totalLabourHours: 117,
+        extractedFrom: "resource-allocation-week23.xlsx",
+        extractionConfidence: 0.92,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ];
+  }
+
+  async createResourceAllocation(allocation: any): Promise<any> {
+    // Demo implementation - in production this would save to database
+    const newAllocation = {
+      id: Date.now(), // Simple ID generation for demo
+      ...allocation,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    return newAllocation;
   }
 }
 
