@@ -632,3 +632,5 @@ export default function ResourceAllocationPage() {
     </div>
   );
 }
+
+export default ResourceAllocation;
