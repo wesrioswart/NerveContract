@@ -1863,6 +1863,25 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
+  // Z-Clauses endpoints
+  app.get("/api/projects/:projectId/z-clauses", async (req: Request, res: Response) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      
+      const query = `
+        SELECT * FROM z_clauses 
+        WHERE project_id = $1 AND is_active = true 
+        ORDER BY clause_number
+      `;
+      
+      const result = await db.$client.query(query, [projectId]);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching Z-clauses:", error);
+      res.status(500).json({ message: "Failed to fetch Z-clauses" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
