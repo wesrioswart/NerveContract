@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Project } from "@shared/schema";
+import { queryClient } from "@/lib/queryClient";
 
 type ProjectContextType = {
   projectId: number;
@@ -31,6 +32,24 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
   }, [projects, projectId]);
 
+  // Enhanced setProjectId with cache invalidation
+  const handleSetProjectId = (id: number) => {
+    setProjectId(id);
+    
+    // Invalidate all project-specific data when switching projects
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        const queryKey = query.queryKey;
+        return Array.isArray(queryKey) && 
+               typeof queryKey[0] === 'string' && 
+               queryKey[0].startsWith('/api/projects/');
+      },
+    });
+    
+    // Also invalidate common project data queries
+    queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+  };
+
   // Find current project
   const currentProject = projects.find(p => p.id === projectId);
 
@@ -38,7 +57,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     <ProjectContext.Provider
       value={{
         projectId,
-        setProjectId,
+        setProjectId: handleSetProjectId,
         currentProject,
         isLoading,
         projects

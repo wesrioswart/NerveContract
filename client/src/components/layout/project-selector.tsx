@@ -1,7 +1,8 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, ChevronDown, Check } from "lucide-react";
+import { Building2, ChevronDown, Check, Loader2 } from "lucide-react";
 import { useProject } from "@/contexts/project-context";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface Project {
   id: number;
@@ -12,6 +13,17 @@ interface Project {
 
 export function ProjectSelector() {
   const { projectId, setProjectId, projects, isLoading, currentProject } = useProject();
+  const [isSwitching, setIsSwitching] = useState(false);
+
+  const handleProjectChange = async (value: string) => {
+    setIsSwitching(true);
+    setProjectId(parseInt(value));
+    
+    // Add a small delay to show switching feedback
+    setTimeout(() => {
+      setIsSwitching(false);
+    }, 1000);
+  };
 
   return (
     <div className="w-full space-y-2">
@@ -22,8 +34,8 @@ export function ProjectSelector() {
       
       <Select
         value={projectId?.toString() || ""}
-        onValueChange={(value) => setProjectId(parseInt(value))}
-        disabled={isLoading}
+        onValueChange={handleProjectChange}
+        disabled={isLoading || isSwitching}
       >
         <SelectTrigger className="w-full h-auto px-3 py-3 border-slate-300 hover:border-slate-400 focus:border-blue-500 transition-all duration-200 bg-white">
           {currentProject ? (
