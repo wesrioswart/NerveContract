@@ -397,41 +397,9 @@ function ClauseLibrary({ projectId }: { projectId: number }) {
   const [showEarlyWarningTemplate, setShowEarlyWarningTemplate] = useState(false);
   
   const PROJECT_OPTIONS = getProjectOptions(projectId);
-  
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    "Core Clauses": true,
-    "Main Option Clauses": true,
-    "Secondary Option Clauses": true,
-    "Project Z-Clauses": true
-  });
 
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
-
-  const navigateToClause = (clauseNumber: string) => {
-    setHighlightedClause(clauseNumber);
-    // Find which section contains this clause and expand it
-    Object.entries(NEC4_CLAUSE_LIBRARY).forEach(([sectionName, sectionData]) => {
-      Object.entries(sectionData).forEach(([subsectionName, subsectionData]: [string, any]) => {
-        if (subsectionData.clauses && subsectionData.clauses[clauseNumber]) {
-          setExpandedSections(prev => ({ ...prev, [sectionName]: true }));
-        }
-      });
-    });
-    // Scroll to clause after a brief delay
-    setTimeout(() => {
-      const element = document.getElementById(`clause-${clauseNumber}`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
-  };
-
-  const highlightText = (text: string, searchTerm: string) => {
+  // Helper function to handle text highlighting for search results
+  const renderHighlightedText = (text: string, searchTerm: string) => {
     if (!searchTerm) return text;
     
     const regex = new RegExp(`(${searchTerm})`, 'gi');
@@ -443,8 +411,24 @@ function ClauseLibrary({ projectId }: { projectId: number }) {
         part
     );
   };
+  
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    "Core Clauses": true,
+    "Main Option Clauses": true,
+    "Secondary Option Clauses": true,
+    "Project Z-Clauses": true
+  });
+
+  // Helper functions for filtering and navigation
+  const toggleSection = (sectionName: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionName]: !prev[sectionName]
+    }));
+  };
 
   const isProjectRelevantOption = (optionName: string) => {
+    if (!PROJECT_OPTIONS) return false;
     if (optionName.includes(`Option ${PROJECT_OPTIONS.mainOption}:`)) return true;
     return PROJECT_OPTIONS.secondaryOptions.some(option => 
       optionName.includes(`${option}:`)
@@ -452,26 +436,32 @@ function ClauseLibrary({ projectId }: { projectId: number }) {
   };
 
   const filterClauses = (clauses: any, searchTerm: string, filter: string) => {
-    if (!searchTerm && filter === "all") return clauses;
+    if (!clauses) return {};
     
-    const filtered: any = {};
-    Object.entries(clauses).forEach(([clauseNumber, clauseInfo]: [string, any]) => {
-      const matchesSearch = !searchTerm || 
-        clauseNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        clauseInfo.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        clauseInfo.explanation.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesFilter = filter === "all" || 
-        (filter === "contractor" && clauseInfo.actionableBy?.includes("Contractor")) ||
-        (filter === "pm" && clauseInfo.actionableBy?.includes("Project Manager")) ||
-        (filter === "time-critical" && clauseInfo.riskTrigger);
-      
-      if (matchesSearch && matchesFilter) {
-        filtered[clauseNumber] = clauseInfo;
-      }
-    });
-    
-    return filtered;
+    return Object.fromEntries(
+      Object.entries(clauses).filter(([clauseNumber, clauseInfo]: [string, any]) => {
+        const matchesSearch = !searchTerm || 
+          clauseNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          clauseInfo.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          clauseInfo.explanation.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesFilter = filter === "all" ||
+          (filter === "contractor" && clauseInfo.actionableBy?.includes("Contractor")) ||
+          (filter === "pm" && clauseInfo.actionableBy?.includes("Project Manager")) ||
+          (filter === "time-critical" && clauseInfo.riskTrigger);
+
+        return matchesSearch && matchesFilter;
+      })
+    );
+  };
+
+  const navigateToClause = (clauseNumber: string) => {
+    setHighlightedClause(clauseNumber);
+    const element = document.getElementById(`clause-${clauseNumber}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => setHighlightedClause(null), 3000);
+    }
   };
 
   return (
@@ -680,6 +670,20 @@ function ClauseLibrary({ projectId }: { projectId: number }) {
                                             </div>
                                           </div>
                                         )}
+                                        
+                                        {/* Quick Create button for Early Warning (Clause 15.1) */}
+                                        {clauseNumber === "15.1" && (
+                                          <div className="mt-4 pt-3 border-t border-gray-200">
+                                            <Button
+                                              onClick={() => setShowEarlyWarningTemplate(true)}
+                                              className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                                              size="sm"
+                                            >
+                                              <Plus className="h-4 w-4 mr-2" />
+                                              Quick Create Early Warning Notice
+                                            </Button>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   ))}
@@ -697,6 +701,12 @@ function ClauseLibrary({ projectId }: { projectId: number }) {
           </ScrollArea>
         </div>
       </CardContent>
+      
+      {/* Early Warning Template Modal */}
+      <EarlyWarningTemplate
+        isOpen={showEarlyWarningTemplate}
+        onClose={() => setShowEarlyWarningTemplate(false)}
+      />
     </Card>
   );
 }
