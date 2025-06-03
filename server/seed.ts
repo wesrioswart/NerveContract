@@ -12,34 +12,23 @@ import {
   chatMessages,
   technicalQueries,
   rfis,
-  usersToProjects
+  usersToProjects,
+  programmes,
+  progressReports,
+  purchaseOrders
 } from "@shared/schema";
 
 async function seedDatabase() {
   console.log("Seeding database...");
 
-  // Clear existing data to ensure fresh seeding (in correct order for foreign keys)
   try {
-    console.log("Clearing existing data...");
-    await db.delete(rfis);
-    await db.delete(technicalQueries);
-    await db.delete(chatMessages);
-    await db.delete(nec4TeamMembers);
-    await db.delete(nec4Teams);
-    await db.delete(paymentCertificates);
-    await db.delete(programmeMilestones);
-    await db.delete(nonConformanceReports);
-    await db.delete(earlyWarnings);
-    await db.delete(compensationEvents);
-    await db.delete(usersToProjects);
-    await db.delete(projects);
-    await db.delete(users);
-    console.log("Database cleared successfully");
-  } catch (error) {
-    console.log("No existing data to clear or error:", error);
-  }
+    // Check if user already exists
+    const existingUsers = await db.select().from(users).limit(1);
+    if (existingUsers.length > 0) {
+      console.log("Database already seeded, skipping...");
+      return;
+    }
 
-  try {
     // Insert a demo user
     const [user] = await db.insert(users).values({
       username: "jane.cooper",
