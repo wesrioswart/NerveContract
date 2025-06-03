@@ -8,12 +8,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { Search, RefreshCw, ChartBar, ChevronDown, ChevronRight, Filter, Clock, User, AlertTriangle, Building, Target, FileText, ExternalLink } from "lucide-react";
+import { useProject } from "@/contexts/project-context";
+import { Search, RefreshCw, ChartBar, ChevronDown, ChevronRight, Filter, Clock, User, AlertTriangle, Building, Target, FileText, ExternalLink, Plus } from "lucide-react";
+import EarlyWarningTemplate from "@/components/document-templates/early-warning-template";
 
 export default function AIAssistant() {
-  // For MVP, we'll assume project ID 1
-  const projectId = 1;
-  const [currentProjectId, setCurrentProjectId] = useState(1);
+  const { currentProject } = useProject();
+  const projectId = currentProject?.id || 1;
   const userId = 1;
   
   const [documentText, setDocumentText] = useState("");
@@ -153,7 +154,7 @@ export default function AIAssistant() {
         </TabsContent>
         
         <TabsContent value="clauses" className="space-y-4">
-          <ClauseLibrary projectId={currentProjectId} />
+          <ClauseLibrary projectId={projectId} />
         </TabsContent>
       </Tabs>
     </>
@@ -389,9 +390,11 @@ const getProjectOptions = (projectId: number) => {
 
 // Clause Library Component
 function ClauseLibrary({ projectId }: { projectId: number }) {
+  const { currentProject } = useProject();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [highlightedClause, setHighlightedClause] = useState<string | null>(null);
+  const [showEarlyWarningTemplate, setShowEarlyWarningTemplate] = useState(false);
   
   const PROJECT_OPTIONS = getProjectOptions(projectId);
   
@@ -484,18 +487,12 @@ function ClauseLibrary({ projectId }: { projectId: number }) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Project Selector */}
+          {/* Project Context Info */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Project</label>
-            <Select value={currentProjectId.toString()} onValueChange={(value) => setCurrentProjectId(Number(value))}>
-              <SelectTrigger className="w-64">
-                <SelectValue placeholder="Select Project" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Westfield Development Project</SelectItem>
-                <SelectItem value="2">Northern Gateway Interchange</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Building className="h-4 w-4" />
+              <span>Current Project: {currentProject?.name || 'No project selected'}</span>
+            </div>
           </div>
 
           {/* Project Context Banner */}

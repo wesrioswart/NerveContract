@@ -76,7 +76,12 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   // Handle template selection from dropdown
   const handleTemplateSelect = (value: string) => {
     setSelectedTemplate(value);
-    setLocation(`/templates?template=${value}`);
+    if (value === 'early-warning') {
+      // Open Early Warning template modal
+      setLocation('/early-warnings?quick-create=true');
+    } else {
+      setLocation(`/templates?template=${value}`);
+    }
   };
 
   // NEC4 Templates - Only show "All Templates" link
