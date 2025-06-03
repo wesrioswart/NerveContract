@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Menu, Bell, HelpCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useProject } from "@/contexts/project-context";
 
 type HeaderProps = {
   user: any;
@@ -9,6 +10,7 @@ type HeaderProps = {
 
 export default function Header({ user, onToggleSidebar, sidebarCollapsed = false }: HeaderProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const { currentProject } = useProject();
 
   const toggleMobileMenu = () => {
     setShowMobileMenu(!showMobileMenu);
@@ -40,8 +42,12 @@ export default function Header({ user, onToggleSidebar, sidebarCollapsed = false
       )}
       
       <div className="flex-1">
-        <h2 className="text-lg font-semibold">Westfield Development Project</h2>
-        <p className="text-sm text-gray-500">Contract Ref: NEC4-2020-1234</p>
+        <h2 className="text-lg font-semibold">
+          {currentProject?.name || "No Project Selected"}
+        </h2>
+        <p className="text-sm text-gray-500">
+          Contract Ref: {currentProject?.contractReference || "N/A"}
+        </p>
       </div>
       
       <div className="flex items-center space-x-3">
