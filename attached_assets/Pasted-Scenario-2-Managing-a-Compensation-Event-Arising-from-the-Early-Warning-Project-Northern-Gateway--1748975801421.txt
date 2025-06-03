@@ -1,0 +1,26 @@
+Scenario 2: Managing a Compensation Event Arising from the Early Warning
+
+Project: Northern Gateway Interchange
+Situation: Following the Early Warning (EW-001, let's say) for the unforeseen soft ground, the Project Manager agrees it's a valid issue. The Project Manager instructs the Contractor (Jane's company) to proceed with investigating solutions and then to submit a quotation for a Compensation Event.
+User (Jane Cooper) Actions & Platform Interaction:
+Jane receives a formal instruction from the Project Manager (via email, which the platform's Email Intake Agent might conceptually process). The instruction references EW-001 and confirms it is a Compensation Event, instructing a quotation.
+Jane navigates to the main Dashboard (as per your mockup Image 1 from the first set).
+Under "Recent Compensation Events" (or by clicking "+ New CE"), she initiates a new CE. Let's say this becomes CE-025. She links it to EW-001.
+Jane needs to understand the timelines and requirements for submitting a CE quotation. She goes to AI Assistant -> Chat Interface.
+Jane types: "The PM has instructed us to submit a quotation for CE-025 (unforeseen ground conditions) on Northern Gateway. What are the key requirements and deadlines under Option E?"
+Jane then navigates to AI Assistant -> Clause Library.
+She uses the search bar within the Clause Library and types "compensation event quotation" or "Clause 62".
+She reviews Clause 62.2 (Contractor’s quotations) and 62.3 (How the Contractor prepares quotations), paying attention to any "Practical Meaning" or "Risk Alerts" you design for these.
+She also wants to check how Defined Cost for equipment will be assessed for this CE, as new dewatering pumps might be needed. She expands "Main Option Clauses" (which has the "Project Relevant" tag). Within that, she would find and expand the section for "Option E" and look for clauses related to Defined Cost or the Schedule of Cost Components. (You'll need to design how the SCC is presented – perhaps as another top-level expandable section or linked from Option E clauses).
+Expected AI/Platform Response (Simulated in Replit):
+Dashboard:
+When CE-025 is created, it appears in the "Recent Compensation Events" list with a status like "Quotation Required" and a due date for the quotation.
+Chat Interface:
+AI Responds: "For CE-025 on Northern Gateway (Option E), you must submit your quotation within three weeks of the Project Manager's instruction, unless a longer period is agreed (Clause 62.3). Your quotation should include proposed changes to the Prices and any Key Dates, a revised Programme showing the impact on planned Completion, and details of how you have assessed these changes. Under Option E, changes to the Prices are assessed as the forecast Defined Cost plus Fee. Ensure your assessment of Defined Cost aligns with the Schedule of Cost Components."
+Clause Library (when viewing Clause 62.2 or 62.3):
+Displays the full text of the clauses.
+Might have a "Practical Meaning:" e.g., for 62.3: "You have three weeks to submit your quotation unless you agree a different period with the Project Manager. Make sure your quotation is detailed and includes programme impacts."
+Might have a "Risk Alert:" e.g., "Failure to submit a quotation within the allowed time may lead to the Project Manager making their own assessment (Clause 64.1)."
+Shows "Related Clauses" (e.g., 62.1, 63.1, 64.1, Schedule of Cost Components).
+Clause Library (Option E / Schedule of Cost Components section):
+When Jane navigates here, she can see the detailed rules for what constitutes Defined Cost for Equipment, People, etc., which will inform her quotation.
