@@ -1788,105 +1788,30 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
       }
 
       // Use AI to extract resource allocation data
-      const extractionPrompt = `You are a data extraction expert. Extract resource allocation data from the document and return ONLY a valid JSON response with no additional text, markdown, or explanations.
-
-Look for team member information including names, roles, companies, hours worked, and whether they are subcontractors.
-
-Return ONLY this JSON structure:
-{
-  "periodName": "extracted period name or Week of [date]",
-  "weekCommencing": "2024-06-03",
-  "teamMembers": [
-    {
-      "name": "Full Name",
-      "role": "Job Role/Position", 
-      "company": "Company Name",
-      "hours": 40,
-      "isSubcontractor": false
-    }
-  ],
-  "extractionConfidence": 0.85
-}
-
-Document content:
-${extractedText.substring(0, 2000)}`;
-
-      const extractedData = await extractResourceAllocationData(extractedText.substring(0, 2000));
-      
       try {
-        // Clean the AI response to extract only JSON
-        let cleanedResponse = extractedData.trim();
-        
-        // Remove any markdown formatting
-        if (cleanedResponse.includes('```')) {
-          const jsonMatch = cleanedResponse.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-          if (jsonMatch) {
-            cleanedResponse = jsonMatch[1];
-          }
-        }
-        
-        // If response starts with explanatory text, try to find JSON
-        if (!cleanedResponse.startsWith('{')) {
-          const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            cleanedResponse = jsonMatch[0];
-          } else {
-            // Fallback: create structured data from the filename and basic parsing
-            const fallbackData = {
-              periodName: fileName.includes('week') ? 
-                fileName.match(/week\s*(\d+)/i)?.[0] || "Week from file" :
-                `Week of ${new Date().toISOString().split('T')[0]}`,
-              weekCommencing: new Date().toISOString().split('T')[0],
-              teamMembers: [
-                {
-                  name: "Data extraction failed - please enter manually",
-                  role: "Unknown",
-                  company: "Please review",
-                  hours: 0,
-                  isSubcontractor: false
-                }
-              ],
-              extractionConfidence: 0.3
-            };
-            
-            const result = {
-              projectId,
-              ...fallbackData,
-              totalLabourHours: 0,
-              extractedFrom: fileName,
-              extractionNote: "AI extraction failed - please review and edit manually"
-            };
-
-            // Clean up uploaded file
-            fs.unlinkSync(filePath);
-            return res.json(result);
-          }
-        }
-        
-        const parsedData = JSON.parse(cleanedResponse);
+        const extractedData = await extractResourceAllocationData(extractedText.substring(0, 2000));
         
         // Calculate total hours
-        const totalLabourHours = parsedData.teamMembers.reduce((sum: number, member: any) => 
+        const totalLabourHours = extractedData.teamMembers.reduce((sum: number, member: any) => 
           sum + (member.hours || 0), 0
         );
 
         const result = {
           projectId,
-          periodName: parsedData.periodName || `Week of ${new Date().toISOString().split('T')[0]}`,
-          weekCommencing: parsedData.weekCommencing || new Date().toISOString().split('T')[0],
-          teamMembers: parsedData.teamMembers || [],
+          periodName: extractedData.periodName || `Week of ${new Date().toISOString().split('T')[0]}`,
+          weekCommencing: extractedData.weekCommencing || new Date().toISOString().split('T')[0],
+          teamMembers: extractedData.teamMembers || [],
           totalLabourHours,
           extractedFrom: fileName,
-          extractionConfidence: parsedData.extractionConfidence || 0.8
+          extractionConfidence: extractedData.extractionConfidence || 0.8
         };
 
         // Clean up uploaded file
         fs.unlinkSync(filePath);
 
         res.json(result);
-      } catch (parseError) {
-        console.error("Error parsing AI response:", parseError);
-        console.log("Raw AI response:", extractedData.substring(0, 500));
+      } catch (extractionError) {
+        console.error("Error in AI extraction:", extractionError);
         
         // Provide fallback response with manual entry guidance
         const fallbackResult = {
