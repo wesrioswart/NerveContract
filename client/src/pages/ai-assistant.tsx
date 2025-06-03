@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { Search, RefreshCw, ChartBar, ChevronDown, ChevronRight, Filter, Clock, User, AlertTriangle } from "lucide-react";
+import { Search, RefreshCw, ChartBar, ChevronDown, ChevronRight, Filter, Clock, User, AlertTriangle, Building, Target, FileText, ExternalLink } from "lucide-react";
 
 export default function AIAssistant() {
   // For MVP, we'll assume project ID 1
@@ -301,18 +301,63 @@ const NEC4_CLAUSE_LIBRARY = {
           relatedClauses: ["60.1", "61.1"]
         }
       }
+    },
+    "X7: Delay damages": {
+      clauses: {
+        "X7.1": {
+          text: "The Contractor pays delay damages at the rate stated in the Contract Data from the Completion Date for each day until the earlier of Completion and the date on which the Employer takes over the works.",
+          explanation: "Sets out the delay damages payable by the Contractor for late completion.",
+          actionableBy: "Contractor",
+          timeframe: "From Completion Date until actual completion",
+          riskTrigger: "Delay damages accrue daily from the contractual completion date",
+          relatedClauses: ["30.2", "35.2", "80.1"]
+        }
+      }
+    }
+  },
+  "Project Z-Clauses": {
+    "Custom Contract Amendments": {
+      clauses: {
+        "Z1.1": {
+          text: "Additional health and safety requirements specific to this project shall be as detailed in Schedule Z1 and take precedence over standard health and safety provisions.",
+          explanation: "Project-specific health and safety requirements that override standard provisions.",
+          actionableBy: "Both Contractor and Project Manager",
+          timeframe: "Throughout the project",
+          riskTrigger: "Non-compliance with Z-clause health and safety requirements may result in contract termination",
+          relatedClauses: ["19.1", "27.1"],
+          isProjectSpecific: true
+        },
+        "Z2.3": {
+          text: "For this project, the definition of 'Completion' is modified to include achievement of BREEAM Excellent rating and commissioning certificate from the M&E consultant.",
+          explanation: "Modified completion criteria specific to this project including environmental standards.",
+          actionableBy: "Contractor",
+          timeframe: "Before claiming completion",
+          riskTrigger: "Completion cannot be achieved without BREEAM certification and M&E commissioning",
+          relatedClauses: ["30.2", "11.2(2)"],
+          isProjectSpecific: true
+        }
+      }
     }
   }
+};
+
+// Project context for the current project (would come from project data in real implementation)
+const PROJECT_OPTIONS = {
+  mainOption: "C", // Target contract with activity schedule
+  secondaryOptions: ["X1", "X2", "X7"], // Price adjustment, changes in law, delay damages
+  zClauses: ["Z1.1", "Z2.3"] // Custom amendments
 };
 
 // Clause Library Component
 function ClauseLibrary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
+  const [highlightedClause, setHighlightedClause] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     "Core Clauses": true,
-    "Main Option Clauses": false,
-    "Secondary Option Clauses": false
+    "Main Option Clauses": PROJECT_OPTIONS.mainOption ? true : false, // Auto-expand if project has main option
+    "Secondary Option Clauses": PROJECT_OPTIONS.secondaryOptions.length > 0 ? true : false,
+    "Project Z-Clauses": PROJECT_OPTIONS.zClauses.length > 0 ? true : false
   });
 
   const toggleSection = (section: string) => {
@@ -320,6 +365,45 @@ function ClauseLibrary() {
       ...prev,
       [section]: !prev[section]
     }));
+  };
+
+  const navigateToClause = (clauseNumber: string) => {
+    setHighlightedClause(clauseNumber);
+    // Find which section contains this clause and expand it
+    Object.entries(NEC4_CLAUSE_LIBRARY).forEach(([sectionName, sectionData]) => {
+      Object.entries(sectionData).forEach(([subsectionName, subsectionData]: [string, any]) => {
+        if (subsectionData.clauses && subsectionData.clauses[clauseNumber]) {
+          setExpandedSections(prev => ({ ...prev, [sectionName]: true }));
+        }
+      });
+    });
+    // Scroll to clause after a brief delay
+    setTimeout(() => {
+      const element = document.getElementById(`clause-${clauseNumber}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  };
+
+  const highlightText = (text: string, searchTerm: string) => {
+    if (!searchTerm) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? 
+        <mark key={index} className="bg-yellow-200 px-1 rounded">{part}</mark> : 
+        part
+    );
+  };
+
+  const isProjectRelevantOption = (optionName: string) => {
+    if (optionName.includes(`Option ${PROJECT_OPTIONS.mainOption}:`)) return true;
+    return PROJECT_OPTIONS.secondaryOptions.some(option => 
+      optionName.includes(`${option}:`)
+    );
   };
 
   const filterClauses = (clauses: any, searchTerm: string, filter: string) => {
@@ -358,6 +442,29 @@ function ClauseLibrary() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {/* Project Context Banner */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Building className="h-5 w-5 text-blue-600" />
+              <h4 className="font-semibold text-blue-900">Project Context: Westfield Development Project</h4>
+            </div>
+            <div className="flex flex-wrap gap-2 text-sm">
+              <Badge variant="outline" className="bg-white">
+                Main Option: {PROJECT_OPTIONS.mainOption} (Target Contract)
+              </Badge>
+              {PROJECT_OPTIONS.secondaryOptions.map(option => (
+                <Badge key={option} variant="outline" className="bg-white">
+                  Secondary: {option}
+                </Badge>
+              ))}
+              {PROJECT_OPTIONS.zClauses.length > 0 && (
+                <Badge variant="outline" className="bg-white">
+                  Z-Clauses: {PROJECT_OPTIONS.zClauses.length} custom amendments
+                </Badge>
+              )}
+            </div>
+          </div>
+
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
@@ -387,102 +494,152 @@ function ClauseLibrary() {
           {/* Clause Sections */}
           <ScrollArea className="h-[600px] w-full">
             <div className="space-y-4">
-              {Object.entries(NEC4_CLAUSE_LIBRARY).map(([sectionName, sectionData]) => (
-                <div key={sectionName} className="border rounded-lg">
-                  <Collapsible 
-                    open={expandedSections[sectionName]} 
-                    onOpenChange={() => toggleSection(sectionName)}
-                  >
-                    <CollapsibleTrigger asChild>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 cursor-pointer">
-                        <h3 className="text-lg font-semibold">{sectionName}</h3>
-                        {expandedSections[sectionName] ? 
-                          <ChevronDown className="h-4 w-4" /> : 
-                          <ChevronRight className="h-4 w-4" />
-                        }
-                      </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="p-4 space-y-4">
-                        {Object.entries(sectionData).map(([subsectionName, subsectionData]: [string, any]) => (
-                          <div key={subsectionName} className="space-y-3">
-                            <h4 className="font-medium text-blue-700 border-b border-blue-200 pb-1">
-                              {subsectionName}
-                            </h4>
-                            <div className="space-y-3">
-                              {Object.entries(filterClauses(subsectionData.clauses, searchTerm, selectedFilter))
-                                .map(([clauseNumber, clauseInfo]: [string, any]) => (
-                                <div key={clauseNumber} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
-                                  <div className="flex items-start justify-between mb-3">
-                                    <h5 className="text-lg font-semibold text-gray-900">
-                                      Clause {clauseNumber}
-                                    </h5>
-                                    <div className="flex gap-2">
-                                      {clauseInfo.riskTrigger && (
-                                        <Badge variant="destructive" className="text-xs">
-                                          <AlertTriangle className="h-3 w-3 mr-1" />
-                                          Time Critical
-                                        </Badge>
-                                      )}
-                                      {clauseInfo.actionableBy && (
-                                        <Badge variant="outline" className="text-xs">
-                                          <User className="h-3 w-3 mr-1" />
-                                          {clauseInfo.actionableBy}
-                                        </Badge>
-                                      )}
-                                      {clauseInfo.timeframe && (
-                                        <Badge variant="secondary" className="text-xs">
-                                          <Clock className="h-3 w-3 mr-1" />
-                                          {clauseInfo.timeframe}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="space-y-3">
-                                    <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 py-2">
-                                      <p className="text-sm font-mono text-gray-800">
-                                        {clauseInfo.text}
-                                      </p>
-                                    </div>
-                                    
-                                    <div className="bg-gray-50 p-3 rounded">
-                                      <p className="text-sm text-gray-700">
-                                        <strong>Practical Meaning:</strong> {clauseInfo.explanation}
-                                      </p>
-                                    </div>
-                                    
-                                    {clauseInfo.riskTrigger && (
-                                      <div className="bg-red-50 border border-red-200 p-3 rounded">
-                                        <p className="text-sm text-red-800">
-                                          <strong>Risk Alert:</strong> {clauseInfo.riskTrigger}
-                                        </p>
-                                      </div>
-                                    )}
-                                    
-                                    {clauseInfo.relatedClauses && clauseInfo.relatedClauses.length > 0 && (
-                                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <span className="font-medium">Related Clauses:</span>
-                                        <div className="flex gap-1">
-                                          {clauseInfo.relatedClauses.map((relatedClause: string) => (
-                                            <Badge key={relatedClause} variant="outline" className="text-xs">
-                                              {relatedClause}
+              {Object.entries(NEC4_CLAUSE_LIBRARY).map(([sectionName, sectionData]) => {
+                const isProjectRelevant = sectionName === "Project Z-Clauses" || 
+                  (sectionName === "Main Option Clauses" && Object.keys(sectionData).some(isProjectRelevantOption)) ||
+                  (sectionName === "Secondary Option Clauses" && Object.keys(sectionData).some(isProjectRelevantOption));
+                
+                return (
+                  <div key={sectionName} className={`border rounded-lg ${isProjectRelevant ? 'border-blue-300 bg-blue-25' : ''}`}>
+                    <Collapsible 
+                      open={expandedSections[sectionName]} 
+                      onOpenChange={() => toggleSection(sectionName)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <div className={`flex items-center justify-between p-4 hover:bg-gray-100 cursor-pointer ${
+                          isProjectRelevant ? 'bg-blue-50' : 'bg-gray-50'
+                        }`}>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-semibold">{sectionName}</h3>
+                            {isProjectRelevant && (
+                              <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700 border-blue-300">
+                                <Target className="h-3 w-3 mr-1" />
+                                Project Relevant
+                              </Badge>
+                            )}
+                          </div>
+                          {expandedSections[sectionName] ? 
+                            <ChevronDown className="h-4 w-4" /> : 
+                            <ChevronRight className="h-4 w-4" />
+                          }
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="p-4 space-y-4">
+                          {Object.entries(sectionData).map(([subsectionName, subsectionData]: [string, any]) => {
+                            const isSubsectionRelevant = isProjectRelevantOption(subsectionName);
+                            return (
+                              <div key={subsectionName} className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <h4 className={`font-medium border-b pb-1 ${
+                                    isSubsectionRelevant ? 'text-blue-700 border-blue-200' : 'text-gray-700 border-gray-200'
+                                  }`}>
+                                    {subsectionName}
+                                  </h4>
+                                  {isSubsectionRelevant && (
+                                    <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700">
+                                      Active
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="space-y-3">
+                                  {Object.entries(filterClauses(subsectionData.clauses, searchTerm, selectedFilter))
+                                    .map(([clauseNumber, clauseInfo]: [string, any]) => (
+                                    <div 
+                                      key={clauseNumber} 
+                                      id={`clause-${clauseNumber}`}
+                                      className={`border rounded-lg p-4 hover:bg-gray-50 transition-all ${
+                                        highlightedClause === clauseNumber ? 'ring-2 ring-blue-500 bg-blue-50' : 
+                                        clauseInfo.isProjectSpecific ? 'border-purple-300 bg-purple-25' : 'border-gray-200'
+                                      }`}
+                                    >
+                                      <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-center gap-2">
+                                          <h5 className="text-lg font-semibold text-gray-900">
+                                            Clause {clauseNumber}
+                                          </h5>
+                                          {clauseInfo.isProjectSpecific && (
+                                            <Badge variant="outline" className="text-xs bg-purple-100 text-purple-700">
+                                              <FileText className="h-3 w-3 mr-1" />
+                                              Z-Clause
                                             </Badge>
-                                          ))}
+                                          )}
+                                        </div>
+                                        <div className="flex gap-2">
+                                          {clauseInfo.riskTrigger && (
+                                            <Badge variant="destructive" className="text-xs">
+                                              <AlertTriangle className="h-3 w-3 mr-1" />
+                                              Time Critical
+                                            </Badge>
+                                          )}
+                                          {clauseInfo.actionableBy && (
+                                            <Badge variant="outline" className="text-xs">
+                                              <User className="h-3 w-3 mr-1" />
+                                              {clauseInfo.actionableBy}
+                                            </Badge>
+                                          )}
+                                          {clauseInfo.timeframe && (
+                                            <Badge variant="secondary" className="text-xs">
+                                              <Clock className="h-3 w-3 mr-1" />
+                                              {clauseInfo.timeframe}
+                                            </Badge>
+                                          )}
                                         </div>
                                       </div>
-                                    )}
-                                  </div>
+                                      
+                                      <div className="space-y-3">
+                                        <div className={`border-l-4 pl-4 py-2 ${
+                                          clauseInfo.isProjectSpecific ? 'border-purple-500 bg-purple-50' : 'border-blue-500 bg-blue-50'
+                                        }`}>
+                                          <p className="text-sm font-mono text-gray-800">
+                                            {highlightText(clauseInfo.text, searchTerm)}
+                                          </p>
+                                        </div>
+                                        
+                                        <div className="bg-gray-50 p-3 rounded">
+                                          <p className="text-sm text-gray-700">
+                                            <strong>Practical Meaning:</strong> {highlightText(clauseInfo.explanation, searchTerm)}
+                                          </p>
+                                        </div>
+                                        
+                                        {clauseInfo.riskTrigger && (
+                                          <div className="bg-red-50 border border-red-200 p-3 rounded">
+                                            <p className="text-sm text-red-800">
+                                              <strong>Risk Alert:</strong> {clauseInfo.riskTrigger}
+                                            </p>
+                                          </div>
+                                        )}
+                                        
+                                        {clauseInfo.relatedClauses && clauseInfo.relatedClauses.length > 0 && (
+                                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                                            <span className="font-medium">Related Clauses:</span>
+                                            <div className="flex gap-1 flex-wrap">
+                                              {clauseInfo.relatedClauses.map((relatedClause: string) => (
+                                                <button
+                                                  key={relatedClause}
+                                                  onClick={() => navigateToClause(relatedClause)}
+                                                  className="text-xs bg-white border border-gray-300 px-2 py-1 rounded hover:bg-blue-50 hover:border-blue-300 transition-colors cursor-pointer"
+                                                >
+                                                  <ExternalLink className="h-3 w-3 inline mr-1" />
+                                                  {relatedClause}
+                                                </button>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
-              ))}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
+                );
+              })}
             </div>
           </ScrollArea>
         </div>
