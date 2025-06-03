@@ -36,22 +36,13 @@ export function ProjectSelector() {
               <div className="flex flex-col">
                 <span className="font-medium">{project.name}</span>
                 <span className="text-xs text-muted-foreground">
-                  {project.contractReference} • {project.clientName}
+                  {project.contractReference}
                 </span>
               </div>
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      
-      {currentProject && (
-        <div className="mt-2 p-2 bg-muted/50 rounded-md">
-          <div className="text-xs text-muted-foreground">
-            <div className="font-medium">{currentProject.contractReference}</div>
-            <div>{currentProject.clientName}</div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
