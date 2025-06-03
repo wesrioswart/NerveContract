@@ -78,11 +78,8 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     setLocation(`/templates?template=${value}`);
   };
 
-  // NEC4 Templates - Placed prominently at the top
+  // NEC4 Templates - Only show "All Templates" link
   const templateItems = [
-    { path: "/templates/daily-site-report", label: "Daily Site Report", icon: Clipboard },
-    { path: "/templates/progress-report", label: "Progress Report", icon: BadgeCheck },
-    { path: "/templates/pmi", label: "Project Manager Instruction", icon: FileWarning },
     { path: "/templates", label: "All Templates", icon: FileText },
   ];
   
