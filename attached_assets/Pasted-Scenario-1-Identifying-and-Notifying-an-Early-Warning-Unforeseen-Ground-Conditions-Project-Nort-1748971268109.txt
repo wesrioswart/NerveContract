@@ -1,0 +1,15 @@
+Scenario 1: Identifying and Notifying an Early Warning (Unforeseen Ground Conditions)
+
+Project: Northern Gateway Interchange
+Situation: During excavation for a bridge abutment, the site team encounters a large area of unexpectedly soft, waterlogged ground not indicated in the geotechnical reports (part of the Scope provided by the Client). This will likely require different excavation methods, additional dewatering, and potentially a redesign of the temporary works, impacting both cost and time.
+User (Jane Cooper, Executive) Actions & Platform Interaction:
+Jane receives an urgent email from her Site Manager about the soft ground.
+Jane logs into the platform. She ensures "Northern Gateway Interchange" is the selected project (this selection would happen at a higher level, perhaps on the main dashboard or via a project selector you'll design).
+She navigates to the AI Assistant -> Chat Interface (as per your mockup Image 1 from the set showing the AI Assistant tabs).
+In the chat input field ("Ask about NEC4 clauses, CE status, or project queries..."), Jane types: "We've hit unexpected soft ground on the Northern Gateway site that wasn't in the geotech reports. What are my immediate obligations under NEC4 Option E?"
+After reviewing the AI's chat response, Jane wants to be certain about the Early Warning clause. She clicks on the Clause Library tab within the AI Assistant.
+The "Project Context: Northern Gateway Interchange" banner is displayed (as per your latest mockup showing Clause 10.1), confirming Main Option E, the selected Secondary Options, and Z-Clauses.
+Jane expands the "Core Clauses" section. Within that, she clicks on the sub-heading "Early Warning" (as per your mockup Image 3 from the set showing Clause 15.1).
+She reviews Clause 15.1, paying attention to the "Time Critical" tag, "Practical Meaning," and "Risk Alert."
+Confident in the need for an EW, Jane navigates to the main left-hand panel and clicks on "Quick Create" (as per your mockup Image 2 from the very first set of images).
+From the "Quick Create" dropdown, she selects "Early Warning Notice."
