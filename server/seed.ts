@@ -30,8 +30,8 @@ async function seedDatabase() {
       avatarInitials: "JC"
     }).returning();
 
-    // Insert a demo project
-    const [project] = await db.insert(projects).values({
+    // Insert demo projects
+    const [project1] = await db.insert(projects).values({
       name: "Westfield Development Project",
       contractReference: "NEC4-2020-1234",
       clientName: "Westfield Corp",
@@ -39,10 +39,18 @@ async function seedDatabase() {
       endDate: new Date("2023-12-15")
     }).returning();
 
-    // Insert demo compensation events
+    const [project2] = await db.insert(projects).values({
+      name: "Northern Gateway Interchange",
+      contractReference: "NEC4-2025-002",
+      clientName: "National Infrastructure Agency",
+      startDate: new Date("2024-01-15"),
+      endDate: new Date("2025-08-30")
+    }).returning();
+
+    // Insert demo compensation events for Westfield Development Project
     await db.insert(compensationEvents).values([
       {
-        projectId: project.id,
+        projectId: project1.id,
         reference: "CE-042",
         title: "Additional groundworks following site survey",
         description: "Excavation revealed unexpected rock formation requiring additional equipment and time",
@@ -57,7 +65,7 @@ async function seedDatabase() {
         attachments: null
       },
       {
-        projectId: project.id,
+        projectId: project1.id,
         reference: "CE-041",
         title: "Design change to east elevation glazing",
         description: "Client requested specification upgrade to high-performance glazing",
@@ -72,7 +80,7 @@ async function seedDatabase() {
         attachments: null
       },
       {
-        projectId: project.id,
+        projectId: project1.id,
         reference: "CE-040",
         title: "Delay due to archaeological findings",
         description: "Historical artifacts discovered during excavation requiring archaeological survey",
@@ -91,7 +99,7 @@ async function seedDatabase() {
     // Insert demo early warnings
     await db.insert(earlyWarnings).values([
       {
-        projectId: project.id,
+        projectId: project1.id,
         reference: "EW-018",
         description: "Potential delay in steel delivery from supplier",
         ownerId: user.id,
@@ -103,7 +111,7 @@ async function seedDatabase() {
         attachments: null
       },
       {
-        projectId: project.id,
+        projectId: project1.id,
         reference: "EW-017",
         description: "Weather forecast indicates potential flooding risk",
         ownerId: user.id,
@@ -115,7 +123,7 @@ async function seedDatabase() {
         attachments: null
       },
       {
-        projectId: project.id,
+        projectId: project1.id,
         reference: "EW-016",
         description: "Potential utility clash at southwest corner",
         ownerId: user.id,
@@ -130,7 +138,7 @@ async function seedDatabase() {
 
     // Insert demo non-conformance reports
     await db.insert(nonConformanceReports).values({
-      projectId: project.id,
+      projectId: project1.id,
       reference: "NCR-008",
       description: "Concrete mix does not meet specification",
       location: "Block A Foundation",
@@ -146,7 +154,7 @@ async function seedDatabase() {
     // Insert demo programme milestones
     await db.insert(programmeMilestones).values([
       {
-        projectId: project.id,
+        projectId: project1.id,
         name: "Project Start",
         plannedDate: new Date("2023-04-10"),
         actualDate: new Date("2023-04-10"),
@@ -155,7 +163,7 @@ async function seedDatabase() {
         delayDays: null
       },
       {
-        projectId: project.id,
+        projectId: project1.id,
         name: "Foundations",
         plannedDate: new Date("2023-05-15"),
         actualDate: new Date("2023-05-15"),
@@ -164,7 +172,7 @@ async function seedDatabase() {
         delayDays: null
       },
       {
-        projectId: project.id,
+        projectId: project1.id,
         name: "Structure",
         plannedDate: new Date("2023-07-20"),
         actualDate: null,
@@ -173,7 +181,7 @@ async function seedDatabase() {
         delayDays: null
       },
       {
-        projectId: project.id,
+        projectId: project1.id,
         name: "Services",
         plannedDate: new Date("2023-09-05"),
         actualDate: null,
@@ -182,7 +190,7 @@ async function seedDatabase() {
         delayDays: 14
       },
       {
-        projectId: project.id,
+        projectId: project1.id,
         name: "Completion",
         plannedDate: new Date("2023-12-15"),
         actualDate: null,
@@ -194,7 +202,7 @@ async function seedDatabase() {
 
     // Insert demo payment certificate
     await db.insert(paymentCertificates).values({
-      projectId: project.id,
+      projectId: project1.id,
       reference: "PC-003",
       amount: 234500,
       dueDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
