@@ -1,523 +1,293 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState } from "react";
+import { useProject } from "@/contexts/project-context";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { AnimatedButton } from "@/components/ui/animated-button";
-import { AnimationWrapper } from "@/components/ui/animation-wrapper";
-import { AlertCircle, Download, Printer, Save, Loader2 } from "lucide-react";
-import { useProject } from "@/contexts/project-context";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Clock, AlertTriangle, FileText, Send, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
-// Form schema for Early Warning
-const formSchema = z.object({
-  projectName: z.string().min(1, "Project name is required"),
-  referenceNumber: z.string().min(1, "Reference number is required"),
-  dateIssued: z.string().min(1, "Date is required"),
-  issuedBy: z.string().min(1, "Issued by is required"),
-  role: z.string().min(1, "Role is required"),
-  raisedTo: z.string().min(1, "Raised to is required"),
-  subjectMatter: z.string().min(1, "Subject matter is required"),
-  description: z.string().min(1, "Description is required"),
-  potentialImpact: z.string().min(1, "Potential impact is required"),
-  proposedMitigation: z.string().min(1, "Proposed mitigation is required"),
-  meetingRequested: z.boolean().default(false),
-  proposedMeetingDate: z.string().optional(),
-});
+interface EarlyWarningTemplateProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+  trigger?: React.ReactNode;
+}
 
-type FormValues = z.infer<typeof formSchema>;
-
-export default function EarlyWarningTemplate() {
-  const [showPreview, setShowPreview] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function EarlyWarningTemplate({ isOpen, onClose, trigger }: EarlyWarningTemplateProps) {
   const { currentProject } = useProject();
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      projectName: currentProject?.name || "Westfield Development Project",
-      referenceNumber: "EW-" + Math.floor(Math.random() * 900 + 100), // Generate a random number for demo
-      dateIssued: new Date().toISOString().split("T")[0],
-      issuedBy: "John Smith",
-      role: "Contractor's Project Manager",
-      raisedTo: "Jane Cooper",
-      subjectMatter: "Potential delay due to material shortage",
-      description: "",
-      potentialImpact: "",
-      proposedMitigation: "",
-      meetingRequested: false,
-      proposedMeetingDate: "",
-    },
+  const [formData, setFormData] = useState({
+    reference: `EW-${currentProject?.name?.includes('Northern Gateway') ? 'NGI' : 'WD'}-${String(Date.now()).slice(-3)}`,
+    date: new Date().toISOString().split('T')[0],
+    projectName: currentProject?.name || '',
+    contractRef: currentProject?.contractReference || '',
+    to: 'Project Manager',
+    from: 'Jane Cooper - Principal Contractor',
+    subject: 'Early Warning Notice - Unforeseen Ground Conditions',
+    description: '',
+    potentialImpacts: '',
+    proposedActions: '',
+    meetingRequired: true,
+    urgency: 'High'
   });
-  
-  const meetingRequested = watch("meetingRequested");
-  const formattedDate = new Date().toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
-  
-  // Update project name when current project changes
-  useEffect(() => {
-    if (currentProject) {
-      setValue("projectName", currentProject.name);
-    }
-  }, [currentProject, setValue]);
-  
-  const onSubmit = async (data: FormValues) => {
-    if (!data.description || !data.potentialImpact || !data.proposedMitigation) {
+
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.description.trim()) {
       toast({
-        title: "Missing information",
-        description: "Please provide all required information for the Early Warning Notice",
+        title: "Validation Error",
+        description: "Please provide a description of the early warning matter.",
         variant: "destructive"
       });
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
-      // In a real implementation, this would save to the backend
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      await apiRequest('POST', '/api/early-warnings', {
+        projectId: currentProject?.id,
+        reference: formData.reference,
+        description: formData.description,
+        ownerId: 1, // Current user ID
+        status: 'Open',
+        raisedBy: 1,
+        raisedAt: new Date(),
+        mitigationPlan: formData.proposedActions,
+        meetingDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        attachments: null
+      });
+
+      queryClient.invalidateQueries({ 
+        queryKey: [`/api/projects/${currentProject?.id}/early-warnings`] 
+      });
 
       toast({
-        title: "Early Warning submitted successfully",
-        description: "The Early Warning Notice has been saved and sent to the appropriate parties",
+        title: "Early Warning Created",
+        description: `Early Warning ${formData.reference} has been submitted successfully.`,
       });
-      
-      // Show preview after saving
-      setShowPreview(true);
+
+      if (onClose) onClose();
     } catch (error) {
       toast({
-        title: "Failed to submit Early Warning",
-        description: "There was an error submitting the form. Please try again.",
+        title: "Submission Failed",
+        description: "Failed to create early warning notice. Please try again.",
         variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  const handleSaveDraft = () => {
-    toast({
-      title: "Draft saved",
-      description: "Your Early Warning draft has been saved successfully."
-    });
-  };
-  
-  const handlePrint = () => {
-    window.print();
-  };
-  
-  const handleDownload = () => {
-    // This would be implemented with a PDF generation library
-    toast({
-      title: "Download started",
-      description: "Your PDF is being generated and will download shortly."
-    });
-  };
-  
-  return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      <AnimationWrapper type="fadeIn">
-        <div className="border-2 bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="p-6 border-b border-gray-200">
-            <AnimationWrapper as="h2" type="slideIn" className="text-xl font-bold mb-2">
-              Early Warning Notice
-            </AnimationWrapper>
-            <AnimationWrapper as="p" type="fadeIn" delay={0.2} className="text-sm text-gray-500">
-              Template for issuing Early Warnings under NEC4 Clause 15.1
-            </AnimationWrapper>
-          </div>
-          
-          {!showPreview ? (
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6">
-              <div className="mb-6">
-                <div className="flex items-center mb-2">
-                  <AlertCircle className="w-5 h-5 text-amber-500 mr-2" />
-                  <h3 className="font-medium">NEC4 Contract Clause 15.1</h3>
-                </div>
-                <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded text-sm text-amber-800 mb-4">
-                  <p>
-                    "The Contractor and the Project Manager give an early warning by notifying 
-                    the other as soon as either becomes aware of any matter which could increase the total
-                    of the Prices, delay Completion, delay meeting a Key Date, or impair the performance 
-                    of the works in use."
-                  </p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Project Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    {...register("projectName")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  />
-                  {errors.projectName && (
-                    <p className="text-red-500 text-xs mt-1">{errors.projectName.message}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Reference Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    {...register("referenceNumber")}
-                    placeholder="EW-XXX"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  />
-                  {errors.referenceNumber && (
-                    <p className="text-red-500 text-xs mt-1">{errors.referenceNumber.message}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Date Issued <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    {...register("dateIssued")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  />
-                  {errors.dateIssued && (
-                    <p className="text-red-500 text-xs mt-1">{errors.dateIssued.message}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Issued By <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    {...register("issuedBy")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  />
-                  {errors.issuedBy && (
-                    <p className="text-red-500 text-xs mt-1">{errors.issuedBy.message}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Role <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    {...register("role")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  >
-                    <option value="Contractor's Project Manager">Contractor's Project Manager</option>
-                    <option value="Project Manager">Project Manager</option>
-                    <option value="Supervisor">Supervisor</option>
-                    <option value="Contractor's Quantity Surveyor">Contractor's Quantity Surveyor</option>
-                    <option value="Client's Representative">Client's Representative</option>
-                  </select>
-                  {errors.role && (
-                    <p className="text-red-500 text-xs mt-1">{errors.role.message}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Raised To <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    {...register("raisedTo")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  />
-                  {errors.raisedTo && (
-                    <p className="text-red-500 text-xs mt-1">{errors.raisedTo.message}</p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-1">
-                  Subject Matter <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register("subjectMatter")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                />
-                {errors.subjectMatter && (
-                  <p className="text-red-500 text-xs mt-1">{errors.subjectMatter.message}</p>
-                )}
-              </div>
-              
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-1">
-                  Description of Early Warning Matter <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  rows={4}
-                  {...register("description")}
-                  placeholder="Describe the matter that could affect time, cost, or quality..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                />
-                {errors.description && (
-                  <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>
-                )}
-              </div>
-              
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-1">
-                  Potential Impact on Project <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  rows={3}
-                  {...register("potentialImpact")}
-                  placeholder="Describe how this matter might impact cost, completion date, or performance..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                />
-                {errors.potentialImpact && (
-                  <p className="text-red-500 text-xs mt-1">{errors.potentialImpact.message}</p>
-                )}
-              </div>
-              
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-1">
-                  Proposed Mitigation Actions <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  rows={3}
-                  {...register("proposedMitigation")}
-                  placeholder="Describe proposed actions to avoid or reduce the impact..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                />
-                {errors.proposedMitigation && (
-                  <p className="text-red-500 text-xs mt-1">{errors.proposedMitigation.message}</p>
-                )}
-              </div>
-              
-              <div className="mb-6">
-                <div className="flex items-center mb-2">
-                  <input
-                    type="checkbox"
-                    id="meetingRequested"
-                    {...register("meetingRequested")}
-                    className="h-4 w-4 border-gray-300 rounded"
-                  />
-                  <label htmlFor="meetingRequested" className="ml-2 block text-sm text-gray-900">
-                    Risk Reduction Meeting Requested (per Clause 15.2)
-                  </label>
-                </div>
-                
-                {meetingRequested && (
-                  <div className="mt-3">
-                    <label className="block text-sm font-medium mb-1">
-                      Proposed Meeting Date
-                    </label>
-                    <input
-                      type="date"
-                      {...register("proposedMeetingDate")}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    />
-                  </div>
-                )}
-              </div>
-              
-              <AnimationWrapper type="fadeIn" delay={0.3} className="mt-8">
-                <div className="w-full flex flex-col sm:flex-row justify-between gap-4">
-                  <div className="flex flex-wrap gap-2 sm:gap-4">
-                    <AnimatedButton 
-                      type="button" 
-                      onClick={handleSaveDraft}
-                      variant="outline" 
-                      className="gap-1 bg-white" 
-                      animation="subtle"
-                      disabled={isSubmitting}
-                    >
-                      <Save className="w-4 h-4" />
-                      Save Draft
-                    </AnimatedButton>
-                    
-                    <AnimatedButton 
-                      type="button" 
-                      onClick={handlePrint}
-                      variant="outline" 
-                      className="gap-1 bg-white" 
-                      animation="subtle"
-                      disabled={isSubmitting}
-                    >
-                      <Printer className="w-4 h-4" />
-                      Print
-                    </AnimatedButton>
-                    
-                    <AnimatedButton 
-                      type="button" 
-                      onClick={handleDownload}
-                      className="gap-1 bg-teal-600 hover:bg-teal-700 text-white" 
-                      animation="subtle"
-                      disabled={isSubmitting}
-                    >
-                      <Download className="w-4 h-4" />
-                      Download PDF
-                    </AnimatedButton>
-                  </div>
-                  
-                  <AnimatedButton 
-                    type="submit" 
-                    className="gap-1 bg-orange-400 hover:bg-orange-500 text-white" 
-                    animation="bounce"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle className="w-4 h-4" />
-                        Generate Notice
-                      </>
-                    )}
-                  </AnimatedButton>
-                </div>
-              </AnimationWrapper>
-            </form>
-          ) : (
-            <div>
-              <AnimationWrapper type="fadeIn" delay={0.2} className="p-6 border-b border-gray-200 print:hidden">
-                <div className="flex flex-col sm:flex-row justify-between gap-4 items-center">
-                  <AnimatedButton
-                    onClick={() => setShowPreview(false)}
-                    variant="outline"
-                    animation="subtle"
-                    className="bg-white w-full sm:w-auto"
-                  >
-                    Back to Edit
-                  </AnimatedButton>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    <AnimatedButton 
-                      variant="outline" 
-                      onClick={handlePrint} 
-                      className="gap-1 bg-white" 
-                      animation="subtle"
-                    >
-                      <Printer className="w-4 h-4" />
-                      Print
-                    </AnimatedButton>
-                    
-                    <AnimatedButton 
-                      onClick={handleDownload} 
-                      className="gap-1 bg-teal-600 hover:bg-teal-700 text-white" 
-                      animation="subtle"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download PDF
-                    </AnimatedButton>
-                  </div>
-                </div>
-              </AnimationWrapper>
-              
-              <div className="p-8 max-w-4xl mx-auto">
-                <AnimationWrapper type="fadeIn" delay={0.3} className="text-center mb-8">
-                  <AnimationWrapper as="h1" type="scale" delay={0.4} className="text-2xl font-bold">
-                    EARLY WARNING NOTICE
-                  </AnimationWrapper>
-                  <AnimationWrapper as="p" type="fadeIn" delay={0.5} className="text-sm text-gray-500 mt-1">
-                    In accordance with Clause 15.1 of the NEC4 Contract
-                  </AnimationWrapper>
-                </AnimationWrapper>
-                
-                <div className="grid grid-cols-2 gap-6 mb-8">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Project</p>
-                    <p className="font-medium">{watch("projectName")}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Reference Number</p>
-                    <p className="font-medium">{watch("referenceNumber")}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Date Issued</p>
-                    <p>{watch("dateIssued")}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Issued By</p>
-                    <p>{watch("issuedBy")}</p>
-                    <p className="text-sm text-gray-500">{watch("role")}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Raised To</p>
-                    <p>{watch("raisedTo")}</p>
-                  </div>
-                </div>
-                
-                <AnimationWrapper type="fadeIn" delay={0.6} className="mb-6">
-                  <h2 className="text-lg font-bold mb-2">{watch("subjectMatter")}</h2>
-                  <div className="border-l-4 border-amber-500 pl-4 py-1">
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{watch("description")}</p>
-                  </div>
-                </AnimationWrapper>
-                
-                <AnimationWrapper type="fadeIn" delay={0.7} className="mb-6">
-                  <h3 className="text-md font-bold mb-2">Potential Impact on Project</h3>
-                  <p className="text-sm whitespace-pre-wrap">{watch("potentialImpact")}</p>
-                </AnimationWrapper>
-                
-                <AnimationWrapper type="fadeIn" delay={0.8} className="mb-6">
-                  <h3 className="text-md font-bold mb-2">Proposed Mitigation Actions</h3>
-                  <p className="text-sm whitespace-pre-wrap">{watch("proposedMitigation")}</p>
-                </AnimationWrapper>
-                
-                {watch("meetingRequested") && (
-                  <AnimationWrapper type="fadeIn" delay={0.9} className="mb-6 p-4 bg-amber-50 rounded-md">
-                    <h3 className="text-md font-bold mb-2">Risk Reduction Meeting (Clause 15.2)</h3>
-                    <p className="text-sm">
-                      A risk reduction meeting is requested {watch("proposedMeetingDate") && `on ${watch("proposedMeetingDate")}`}
-                      {!watch("proposedMeetingDate") && " at a date to be agreed"}
-                    </p>
-                  </AnimationWrapper>
-                )}
-                
-                <AnimationWrapper type="fadeIn" delay={1.0} className="mt-12 pt-8 border-t border-gray-200">
-                  <div className="grid grid-cols-2 gap-12">
-                    <div>
-                      <p className="text-sm font-medium mb-8">Issued by:</p>
-                      <div className="border-b border-black mb-2" />
-                      <p className="text-sm">{watch("issuedBy")}</p>
-                      <p className="text-sm text-gray-500">{watch("role")}</p>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm font-medium mb-8">Acknowledged by:</p>
-                      <div className="border-b border-black mb-2" />
-                      <p className="text-sm">{watch("raisedTo")}</p>
-                    </div>
-                  </div>
-                </AnimationWrapper>
-                
-                <AnimationWrapper type="fadeIn" delay={1.1} className="mt-12 text-xs text-gray-500">
-                  <p>
-                    Note: This Early Warning is issued in accordance with Clause 15.1 of the NEC4 Contract, 
-                    which requires notification of any matter that could affect time, cost, or quality.
-                  </p>
-                </AnimationWrapper>
-              </div>
-            </div>
-          )}
+
+  const templateContent = (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <AlertTriangle className="h-5 w-5 text-red-600" />
+          <h3 className="font-semibold text-blue-900">NEC4 Early Warning Notice</h3>
+          <Badge variant="destructive" className="ml-auto">Time Critical</Badge>
         </div>
-      </AnimationWrapper>
+        <p className="text-sm text-blue-700">
+          Clause 15.1 - Both parties must notify early warnings as soon as becoming aware of any matter affecting cost, time, or quality.
+        </p>
+      </div>
+
+      {/* Project Context */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Project Context
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="reference" className="text-sm font-medium">EW Reference</Label>
+              <Input
+                id="reference"
+                value={formData.reference}
+                onChange={(e) => handleInputChange('reference', e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="date" className="text-sm font-medium">Date</Label>
+              <Input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleInputChange('date', e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="projectName" className="text-sm font-medium">Project Name</Label>
+              <Input
+                id="projectName"
+                value={formData.projectName}
+                onChange={(e) => handleInputChange('projectName', e.target.value)}
+                className="mt-1"
+                readOnly
+              />
+            </div>
+            <div>
+              <Label htmlFor="contractRef" className="text-sm font-medium">Contract Reference</Label>
+              <Input
+                id="contractRef"
+                value={formData.contractRef}
+                onChange={(e) => handleInputChange('contractRef', e.target.value)}
+                className="mt-1"
+                readOnly
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Communication Details */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Communication Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="to" className="text-sm font-medium">To</Label>
+              <Input
+                id="to"
+                value={formData.to}
+                onChange={(e) => handleInputChange('to', e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="from" className="text-sm font-medium">From</Label>
+              <Input
+                id="from"
+                value={formData.from}
+                onChange={(e) => handleInputChange('from', e.target.value)}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="subject" className="text-sm font-medium">Subject</Label>
+            <Input
+              id="subject"
+              value={formData.subject}
+              onChange={(e) => handleInputChange('subject', e.target.value)}
+              className="mt-1"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Early Warning Details */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Early Warning Matter</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="description" className="text-sm font-medium">
+              Description of Matter <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="Describe the matter that could affect cost, time, or quality..."
+              className="mt-1 min-h-[100px]"
+            />
+          </div>
+          <div>
+            <Label htmlFor="potentialImpacts" className="text-sm font-medium">Potential Impacts</Label>
+            <Textarea
+              id="potentialImpacts"
+              value={formData.potentialImpacts}
+              onChange={(e) => handleInputChange('potentialImpacts', e.target.value)}
+              placeholder="Describe potential impacts on cost, programme, or performance..."
+              className="mt-1 min-h-[80px]"
+            />
+          </div>
+          <div>
+            <Label htmlFor="proposedActions" className="text-sm font-medium">Proposed Mitigation Actions</Label>
+            <Textarea
+              id="proposedActions"
+              value={formData.proposedActions}
+              onChange={(e) => handleInputChange('proposedActions', e.target.value)}
+              placeholder="Describe proposed actions to avoid or reduce the impact..."
+              className="mt-1 min-h-[80px]"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Actions */}
+      <div className="flex justify-between items-center pt-4 border-t">
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Clock className="h-4 w-4" />
+          <span>Meeting will be scheduled within 7 days</span>
+        </div>
+        <div className="flex gap-2">
+          {onClose && (
+            <Button variant="outline" onClick={onClose}>
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+          )}
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Clock className="h-4 w-4 mr-2 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4 mr-2" />
+                Submit Early Warning
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
+  );
+
+  if (trigger) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Early Warning Notice</DialogTitle>
+          </DialogHeader>
+          {templateContent}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Card className="max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>Create Early Warning Notice</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {templateContent}
+      </CardContent>
+    </Card>
   );
 }

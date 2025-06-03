@@ -153,7 +153,7 @@ export default function AIAssistant() {
         </TabsContent>
         
         <TabsContent value="clauses" className="space-y-4">
-          <ClauseLibrary />
+          <ClauseLibrary projectId={currentProjectId} />
         </TabsContent>
       </Tabs>
     </>
@@ -388,12 +388,12 @@ const getProjectOptions = (projectId: number) => {
 };
 
 // Clause Library Component
-function ClauseLibrary() {
+function ClauseLibrary({ projectId }: { projectId: number }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [highlightedClause, setHighlightedClause] = useState<string | null>(null);
   
-  const PROJECT_OPTIONS = getProjectOptions(currentProjectId);
+  const PROJECT_OPTIONS = getProjectOptions(projectId);
   
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     "Core Clauses": true,

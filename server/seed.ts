@@ -138,6 +138,7 @@ async function seedDatabase() {
 
     // Insert demo early warnings
     await db.insert(earlyWarnings).values([
+      // Westfield Development Project EWs
       {
         projectId: project1.id,
         reference: "EW-018",
@@ -172,6 +173,43 @@ async function seedDatabase() {
         raisedAt: new Date("2023-05-15"),
         mitigationPlan: "Survey underground utilities and revise foundation plan",
         meetingDate: new Date("2023-05-22"),
+        attachments: null
+      },
+      // Northern Gateway Interchange EWs - Including unforeseen ground conditions scenario
+      {
+        projectId: project2.id,
+        reference: "EW-NGI-004",
+        description: "Unforeseen soft, waterlogged ground conditions encountered during bridge abutment excavation - not indicated in geotechnical reports provided by Client",
+        ownerId: user.id,
+        status: "Open",
+        raisedBy: user.id,
+        raisedAt: new Date(),
+        mitigationPlan: "Immediate site investigation required. Assess need for alternative excavation methods, dewatering systems, and temporary works redesign. Potential impact on programme and costs to be evaluated.",
+        meetingDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        attachments: null
+      },
+      {
+        projectId: project2.id,
+        reference: "EW-NGI-003",
+        description: "Potential access restrictions due to increased traffic volumes during peak construction phase",
+        ownerId: user.id,
+        status: "Under Review",
+        raisedBy: user.id,
+        raisedAt: new Date("2024-03-10"),
+        mitigationPlan: "Coordinate with local authorities for temporary traffic management measures",
+        meetingDate: new Date("2024-03-17"),
+        attachments: null
+      },
+      {
+        projectId: project2.id,
+        reference: "EW-NGI-002",
+        description: "Environmental sensitivity around protected wetland area requires enhanced monitoring protocols",
+        ownerId: user.id,
+        status: "Mitigated",
+        raisedBy: user.id,
+        raisedAt: new Date("2024-02-05"),
+        mitigationPlan: "Implement daily environmental monitoring and maintain 50m buffer zone during sensitive nesting season",
+        meetingDate: new Date("2024-02-12"),
         attachments: null
       }
     ]);
@@ -251,6 +289,55 @@ async function seedDatabase() {
       submittedAt: null,
       certifiedBy: null,
       certifiedAt: null,
+      attachments: null
+    });
+
+    // Insert scenario-related AI chat messages for Northern Gateway ground conditions
+    await db.insert(chatMessages).values([
+      {
+        projectId: project2.id,
+        userId: user.id,
+        message: "We've hit unexpected soft ground on the Northern Gateway site that wasn't in the geotech reports. What are my immediate obligations under NEC4 Option E?",
+        isAi: false,
+        timestamp: new Date(Date.now() - 5 * 60 * 1000) // 5 minutes ago
+      },
+      {
+        projectId: project2.id,
+        userId: user.id,
+        message: "Under NEC4 Option E (Cost Reimbursable Contract), when you encounter unforeseen ground conditions not indicated in the provided geotechnical reports, you have several immediate obligations:\n\n**1. Early Warning Notice (Clause 15.1)**: You must notify an early warning as soon as you become aware that the unforeseen ground conditions could increase total costs, delay completion, or impair the performance of the works.\n\n**2. Risk Register Update**: This situation should be added to the Risk Register as it affects the project's risk profile.\n\n**3. Compensation Event Notification**: This likely constitutes a Compensation Event under Clause 60.1(12) - 'Physical conditions within the Site which are not weather conditions and which an experienced contractor would have judged at the Contract Date to have such a small chance of occurring that it would have been unreasonable for him to have allowed for them'.\n\n**Key Actions Required:**\n- Issue Early Warning Notice immediately\n- Document the conditions with photographs and soil samples\n- Assess impact on programme and costs\n- Notify the Project Manager of potential Compensation Event\n- Implement immediate safety measures if required\n\n**Time Critical**: Early Warning notices must be given as soon as you become aware of the matter. Delay in notification could affect your entitlement to compensation.",
+        isAi: true,
+        timestamp: new Date(Date.now() - 3 * 60 * 1000) // 3 minutes ago
+      },
+      {
+        projectId: project2.id,
+        userId: user.id,
+        message: "What specific clause reference should I use for the Compensation Event notification?",
+        isAi: false,
+        timestamp: new Date(Date.now() - 2 * 60 * 1000) // 2 minutes ago
+      },
+      {
+        projectId: project2.id,
+        userId: user.id,
+        message: "For the Compensation Event notification, you should reference **Clause 60.1(12)** - 'Physical conditions within the Site which are not weather conditions and which an experienced contractor would have judged at the Contract Date to have such a small chance of occurring that it would have been unreasonable for him to have allowed for them'.\n\nThis clause specifically covers unforeseen ground conditions that:\n- Were not indicated in the Site Information provided by the Client\n- Could not reasonably have been anticipated by an experienced contractor\n- Have a significant impact on the works\n\nEnsure your notification includes:\n- Clear description of the encountered conditions\n- Difference from the provided geotechnical information\n- Proposed methods to deal with the conditions\n- Estimated time and cost implications\n- Supporting evidence (photos, soil samples, expert reports)",
+        isAi: true,
+        timestamp: new Date(Date.now() - 1 * 60 * 1000) // 1 minute ago
+      }
+    ]);
+
+    // Insert related technical query
+    await db.insert(technicalQueries).values({
+      projectId: project2.id,
+      reference: "TQ-NGI-001",
+      title: "Geotechnical Investigation Discrepancy - Bridge Abutment Location",
+      description: "Encountered soft, waterlogged ground conditions during excavation at bridge abutment location (Grid Reference: NG/425/887) that differ significantly from the geotechnical reports provided in the Site Information. Ground conditions show bearing capacity of <50kN/m² compared to design assumption of 200kN/m². Requires immediate technical review and potential design modification.",
+      raisedBy: user.id,
+      raisedAt: new Date(),
+      status: "Open",
+      priority: "High",
+      assignedTo: user.id,
+      category: "Geotechnical",
+      response: null,
+      responseDate: null,
       attachments: null
     });
 
