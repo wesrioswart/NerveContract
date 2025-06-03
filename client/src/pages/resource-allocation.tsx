@@ -69,6 +69,8 @@ function ResourceAllocationPage() {
   const { currentProject } = useProject();
   const { toast } = useToast();
   const [uploadDialog, setUploadDialog] = useState(false);
+  const [detailsDialog, setDetailsDialog] = useState(false);
+  const [selectedAllocation, setSelectedAllocation] = useState<ResourceAllocation | null>(null);
   const [extractedData, setExtractedData] = useState<ResourceAllocation | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -233,6 +235,11 @@ function ResourceAllocationPage() {
     if (extractedData) {
       saveMutation.mutate(extractedData);
     }
+  };
+
+  const handleViewDetails = (allocation: ResourceAllocation) => {
+    setSelectedAllocation(allocation);
+    setDetailsDialog(true);
   };
 
   if (isLoading) {
@@ -615,7 +622,12 @@ function ResourceAllocationPage() {
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleViewDetails(allocation)}
+                  >
                     <Eye className="h-4 w-4 mr-1" />
                     View Details
                   </Button>
@@ -629,6 +641,149 @@ function ResourceAllocationPage() {
           ))
         )}
       </div>
+
+      {/* Details Dialog */}
+      <Dialog open={detailsDialog} onOpenChange={setDetailsDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              {selectedAllocation?.periodName} - Resource Allocation Details
+            </DialogTitle>
+            <DialogDescription>
+              Detailed breakdown of team members and resource allocation for this period
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedAllocation && (
+            <div className="space-y-6">
+              {/* Period Information */}
+              <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Period Name</Label>
+                  <div className="text-lg font-semibold">{selectedAllocation.periodName}</div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Week Commencing</Label>
+                  <div className="text-lg font-semibold">
+                    {new Date(selectedAllocation.weekCommencing).toLocaleDateString()}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Total Labour Hours</Label>
+                  <div className="text-lg font-semibold text-blue-600">
+                    {selectedAllocation.totalLabourHours} hours
+                  </div>
+                </div>
+              </div>
+
+              {/* Extraction Information */}
+              {selectedAllocation.extractedFrom && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Wand2 className="h-4 w-4 text-green-600" />
+                    <span className="font-medium text-green-800">AI Extracted Data</span>
+                    {selectedAllocation.extractionConfidence && (
+                      <Badge variant="outline" className="text-green-700 border-green-300">
+                        {Math.round(selectedAllocation.extractionConfidence * 100)}% confidence
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="text-sm text-green-700">
+                    Extracted from: {selectedAllocation.extractedFrom}
+                  </div>
+                </div>
+              )}
+
+              {/* Team Members Table */}
+              <div>
+                <h4 className="text-lg font-semibold mb-4">Team Members ({selectedAllocation.teamMembers.length})</h4>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Name</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Role</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Company</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">Hours</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">Type</th>
+                        {selectedAllocation.teamMembers.some(m => m.rate) && (
+                          <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Rate</th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {selectedAllocation.teamMembers.map((member, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 font-medium">{member.name}</td>
+                          <td className="px-4 py-3 text-gray-600">{member.role}</td>
+                          <td className="px-4 py-3 text-gray-600">{member.company}</td>
+                          <td className="px-4 py-3 text-center font-medium">{member.hours}h</td>
+                          <td className="px-4 py-3 text-center">
+                            {member.isSubcontractor ? (
+                              <Badge variant="outline" className="text-orange-700 border-orange-300">
+                                <Building className="h-3 w-3 mr-1" />
+                                Subcontractor
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-blue-700 border-blue-300">
+                                Direct
+                              </Badge>
+                            )}
+                          </td>
+                          {selectedAllocation.teamMembers.some(m => m.rate) && (
+                            <td className="px-4 py-3 text-right">
+                              {member.rate ? `£${member.rate}/hr` : '-'}
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Summary Statistics */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {selectedAllocation.teamMembers.length}
+                    </div>
+                    <div className="text-sm text-blue-700">Total Members</div>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {selectedAllocation.teamMembers.filter(m => !m.isSubcontractor).length}
+                    </div>
+                    <div className="text-sm text-green-700">Direct Staff</div>
+                  </div>
+                  <div className="bg-orange-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-600">
+                      {selectedAllocation.teamMembers.filter(m => m.isSubcontractor).length}
+                    </div>
+                    <div className="text-sm text-orange-700">Subcontractors</div>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">
+                      {selectedAllocation.totalLabourHours}h
+                    </div>
+                    <div className="text-sm text-purple-700">Total Hours</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailsDialog(false)}>
+              Close
+            </Button>
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Export Details
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
