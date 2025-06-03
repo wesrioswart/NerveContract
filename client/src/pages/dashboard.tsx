@@ -6,37 +6,17 @@ import ChatInterface from "@/components/ai-assistant/chat-interface";
 import Timeline from "@/components/dashboard/timeline";
 import NewProjectModal from "@/components/projects/new-project-modal";
 import { CompensationEvent, EarlyWarning, NonConformanceReport, PaymentCertificate, ProgrammeMilestone, Project } from "@shared/schema";
-import { useState, useEffect } from "react";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BuildingIcon, Loader2, PlusIcon } from "lucide-react";
+import { Loader2, PlusIcon } from "lucide-react";
+import { useProject } from "@/contexts/project-context";
 
 export default function Dashboard() {
-  const [projectId, setProjectId] = useState(1);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const userId = 1;
-
-  // Fetch available projects
-  const { 
-    data: projects = [], 
-    isLoading: projectsLoading 
-  } = useQuery<Project[]>({
-    queryKey: ['/api/projects'],
-    refetchOnWindowFocus: false,
-  });
-
-  // Set default project if not already set
-  useEffect(() => {
-    if (projects.length > 0 && projectId === 1) {
-      setProjectId(projects[0].id);
-    }
-  }, [projects, projectId]);
+  
+  // Use global project context
+  const { projectId, currentProject, projects, isLoading: projectsLoading } = useProject();
 
   // Fetch project data
   const { data: compensationEvents = [], isLoading: ceLoading } = useQuery<CompensationEvent[]>({
@@ -90,14 +70,6 @@ export default function Dashboard() {
 
   // Loading state
   const isLoading = projectsLoading || ceLoading || ewLoading || ncrLoading || pcLoading || milestoneLoading;
-
-  // Project selection handler
-  const handleProjectChange = (value: string) => {
-    setProjectId(parseInt(value));
-  };
-
-  // Get current project name
-  const currentProject = projects.find(p => p.id === projectId);
 
   // Loading view
   const loadingView = (
@@ -182,44 +154,13 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
           <h1 className="text-2xl font-bold text-gray-900">Project Dashboard</h1>
           
-          <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3 mt-3 md:mt-0">
-            <Button
-              onClick={() => setIsNewProjectModalOpen(true)}
-              className="bg-blue-600 text-white hover:bg-blue-700"
-            >
-              <PlusIcon className="h-4 w-4 mr-2" />
-              New Project
-            </Button>
-            
-            <div className="w-full md:w-72">
-              <Select 
-                value={projectId?.toString()} 
-                onValueChange={handleProjectChange}
-                disabled={projectsLoading}
-              >
-                <SelectTrigger className="w-full bg-white">
-                  <div className="flex items-center gap-2">
-                    <BuildingIcon className="h-4 w-4 text-blue-600" />
-                    {projectsLoading ? (
-                      <div className="flex items-center">
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        <span>Loading projects...</span>
-                      </div>
-                    ) : (
-                      <SelectValue placeholder="Select project" />
-                    )}
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id.toString()}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <Button
+            onClick={() => setIsNewProjectModalOpen(true)}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+          >
+            <PlusIcon className="h-4 w-4 mr-2" />
+            New Project
+          </Button>
         </div>
         <p className="text-gray-500">
           {currentProject 
