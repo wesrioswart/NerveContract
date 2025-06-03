@@ -39,6 +39,7 @@ import { ActivityBadge } from "@/components/ui/activity-badge";
 import { CollapsibleSection } from "@/components/layout/collapsible-section";
 import { useSidebar } from "@/contexts/sidebar-context";
 import { useProject } from "@/contexts/project-context";
+import { ProjectSelector } from "./project-selector";
 
 type SidebarProps = {
   user: any;
@@ -287,11 +288,10 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
         )}
       </div>
       
-      {/* Project Context */}
-      {!collapsed && currentProject && (
-        <div className="px-4 py-2 border-b border-gray-200 bg-blue-50">
-          <p className="text-xs text-gray-500 font-medium">CURRENT PROJECT</p>
-          <p className="text-sm font-semibold text-blue-700 truncate">{currentProject.name}</p>
+      {/* Project Selector */}
+      {!collapsed && (
+        <div className="px-4 py-3 border-b border-gray-200">
+          <ProjectSelector />
         </div>
       )}
       
