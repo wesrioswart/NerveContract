@@ -635,13 +635,13 @@ function ClauseLibrary({ projectId }: { projectId: number }) {
                                           clauseInfo.isProjectSpecific ? 'border-purple-500 bg-purple-50' : 'border-blue-500 bg-blue-50'
                                         }`}>
                                           <p className="text-sm font-mono text-gray-800">
-                                            {highlightText(clauseInfo.text, searchTerm)}
+                                            {renderHighlightedText(clauseInfo.text, searchTerm)}
                                           </p>
                                         </div>
                                         
                                         <div className="bg-gray-50 p-3 rounded">
                                           <p className="text-sm text-gray-700">
-                                            <strong>Practical Meaning:</strong> {highlightText(clauseInfo.explanation, searchTerm)}
+                                            <strong>Practical Meaning:</strong> {renderHighlightedText(clauseInfo.explanation, searchTerm)}
                                           </p>
                                         </div>
                                         
