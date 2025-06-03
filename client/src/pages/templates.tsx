@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt, BarChart2, Calendar, FileText, ChevronDown } from "lucide-react";
-import { AnimatedCard } from "@/components/ui/animated-card";
-import { AnimatedButton } from "@/components/ui/animated-button";
-import { AnimationWrapper } from "@/components/ui/animation-wrapper";
-import { animatedToast } from "@/components/ui/animated-toast";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { FileText, AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt, BarChart2, Calendar } from 'lucide-react';
+import { AnimationWrapper } from '@/components/ui/animation-wrapper';
+import { AnimatedCard } from '@/components/ui/animated-card';
+import { AnimatedButton } from '@/components/ui/animated-button';
+
+// Template components
 import PMITemplate from '@/components/document-templates/pmi-template';
 import EarlyWarningTemplate from '@/components/document-templates/early-warning-template';
 import CompensationEventTemplate from '@/components/document-templates/compensation-event-template';
@@ -54,9 +53,8 @@ export default function TemplatesPage() {
         return <DailySiteReportTemplate />;
       default:
         return (
-          <div className="flex flex-col items-center justify-center p-12 text-center">
-            <h3 className="text-2xl font-semibold mb-2">Select a Template</h3>
-            <p className="text-gray-500">Choose a template from the list to view and use</p>
+          <div className="text-center py-12">
+            <p className="text-gray-500">Select a template from the dropdown above to get started.</p>
           </div>
         );
     }
@@ -105,256 +103,220 @@ export default function TemplatesPage() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 w-full">
-        {/* Template Card - PMI */}
-        <AnimatedCard animation="hover" index={0}>
-          <CardHeader>
-            <CardTitle>Project Manager's Instruction (PMI)</CardTitle>
-            <CardDescription>
-              Template for issuing formal PMIs in accordance with NEC4 Clause 14.3
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Use this template to formally instruct the Contractor to implement changes to the Scope
-              or Key Dates as permitted under Clause 14.3 of the NEC4 contract.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <AnimatedButton 
-              onClick={() => setActiveTemplate('pmi')}
-              className="w-full"
-              animation="default"
-            >
-              View Template
-            </AnimatedButton>
-          </CardFooter>
-        </AnimatedCard>
-        
-        {/* Template Card - Early Warning */}
-        <AnimatedCard animation="hover" index={1} className="border-2 border-amber-500">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Early Warning Notice</CardTitle>
-              <AlertTriangle className="text-amber-500 w-5 h-5" />
-            </div>
-            <CardDescription>
-              Template for issuing Early Warnings under NEC4 Clause 15.1
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Use this template to notify potential issues that could increase costs, delay completion,
-              or impair the performance of the works, as required by Clause 15.1.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <AnimatedButton 
-              onClick={() => setActiveTemplate('early-warning')}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-              animation="bounce"
-            >
-              Create Early Warning
-            </AnimatedButton>
-          </CardFooter>
-        </AnimatedCard>
-        
-        {/* Template Card - Compensation Event */}
-        <AnimatedCard animation="hover" index={2} className="border-2 border-blue-500">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Compensation Event Notice</CardTitle>
-              <DollarSign className="text-blue-500 w-5 h-5" />
-            </div>
-            <CardDescription>
-              Template for notifying Compensation Events under NEC4 Clause 61.3
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Use this template to formally notify the Project Manager of events that may
-              alter the Prices, Completion Date or Key Dates, in accordance with Clause 61.3.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <AnimatedButton 
-              onClick={() => setActiveTemplate('compensation-event')}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-              animation="default"
-            >
-              Create CE Notice
-            </AnimatedButton>
-          </CardFooter>
-        </AnimatedCard>
-        
-        {/* Template Card - Progress Report */}
-        <AnimatedCard animation="hover" index={3} className="border-2 border-indigo-500">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Progress Report</CardTitle>
-              <BarChart2 className="text-indigo-500 w-5 h-5" />
-            </div>
-            <CardDescription>
-              Template for submitting Progress Reports under NEC4 Clause 31.2
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Use this template to submit comprehensive progress reports showing actual versus
-              planned progress, forecasts, and early warnings in accordance with Clause 31.2.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <AnimatedButton 
-              onClick={() => setActiveTemplate('progress-report')}
-              className="w-full bg-indigo-500 hover:bg-indigo-600 text-white"
-              animation="default"
-            >
-              Create Progress Report
-            </AnimatedButton>
-          </CardFooter>
-        </AnimatedCard>
-        
-        {/* Template Card - Non-Conformance Report */}
-        <AnimatedCard animation="hover" index={4} className="border-2 border-red-500">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Non-Conformance Report</CardTitle>
-              <AlertOctagon className="text-red-500 w-5 h-5" />
-            </div>
-            <CardDescription>
-              Template for documenting non-conformances under NEC4 Quality Management
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Use this template to report work that does not conform to the requirements 
-              specified in the Works Information or contract.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <AnimatedButton 
-              onClick={() => setActiveTemplate('ncr')}
-              className="w-full bg-red-500 hover:bg-red-600 text-white"
-              animation="default"
-            >
-              Create NCR
-            </AnimatedButton>
-          </CardFooter>
-        </AnimatedCard>
-        
-        {/* Template Card - Technical Query */}
-        <AnimatedCard animation="hover" index={5} className="border-2 border-purple-500">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Technical Query</CardTitle>
-              <HelpCircle className="text-purple-500 w-5 h-5" />
-            </div>
-            <CardDescription>
-              Template for submitting technical queries on the NEC4 contract
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Use this template to submit formal queries regarding technical aspects 
-              of the works, specifications, or design requirements.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <AnimatedButton 
-              onClick={() => setActiveTemplate('technical-query')}
-              className="w-full bg-purple-500 hover:bg-purple-600 text-white"
-              animation="default"
-            >
-              Create TQ
-            </AnimatedButton>
-          </CardFooter>
-        </AnimatedCard>
-        
-        {/* Template Card - Payment Application */}
-        <AnimatedCard animation="hover" index={6} className="border-2 border-green-500">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Payment Application</CardTitle>
-              <Receipt className="text-green-500 w-5 h-5" />
-            </div>
-            <CardDescription>
-              Template for submitting payment applications under NEC4 Option Y(UK)2
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Use this template to submit applications for payment as a Contractor,
-              showing the amount due and calculations as required by the payment provisions.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <AnimatedButton 
-              onClick={() => setActiveTemplate('payment-application')}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-              animation="default"
-            >
-              Create Payment Application
-            </AnimatedButton>
-          </CardFooter>
-        </AnimatedCard>
-
-        {/* Template Card - Daily Site Report */}
-        <AnimatedCard animation="hover" index={7} className="border-2 border-cyan-500">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Daily Site Report</CardTitle>
-              <Calendar className="text-cyan-500 w-5 h-5" />
-            </div>
-            <CardDescription>
-              Template for recording daily site activities and progress
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Use this template to record daily site activities, labor, plant, materials, progress, 
-              and issues. The AI will analyze reports to identify risks and update executive dashboards.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <AnimatedButton 
-              onClick={() => setActiveTemplate('daily-site-report')}
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white"
-              animation="default"
-            >
-              Create Daily Site Report
-            </AnimatedButton>
-          </CardFooter>
-        </AnimatedCard>
-      </div>
-      
-      {/* Template Preview Area */}
-      <AnimationWrapper type="fadeIn" delay={0.3}>
-        <div className="bg-gray-50 rounded-lg p-6 border shadow-sm w-full">
-          <div className="flex justify-between items-center mb-6">
-            <AnimationWrapper as="h2" type="slideIn" delay={0.4} className="text-2xl font-bold">
-              Template Preview
-            </AnimationWrapper>
-            {activeTemplate && (
-              <AnimationWrapper type="fadeIn" delay={0.5}>
-                <AnimatedButton 
-                  variant="outline" 
-                  onClick={() => setActiveTemplate(null)}
-                  animation="subtle"
-                >
-                  Back to Templates
-                </AnimatedButton>
-              </AnimationWrapper>
-            )}
-          </div>
-          
-          <AnimationWrapper type="fadeIn" delay={0.6} className="w-full">
-            <div className="w-full max-w-full overflow-x-auto">
-              {renderTemplate()}
-            </div>
-          </AnimationWrapper>
+      {/* Show selected template or template grid */}
+      {activeTemplate ? (
+        <div className="w-full">
+          {renderTemplate()}
         </div>
-      </AnimationWrapper>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 w-full">
+          {/* Template Card - PMI */}
+          <AnimatedCard animation="hover" index={0}>
+            <CardHeader>
+              <CardTitle>Project Manager's Instruction (PMI)</CardTitle>
+              <CardDescription>
+                Template for issuing formal PMIs in accordance with NEC4 Clause 14.3
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Use this template to issue instructions to the Contractor. The system will automatically 
+                check compliance with NEC4 procedures and generate appropriate reference numbers.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <AnimatedButton 
+                onClick={() => setActiveTemplate('pmi')}
+                className="w-full"
+                animation="default"
+              >
+                Create PMI
+              </AnimatedButton>
+            </CardFooter>
+          </AnimatedCard>
+
+          {/* Template Card - Early Warning */}
+          <AnimatedCard animation="hover" index={1}>
+            <CardHeader>
+              <CardTitle>Early Warning Notice</CardTitle>
+              <CardDescription>
+                NEC4 Clause 15.1 Early Warning notification template
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Create early warning notices for matters that could increase costs, delay completion, 
+                or impair performance. AI will assess risk levels and suggest mitigation strategies.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <AnimatedButton 
+                onClick={() => setActiveTemplate('early-warning')}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                animation="default"
+              >
+                Create Early Warning
+              </AnimatedButton>
+            </CardFooter>
+          </AnimatedCard>
+
+          {/* Template Card - Compensation Event */}
+          <AnimatedCard animation="hover" index={2}>
+            <CardHeader>
+              <CardTitle>Compensation Event</CardTitle>
+              <CardDescription>
+                NEC4 Clause 60-65 Compensation Event notification and assessment
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Record and assess compensation events with automatic cost and time impact calculations. 
+                Includes built-in NEC4 clause compliance checking and quotation generation.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <AnimatedButton 
+                onClick={() => setActiveTemplate('compensation-event')}
+                className="w-full bg-green-500 hover:bg-green-600 text-white"
+                animation="default"
+              >
+                Create Compensation Event
+              </AnimatedButton>
+            </CardFooter>
+          </AnimatedCard>
+
+          {/* Template Card - NCR */}
+          <AnimatedCard animation="hover" index={3}>
+            <CardHeader>
+              <CardTitle>Non-Conformance Report</CardTitle>
+              <CardDescription>
+                Quality management and defect tracking template
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Document quality issues, defects, and non-conformances. Track corrective actions 
+                and resolution status with automatic stakeholder notifications.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <AnimatedButton 
+                onClick={() => setActiveTemplate('ncr')}
+                className="w-full bg-red-500 hover:bg-red-600 text-white"
+                animation="default"
+              >
+                Create NCR
+              </AnimatedButton>
+            </CardFooter>
+          </AnimatedCard>
+
+          {/* Template Card - Technical Query */}
+          <AnimatedCard animation="hover" index={4}>
+            <CardHeader>
+              <CardTitle>Technical Query</CardTitle>
+              <CardDescription>
+                Request for Information (RFI) and technical clarification template
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Submit technical queries and requests for clarification. AI will suggest similar 
+                previous queries and auto-route to appropriate technical specialists.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <AnimatedButton 
+                onClick={() => setActiveTemplate('technical-query')}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                animation="default"
+              >
+                Create Technical Query
+              </AnimatedButton>
+            </CardFooter>
+          </AnimatedCard>
+
+          {/* Template Card - Payment Application */}
+          <AnimatedCard animation="hover" index={5}>
+            <CardHeader>
+              <CardTitle>Payment Application</CardTitle>
+              <CardDescription>
+                NEC4 payment certificate and application template
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Generate payment applications and certificates with automatic value calculations, 
+                retention handling, and compliance with NEC4 payment procedures.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <AnimatedButton 
+                onClick={() => setActiveTemplate('payment-application')}
+                className="w-full bg-purple-500 hover:bg-purple-600 text-white"
+                animation="default"
+              >
+                Create Payment Application
+              </AnimatedButton>
+            </CardFooter>
+          </AnimatedCard>
+
+          {/* Template Card - Progress Report */}
+          <AnimatedCard animation="hover" index={6}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Progress Report</CardTitle>
+                <BarChart2 className="text-indigo-500 w-5 h-5" />
+              </div>
+              <CardDescription>
+                Template for comprehensive project progress reporting
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Create detailed progress reports with schedule analysis, cost tracking, risk assessment, 
+                and executive summaries. AI-powered insights and trend analysis included.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <AnimatedButton 
+                onClick={() => setActiveTemplate('progress-report')}
+                className="w-full bg-indigo-500 hover:bg-indigo-600 text-white"
+                animation="default"
+              >
+                Create Progress Report
+              </AnimatedButton>
+            </CardFooter>
+          </AnimatedCard>
+
+          {/* Template Card - Daily Site Report */}
+          <AnimatedCard animation="hover" index={7}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Daily Site Report</CardTitle>
+                <Calendar className="text-cyan-500 w-5 h-5" />
+              </div>
+              <CardDescription>
+                Template for recording daily site activities and progress
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Use this template to record daily site activities, labor, plant, materials, progress, 
+                and issues. The AI will analyze reports to identify risks and update executive dashboards.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <AnimatedButton 
+                onClick={() => setActiveTemplate('daily-site-report')}
+                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white"
+                animation="default"
+              >
+                Create Daily Site Report
+              </AnimatedButton>
+            </CardFooter>
+          </AnimatedCard>
+        </div>
+      )}
     </div>
   );
 }
