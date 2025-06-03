@@ -1722,6 +1722,132 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   // Setup RFI Management Routes
   setupRfiRoutes(app);
 
+  // Resource Allocation routes
+  app.get("/api/projects/:projectId/resource-allocations", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      
+      if (isNaN(projectId)) {
+        return res.status(400).json({ error: "Invalid project ID" });
+      }
+      
+      const allocations = await storage.getResourceAllocationsByProject(projectId);
+      res.json(allocations);
+    } catch (error) {
+      console.error("Error fetching resource allocations:", error);
+      res.status(500).json({ error: "Failed to fetch resource allocations" });
+    }
+  });
+
+  app.post("/api/resource-allocations", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const allocation = await storage.createResourceAllocation(req.body);
+      res.status(201).json(allocation);
+    } catch (error) {
+      console.error("Error creating resource allocation:", error);
+      res.status(500).json({ error: "Failed to create resource allocation" });
+    }
+  });
+
+  app.post("/api/resource-allocation/extract", requireAuth, upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const projectId = parseInt(req.body.projectId);
+      if (isNaN(projectId)) {
+        return res.status(400).json({ error: "Invalid project ID" });
+      }
+
+      // Check if AI is configured
+      if (!isOpenAIConfigured()) {
+        return res.status(503).json({ 
+          error: "AI extraction service not available. Please configure OpenAI API key." 
+        });
+      }
+
+      const filePath = req.file.path;
+      const fileName = req.file.originalname;
+      const fileExtension = path.extname(fileName).toLowerCase();
+
+      let extractedText = "";
+
+      // Read file content based on type
+      if (fileExtension === '.csv') {
+        extractedText = fs.readFileSync(filePath, 'utf-8');
+      } else if (fileExtension === '.pdf') {
+        // For PDF, we'll extract text content
+        extractedText = fs.readFileSync(filePath, 'utf-8');
+      } else if (['.xlsx', '.xls'].includes(fileExtension)) {
+        // For Excel files, we'll read as binary and convert
+        const buffer = fs.readFileSync(filePath);
+        extractedText = buffer.toString('binary');
+      } else {
+        return res.status(400).json({ error: "Unsupported file type" });
+      }
+
+      // Use AI to extract resource allocation data
+      const extractionPrompt = `
+        Extract resource allocation data from the following document content. 
+        Look for team member information including names, roles, companies, hours worked, and whether they are subcontractors.
+        Also extract period information like week commencing dates and period names.
+        
+        Return the data in this JSON format:
+        {
+          "periodName": "extracted period name or generate from date",
+          "weekCommencing": "YYYY-MM-DD format",
+          "teamMembers": [
+            {
+              "name": "Full Name",
+              "role": "Job Role/Position",
+              "company": "Company Name",
+              "hours": number,
+              "isSubcontractor": boolean
+            }
+          ],
+          "extractionConfidence": number between 0 and 1
+        }
+        
+        Document content:
+        ${extractedText.substring(0, 3000)}
+      `;
+
+      const extractedData = await askContractAssistant(extractionPrompt, []);
+      
+      try {
+        const parsedData = JSON.parse(extractedData);
+        
+        // Calculate total hours
+        const totalLabourHours = parsedData.teamMembers.reduce((sum: number, member: any) => 
+          sum + (member.hours || 0), 0
+        );
+
+        const result = {
+          projectId,
+          periodName: parsedData.periodName || `Week of ${new Date().toISOString().split('T')[0]}`,
+          weekCommencing: parsedData.weekCommencing || new Date().toISOString().split('T')[0],
+          teamMembers: parsedData.teamMembers || [],
+          totalLabourHours,
+          extractedFrom: fileName,
+          extractionConfidence: parsedData.extractionConfidence || 0.8
+        };
+
+        // Clean up uploaded file
+        fs.unlinkSync(filePath);
+
+        res.json(result);
+      } catch (parseError) {
+        console.error("Error parsing AI response:", parseError);
+        res.status(500).json({ error: "Failed to parse extracted data" });
+      }
+
+    } catch (error) {
+      console.error("Error extracting resource allocation:", error);
+      res.status(500).json({ error: "Failed to extract resource allocation data" });
+    }
+  });
+
   // PDF Overview Download route
   app.get('/api/pdf/overview', (req: Request, res: Response) => {
     try {

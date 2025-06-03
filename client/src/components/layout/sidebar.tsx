@@ -128,6 +128,12 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
       activityCount: activityCounts.equipmentHire,
       activityVariant: "warning"
     },
+    { 
+      path: "/resource-allocation", 
+      label: "Resource Allocation", 
+      icon: Users, 
+      badge: "AI"
+    },
   ];
 
   // Utility items

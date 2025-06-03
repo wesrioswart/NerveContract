@@ -19,6 +19,7 @@ import Suppliers from "@/pages/suppliers";
 import Inventory from "@/pages/inventory";
 import EquipmentHire from "@/pages/equipment-hire";
 import RfiManagement from "@/pages/rfi-management";
+import ResourceAllocation from "@/pages/resource-allocation";
 import Login from "@/pages/login";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -129,6 +130,7 @@ function AppContent() {
                   <Route path="/equipment-hire" component={EquipmentHire} />
                   <Route path="/email-processor" component={EmailProcessor} />
                   <Route path="/rfi-management" component={RfiManagement} />
+                  <Route path="/resource-allocation" component={ResourceAllocation} />
                   <Route component={NotFound} />
                 </Switch>
               </div>
