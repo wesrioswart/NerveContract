@@ -503,4 +503,57 @@ async function analyzeContractDocument(documentText: string): Promise<{
   }
 }
 
-export { askContractAssistant, analyzeContractDocument, isOpenAIConfigured };
+// Function specifically for resource allocation data extraction
+async function extractResourceAllocationData(documentContent: string): Promise<any> {
+  try {
+    if (!apiKey) {
+      throw new Error("OpenAI API key is not configured");
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: `You are a data extraction expert. Extract resource allocation data from construction documents and return ONLY valid JSON. Look for team member information including names, roles, companies, hours worked, and whether they are subcontractors. Also extract period information like week commencing dates.
+
+You must respond with valid JSON in this exact format:
+{
+  "periodName": "Week 23" or "Week of [date]",
+  "weekCommencing": "YYYY-MM-DD",
+  "teamMembers": [
+    {
+      "name": "Full Name",
+      "role": "Job Role/Position",
+      "company": "Company Name", 
+      "hours": 40,
+      "isSubcontractor": false
+    }
+  ],
+  "extractionConfidence": 0.85
+}
+
+If you cannot extract clear data, return this fallback structure with confidence 0.3.`
+        },
+        {
+          role: "user",
+          content: `Extract resource allocation data from this document content:\n\n${documentContent}`
+        }
+      ],
+      max_tokens: 1000,
+    });
+
+    const result = response.choices[0].message.content;
+    if (!result) {
+      throw new Error("No response from OpenAI");
+    }
+
+    return JSON.parse(result);
+  } catch (error: any) {
+    console.error("Error in resource allocation extraction:", error);
+    throw error;
+  }
+}
+
+export { askContractAssistant, analyzeContractDocument, isOpenAIConfigured, extractResourceAllocationData };

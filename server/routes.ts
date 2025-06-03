@@ -11,7 +11,7 @@ import * as procurementController from "./controllers/procurement-controller";
 import * as inventoryController from "./controllers/inventory-controller";
 import * as equipmentHireController from "./controllers/equipment-hire-controller";
 import { generateRfiPdf, getRfiHtmlPreview } from "./controllers/rfi-pdf-controller";
-import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured } from "./utils/openai";
+import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured, extractResourceAllocationData } from "./utils/openai";
 import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
 import { parseProgrammeFile } from "./services/programme-parser";
 import { analyzeProgramme } from "./services/programme-analysis";
@@ -1788,35 +1788,82 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
       }
 
       // Use AI to extract resource allocation data
-      const extractionPrompt = `
-        Extract resource allocation data from the following document content. 
-        Look for team member information including names, roles, companies, hours worked, and whether they are subcontractors.
-        Also extract period information like week commencing dates and period names.
-        
-        Return the data in this JSON format:
-        {
-          "periodName": "extracted period name or generate from date",
-          "weekCommencing": "YYYY-MM-DD format",
-          "teamMembers": [
-            {
-              "name": "Full Name",
-              "role": "Job Role/Position",
-              "company": "Company Name",
-              "hours": number,
-              "isSubcontractor": boolean
-            }
-          ],
-          "extractionConfidence": number between 0 and 1
-        }
-        
-        Document content:
-        ${extractedText.substring(0, 3000)}
-      `;
+      const extractionPrompt = `You are a data extraction expert. Extract resource allocation data from the document and return ONLY a valid JSON response with no additional text, markdown, or explanations.
 
-      const extractedData = await askContractAssistant(extractionPrompt, []);
+Look for team member information including names, roles, companies, hours worked, and whether they are subcontractors.
+
+Return ONLY this JSON structure:
+{
+  "periodName": "extracted period name or Week of [date]",
+  "weekCommencing": "2024-06-03",
+  "teamMembers": [
+    {
+      "name": "Full Name",
+      "role": "Job Role/Position", 
+      "company": "Company Name",
+      "hours": 40,
+      "isSubcontractor": false
+    }
+  ],
+  "extractionConfidence": 0.85
+}
+
+Document content:
+${extractedText.substring(0, 2000)}`;
+
+      const extractedData = await extractResourceAllocationData(extractedText.substring(0, 2000));
       
       try {
-        const parsedData = JSON.parse(extractedData);
+        // Clean the AI response to extract only JSON
+        let cleanedResponse = extractedData.trim();
+        
+        // Remove any markdown formatting
+        if (cleanedResponse.includes('```')) {
+          const jsonMatch = cleanedResponse.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+          if (jsonMatch) {
+            cleanedResponse = jsonMatch[1];
+          }
+        }
+        
+        // If response starts with explanatory text, try to find JSON
+        if (!cleanedResponse.startsWith('{')) {
+          const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            cleanedResponse = jsonMatch[0];
+          } else {
+            // Fallback: create structured data from the filename and basic parsing
+            const fallbackData = {
+              periodName: fileName.includes('week') ? 
+                fileName.match(/week\s*(\d+)/i)?.[0] || "Week from file" :
+                `Week of ${new Date().toISOString().split('T')[0]}`,
+              weekCommencing: new Date().toISOString().split('T')[0],
+              teamMembers: [
+                {
+                  name: "Data extraction failed - please enter manually",
+                  role: "Unknown",
+                  company: "Please review",
+                  hours: 0,
+                  isSubcontractor: false
+                }
+              ],
+              extractionConfidence: 0.3
+            };
+            
+            const result = {
+              projectId,
+              ...fallbackData,
+              totalLabourHours: 0,
+              extractedFrom: fileName,
+              extractionNote: "AI extraction failed - please review and edit manually"
+            };
+
+            // Clean up uploaded file
+            fs.unlinkSync(filePath);
+            return res.json(result);
+          }
+        }
+        
+        const parsedData = JSON.parse(cleanedResponse);
         
         // Calculate total hours
         const totalLabourHours = parsedData.teamMembers.reduce((sum: number, member: any) => 
@@ -1839,7 +1886,32 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
         res.json(result);
       } catch (parseError) {
         console.error("Error parsing AI response:", parseError);
-        res.status(500).json({ error: "Failed to parse extracted data" });
+        console.log("Raw AI response:", extractedData.substring(0, 500));
+        
+        // Provide fallback response with manual entry guidance
+        const fallbackResult = {
+          projectId,
+          periodName: `Week of ${new Date().toISOString().split('T')[0]}`,
+          weekCommencing: new Date().toISOString().split('T')[0],
+          teamMembers: [
+            {
+              name: "AI extraction failed - please enter manually",
+              role: "Please enter role",
+              company: "Please enter company",
+              hours: 0,
+              isSubcontractor: false
+            }
+          ],
+          totalLabourHours: 0,
+          extractedFrom: fileName,
+          extractionConfidence: 0.2,
+          extractionNote: "AI extraction failed - please use manual entry"
+        };
+        
+        // Clean up uploaded file
+        fs.unlinkSync(filePath);
+        
+        res.json(fallbackResult);
       }
 
     } catch (error) {
