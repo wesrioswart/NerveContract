@@ -205,8 +205,8 @@ export class MemStorage implements IStorage {
     };
     this.users.set(user.id, user);
 
-    // Create a demo project
-    const project: Project = {
+    // Create demo projects
+    const project1: Project = {
       id: this.projectCurrentId++,
       name: "Westfield Development Project",
       contractReference: "NEC4-2020-1234",
@@ -214,11 +214,21 @@ export class MemStorage implements IStorage {
       startDate: new Date("2023-04-10"),
       endDate: new Date("2023-12-15")
     };
-    this.projects.set(project.id, project);
+    this.projects.set(project1.id, project1);
 
-    // Create demo compensation events
+    const project2: Project = {
+      id: this.projectCurrentId++,
+      name: "Northern Gateway Interchange",
+      contractReference: "NEC4-2025-002",
+      clientName: "National Infrastructure Agency",
+      startDate: new Date("2024-01-15"),
+      endDate: new Date("2025-08-30")
+    };
+    this.projects.set(project2.id, project2);
+
+    // Create demo compensation events for Westfield Development Project
     this.createCompensationEvent({
-      projectId: project.id,
+      projectId: project1.id,
       reference: "CE-042",
       title: "Additional groundworks following site survey",
       description: "Excavation revealed unexpected rock formation requiring additional equipment and time",
@@ -234,7 +244,7 @@ export class MemStorage implements IStorage {
     });
 
     this.createCompensationEvent({
-      projectId: project.id,
+      projectId: project1.id,
       reference: "CE-041",
       title: "Design change to east elevation glazing",
       description: "Client requested specification upgrade to high-performance glazing",
@@ -249,8 +259,41 @@ export class MemStorage implements IStorage {
       attachments: null
     });
 
+    // Create demo compensation events for Northern Gateway Interchange
     this.createCompensationEvent({
-      projectId: project.id,
+      projectId: project2.id,
+      reference: "CE-NGI-003",
+      title: "Additional environmental monitoring requirements",
+      description: "Environmental agency requested enhanced monitoring during construction near protected wetlands",
+      clauseReference: "60.1(7)",
+      estimatedValue: 28000,
+      actualValue: null,
+      status: "Assessment Due",
+      raisedBy: user.id,
+      raisedAt: new Date("2024-03-15"),
+      responseDeadline: new Date("2024-03-29"),
+      implementedDate: null,
+      attachments: null
+    });
+
+    this.createCompensationEvent({
+      projectId: project2.id,
+      reference: "CE-NGI-002",
+      title: "Traffic management system upgrade",
+      description: "Local authority required enhanced traffic control systems during peak construction",
+      clauseReference: "60.1(1)",
+      estimatedValue: 85000,
+      actualValue: 82500,
+      status: "Implemented",
+      raisedBy: user.id,
+      raisedAt: new Date("2024-02-20"),
+      responseDeadline: new Date("2024-03-05"),
+      implementedDate: new Date("2024-03-18"),
+      attachments: null
+    });
+
+    this.createCompensationEvent({
+      projectId: project1.id,
       reference: "CE-040",
       title: "Delay due to archaeological findings",
       description: "Historical artifacts discovered during excavation requiring archaeological survey",
@@ -265,9 +308,9 @@ export class MemStorage implements IStorage {
       attachments: null
     });
 
-    // Create demo early warnings
+    // Create demo early warnings for Westfield Development Project
     this.createEarlyWarning({
-      projectId: project.id,
+      projectId: project1.id,
       reference: "EW-018",
       description: "Potential delay in steel delivery from supplier",
       ownerId: user.id,
@@ -280,7 +323,7 @@ export class MemStorage implements IStorage {
     });
 
     this.createEarlyWarning({
-      projectId: project.id,
+      projectId: project1.id,
       reference: "EW-017",
       description: "Weather forecast indicates potential flooding risk",
       ownerId: user.id,
