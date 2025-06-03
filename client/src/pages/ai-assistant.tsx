@@ -392,11 +392,14 @@ function ClauseLibrary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [highlightedClause, setHighlightedClause] = useState<string | null>(null);
+  
+  const PROJECT_OPTIONS = getProjectOptions(currentProjectId);
+  
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     "Core Clauses": true,
-    "Main Option Clauses": PROJECT_OPTIONS.mainOption ? true : false, // Auto-expand if project has main option
-    "Secondary Option Clauses": PROJECT_OPTIONS.secondaryOptions.length > 0 ? true : false,
-    "Project Z-Clauses": PROJECT_OPTIONS.zClauses.length > 0 ? true : false
+    "Main Option Clauses": true,
+    "Secondary Option Clauses": true,
+    "Project Z-Clauses": true
   });
 
   const toggleSection = (section: string) => {
@@ -481,17 +484,31 @@ function ClauseLibrary() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {/* Project Selector */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Select Project</label>
+            <Select value={currentProjectId.toString()} onValueChange={(value) => setCurrentProjectId(Number(value))}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Select Project" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Westfield Development Project</SelectItem>
+                <SelectItem value="2">Northern Gateway Interchange</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Project Context Banner */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <div className="flex items-center gap-2 mb-2">
               <Building className="h-5 w-5 text-blue-600" />
-              <h4 className="font-semibold text-blue-900">Project Context: Westfield Development Project</h4>
+              <h4 className="font-semibold text-blue-900">Project Context: {PROJECT_OPTIONS.name}</h4>
             </div>
             <div className="flex flex-wrap gap-2 text-sm">
               <Badge variant="outline" className="bg-white">
-                Main Option: {PROJECT_OPTIONS.mainOption} (Target Contract)
+                Main Option: {PROJECT_OPTIONS.mainOption} ({PROJECT_OPTIONS.mainOption === 'C' ? 'Target Contract' : 'Cost Reimbursable Contract'})
               </Badge>
-              {PROJECT_OPTIONS.secondaryOptions.map(option => (
+              {PROJECT_OPTIONS.secondaryOptions.map((option: string) => (
                 <Badge key={option} variant="outline" className="bg-white">
                   Secondary: {option}
                 </Badge>
