@@ -242,6 +242,36 @@ const NEC4_CLAUSE_LIBRARY = {
           timeframe: "Within 8 weeks of becoming aware of the event",
           riskTrigger: "Exceeding the 8-week notification period leads to loss of entitlement",
           relatedClauses: ["61.3", "60.1", "61.1", "15.1"]
+        },
+        "62.2": {
+          text: "The Contractor submits quotations for a compensation event to the Project Manager. The Contractor's quotation includes proposals for changed Prices, any delay to the Completion Date and any delay to a Key Date and an estimate of the cost of preparing the quotation.",
+          explanation: "The Contractor must submit detailed quotations showing price changes, programme delays, and quotation preparation costs.",
+          actionableBy: "Contractor",
+          timeframe: "Within the quotation period stated in the contract or as agreed",
+          relatedClauses: ["62.1", "62.3", "63.1", "64.1"]
+        },
+        "62.3": {
+          text: "The Contractor submits quotations within three weeks of being instructed to do so by the Project Manager unless a longer period is agreed between the Project Manager and the Contractor.",
+          explanation: "Standard quotation submission period is 3 weeks unless otherwise agreed.",
+          actionableBy: "Contractor", 
+          timeframe: "Within 3 weeks of instruction (unless extended)",
+          riskTrigger: "Late submission may result in PM's own assessment under Clause 64.1",
+          relatedClauses: ["62.2", "64.1", "61.1", "63.1"]
+        },
+        "63.1": {
+          text: "The changes to the Prices are assessed as the effect of the compensation event upon forecast Defined Cost plus the applicable percentage for overhead and profit stated in the Contract Data.",
+          explanation: "Price changes are calculated based on forecast Defined Cost plus the fee percentage.",
+          actionableBy: "Project Manager/Contractor",
+          timeframe: "During quotation assessment",
+          relatedClauses: ["62.2", "11.2(22)", "Schedule of Cost Components"]
+        },
+        "64.1": {
+          text: "If the Contractor does not submit a quotation and details of his assessment within the time allowed, the Project Manager assesses the compensation event.",
+          explanation: "The PM makes their own assessment if the Contractor fails to submit a quotation on time.",
+          actionableBy: "Project Manager",
+          timeframe: "After quotation deadline has passed",
+          riskTrigger: "Contractor loses control over the assessment if quotation is late",
+          relatedClauses: ["62.3", "63.1", "65.1"]
         }
       }
     }
@@ -288,15 +318,125 @@ const NEC4_CLAUSE_LIBRARY = {
           actionableBy: "Project Manager",
           timeframe: "As costs are incurred",
           riskTrigger: "Poor cost records or inadequate substantiation can lead to payment disputes",
-          relatedClauses: ["E50.2", "E63.1", "11.2(23)"]
+          relatedClauses: ["11.2(22)", "11.2(7)", "52.1", "Schedule of Cost Components"]
         },
-        "E30.3": {
-          text: "The Contractor submits accounts to the Project Manager in the form stated in the Scope.",
-          explanation: "Regular submission of detailed cost accounts is mandatory under Option E contracts.",
+        "11.2(22)": {
+          text: "Defined Cost is the cost of the components in the Schedule of Cost Components whether work is subcontracted or not, less Disallowed Cost.",
+          explanation: "Under Option E, all costs are reimbursed based on the Schedule of Cost Components, minus any costs that are specifically disallowed.",
+          actionableBy: "Both parties",
+          timeframe: "Ongoing cost assessment",
+          relatedClauses: ["11.2(7)", "E63.1", "Schedule of Cost Components"]
+        },
+        "11.2(7)": {
+          text: "Disallowed Cost is cost which is not justified by the records or is not reasonable or is cost for a matter which was at the Contractor's risk.",
+          explanation: "Costs that cannot be reimbursed include those without proper records, unreasonable costs, or costs for risks the Contractor was supposed to bear.",
+          actionableBy: "Project Manager",
+          timeframe: "During cost assessment",
+          riskTrigger: "Ensure all costs are properly recorded and justified",
+          relatedClauses: ["11.2(22)", "52.1", "Schedule of Cost Components"]
+        },
+        "E63.1": {
+          text: "Changes to the Prices are assessed as the effect of the compensation event upon forecast Defined Cost plus the Fee percentage stated in the Contract Data.",
+          explanation: "For Option E contracts, compensation events are assessed based on the forecast impact on Defined Cost plus the agreed fee percentage.",
+          actionableBy: "Project Manager/Contractor",
+          timeframe: "During CE assessment",
+          relatedClauses: ["11.2(22)", "62.2", "63.1", "Schedule of Cost Components"]
+        }
+      }
+    }
+  },
+  "Schedule of Cost Components": {
+    "People": {
+      clauses: {
+        "SCC1.1": {
+          text: "The rate for people in the working areas includes wages and salaries, benefits, overheads and profit.",
+          explanation: "All costs related to personnel working directly on the project, including all employment costs and overheads.",
           actionableBy: "Contractor",
-          timeframe: "As stated in the Scope (typically monthly)",
-          riskTrigger: "Late or inadequate account submissions can delay payments",
-          relatedClauses: ["E50.2", "50.1"]
+          timeframe: "As incurred",
+          relatedClauses: ["11.2(22)", "E63.1"]
+        },
+        "SCC1.2": {
+          text: "The rate for people outside the working areas includes wages and salaries, benefits, overheads and profit of people who are not in the working areas but who are working on the contract.",
+          explanation: "Costs for site management, design teams, and other personnel not directly in construction areas but working on the contract.",
+          actionableBy: "Contractor", 
+          timeframe: "As incurred",
+          relatedClauses: ["11.2(22)", "E63.1"]
+        }
+      }
+    },
+    "Equipment": {
+      clauses: {
+        "SCC2.1": {
+          text: "The rate for Equipment includes the costs of purchase or hire, transporting to and from the working areas, erection, dismantling, fuel, consumables, repairs and maintenance.",
+          explanation: "All equipment costs including mobilization, operation, and maintenance. Critical for dewatering pumps and specialist equipment.",
+          actionableBy: "Contractor",
+          timeframe: "As incurred",
+          riskTrigger: "Ensure all equipment costs are properly substantiated with hire receipts and fuel records",
+          relatedClauses: ["11.2(22)", "E63.1", "11.2(7)"]
+        },
+        "SCC2.2": {
+          text: "The rate for Equipment excludes the cost of depreciation and interest except for Equipment purchased for work outside the working areas which the Contractor would not have purchased but for the work.",
+          explanation: "Standard equipment depreciation is excluded, but special purchases for the specific contract work can be included.",
+          actionableBy: "Contractor",
+          timeframe: "During cost assessment",
+          relatedClauses: ["11.2(22)", "SCC2.1"]
+        }
+      }
+    },
+    "Plant and Materials": {
+      clauses: {
+        "SCC3.1": {
+          text: "The cost of Plant and Materials includes delivery to and removal from the working areas and providing and maintaining samples.",
+          explanation: "All costs for permanent materials and plant including delivery, handling, and testing.",
+          actionableBy: "Contractor",
+          timeframe: "As incurred",
+          relatedClauses: ["11.2(22)", "E63.1"]
+        }
+      }
+    },
+    "Charges": {
+      clauses: {
+        "SCC4.1": {
+          text: "The cost of charges includes charges for cancellation, buying and selling materials, specialist services, payments to public bodies and insurances.",
+          explanation: "Third-party charges and fees that cannot be avoided as part of the work execution.",
+          actionableBy: "Contractor",
+          timeframe: "As incurred", 
+          relatedClauses: ["11.2(22)", "E63.1"]
+        }
+      }
+    },
+    "Manufacture and fabrication": {
+      clauses: {
+        "SCC5.1": {
+          text: "The cost of manufacture and fabrication is the cost of Plant and Materials, labour and Equipment.",
+          explanation: "Costs for off-site manufacture and fabrication work using the same cost components.",
+          actionableBy: "Contractor",
+          timeframe: "As incurred",
+          relatedClauses: ["11.2(22)", "SCC1.1", "SCC2.1", "SCC3.1"]
+        }
+      }
+    }
+  },
+  "Project Z-Clauses": {
+    "Northern Gateway Specific": {
+      clauses: {
+        "Z90.1": {
+          text: "Access to the working areas is restricted to the hours stated in the Contract Data. The Contractor gives notice to the Project Manager if he requires access outside these hours.",
+          explanation: "Special access restrictions for Northern Gateway due to operational railway constraints.",
+          actionableBy: "Contractor",
+          timeframe: "24 hours notice required for out-of-hours access",
+          isProjectSpecific: true,
+          riskTrigger: "Failure to coordinate access may result in delays and additional costs",
+          relatedClauses: ["60.1", "61.3", "15.1"]
+        },
+        "Z90.2": {
+          text: "Ground investigation data provided is for guidance only. The Contractor accepts the risk of unforeseen ground conditions below 2m depth except for contaminated ground.",
+          explanation: "Modified risk allocation for ground conditions on Northern Gateway project with specific depth limitations.",
+          actionableBy: "Both parties",
+          timeframe: "Throughout construction",
+          isProjectSpecific: true,
+          riskTrigger: "Ground conditions above 2m depth remain Contractor's risk - ensure thorough investigation",
+          relatedClauses: ["60.1(12)", "15.1", "61.3"]
         }
       }
     }
