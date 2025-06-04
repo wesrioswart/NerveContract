@@ -49,6 +49,23 @@ const NEC4_KNOWLEDGE_BASE: KnowledgeBase = {
     timeframe: "Every two weeks throughout the project",
     riskTrigger: "Failure to submit fortnightly reports may impact payment certification and contract compliance"
   },
+  // Programme revision clauses for Option C
+  "32.1": {
+    text: "The Contractor submits a revised programme to the Project Manager for acceptance showing the actual progress achieved on each operation and its effect upon the timing of the remaining work.",
+    explanation: "For Option C contracts, revised programmes must show actual progress and effects on remaining work. Critical for compensation event impacts and programme recovery.",
+    relatedClauses: ["31.2", "62.2", "63.5"],
+    actionableBy: "Contractor",
+    timeframe: "When requested by Project Manager or when compensation events affect programme",
+    riskTrigger: "Failure to submit compliant revised programme can lead to Project Manager making own assessment of time impacts"
+  },
+  "62.2": {
+    text: "The quotation comprises proposed changes to the Prices and any delay to the Completion Date and Key Dates assessed by the Contractor. The Contractor submits details of his assessment with each quotation.",
+    explanation: "Compensation event quotations must include time impact assessment. For programme-affecting events, this requires revised programme submission.",
+    relatedClauses: ["32.1", "63.1", "63.5"],
+    actionableBy: "Contractor", 
+    timeframe: "With compensation event quotation (3 weeks from instruction)",
+    riskTrigger: "Inadequate time impact assessment can lead to quotation rejection and Project Manager assessment"
+  },
   // Compensation Event Clauses
   "61.3": {
     text: "The Contractor notifies the Project Manager of an event which has happened or which is expected to happen as a compensation event if the Contractor believes that the event is a compensation event and the Project Manager has not notified the event to the Contractor.",
@@ -195,7 +212,16 @@ async function askContractAssistant(question: string): Promise<string> {
       "project specific": ["Z1.1"],
       "two weeks": ["Z1.1"],
       "fortnightly": ["Z1.1"],
-      "weekly": ["Z1.1"]
+      "weekly": ["Z1.1"],
+      "programme revision": ["32.1", "62.2", "31.2"],
+      "revised programme": ["32.1", "62.2", "31.2"],
+      "programme impact": ["32.1", "62.2", "63.5"],
+      "option c": ["32.1", "62.2", "63.5"],
+      "westfield": ["32.1", "62.2"],
+      "slippage": ["32.1", "15.1", "62.2"],
+      "critical path": ["32.1", "31.2"],
+      "archaeological": ["60.1", "15.1", "61.3"],
+      "ce-040": ["60.1", "61.3", "62.2"]
     };
     
     // Search for relevant clauses in our knowledge base

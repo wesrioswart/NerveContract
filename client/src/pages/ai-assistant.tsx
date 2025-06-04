@@ -522,6 +522,40 @@ const NEC4_CLAUSE_LIBRARY = {
       }
     }
   },
+  "Programme Management": {
+    "Programme Revision Requirements": {
+      clauses: {
+        "32.1": {
+          text: "The Contractor submits a revised programme to the Project Manager for acceptance showing the actual progress achieved on each operation and its effect upon the timing of the remaining work.",
+          explanation: "For Option C contracts, revised programmes must show actual progress and effects on remaining work. Critical for compensation event impacts and programme recovery.",
+          actionableBy: "Contractor",
+          timeframe: "When requested by Project Manager or when compensation events affect programme",
+          riskTrigger: "Failure to submit compliant revised programme can lead to Project Manager making own assessment of time impacts",
+          relatedClauses: ["31.2", "62.2", "63.5"]
+        },
+        "31.2": {
+          text: "The Contractor shows on each programme which he submits for acceptance the planned Completion Date for the whole of the works and the planned Completion Date for each Section of the works.",
+          explanation: "Programmes must clearly show completion dates for tracking and assessment. Essential for demonstrating CE time impacts.",
+          actionableBy: "Contractor", 
+          timeframe: "With each programme submission",
+          riskTrigger: "Missing completion dates can lead to programme rejection",
+          relatedClauses: ["32.1", "62.2", "30.1"]
+        }
+      }
+    },
+    "Compensation Event Programme Impact": {
+      clauses: {
+        "62.2": {
+          text: "The quotation comprises proposed changes to the Prices and any delay to the Completion Date and Key Dates assessed by the Contractor. The Contractor submits details of his assessment with each quotation.",
+          explanation: "Compensation event quotations must include time impact assessment. For programme-affecting events like CE-040 archaeological findings, this requires revised programme submission showing critical path impacts.",
+          actionableBy: "Contractor",
+          timeframe: "With compensation event quotation (3 weeks from instruction)",
+          riskTrigger: "Inadequate time impact assessment can lead to quotation rejection and Project Manager assessment",
+          relatedClauses: ["32.1", "63.1", "63.5"]
+        }
+      }
+    }
+  },
   "Secondary Option Clauses": {
     "X1: Price adjustment for inflation": {
       clauses: {

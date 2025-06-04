@@ -1,0 +1,26 @@
+cenario 5: Programme Slippage and CE Impact (Westfield Development Project)
+
+Project: Westfield Development Project
+Situation: The Operational Agent (working in the background) has detected slippage on a critical path activity in the latest MS Project programme update for the Westfield project. This slippage is due to a delay in the Client providing access to a specific work area, which was a Compensation Event (CE-040: "Delay due to archaeological findings" - as seen in your very first dashboard mockup). The CE has been accepted, but its full impact on the programme needs to be assessed and a revised programme submitted.
+User (Jane Cooper) Actions & Platform Interaction:
+Jane logs in and views the Dashboard for "Westfield Development Project."
+The dashboard might have a notification or an alert from the "Operational Agent" (you can design how this alert appears – perhaps a notification icon or a highlighted metric). Let's assume there's an alert: "Programme Alert: Critical path slippage detected on Activity X due to CE-040 impact. Review required."
+Jane navigates to the Programme section (from the main left-hand menu). (We haven't seen mockups for this, so you'll need to imagine a basic programme view, perhaps showing a list of key activities and their status).
+The Programme view highlights the affected activity and indicates the slippage.
+Jane then goes to AI Assistant -> Chat Interface.
+Jane types: "CE-040 (archaeological findings) has caused slippage on Westfield. What are the NEC4 requirements for revising the programme and incorporating this CE's impact under Option C?"
+She then navigates to AI Assistant -> Clause Library. The "Project Context" banner shows "Westfield Development Project" and Option C.
+She searches for clauses related to "revised programme" or "Clause 32."
+Expected AI/Platform Response (Simulated in Replit):
+Dashboard:
+Displays the alert as described above.
+The "Compensation Events" summary might show CE-040 with a status like "Accepted - Programme Impact Review."
+Programme Section (Simulated View):
+Visually indicates the slippage on the relevant activity.
+Chat Interface:
+AI Responds: "For Westfield (Option C), when a Compensation Event impacts planned Completion, you must submit a revised programme to the Project Manager showing the effects of the CE (Clause 62.2, 32.1). This revised programme must be submitted with your CE quotation or shortly after implementation. It should realistically show actual progress, the effects of the CE, and how you plan to deal with any delays. The Project Manager must accept or not accept this revised programme within two weeks (Clause 31.3)."
+Clause Library (when viewing Clause 32.1 - Revising Programmes):
+Displays the full text.
+Might have a "Practical Meaning:" "You need to regularly update the programme to show actual progress and the impact of any changes like CEs. This revised programme needs to be submitted for acceptance."
+Might have a "Risk Alert:" "Failure to submit a compliant revised programme can lead to the Project Manager making their own assessment of CEs or withholding acceptance, which can cause issues."
+Shows "Related Clauses" (e.g., 31.2, 31.3, 62.2, 63.5).
