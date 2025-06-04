@@ -614,14 +614,30 @@ async function analyzeContractDocument(documentText: string): Promise<{
     } else if (error.name === 'TimeoutError') {
       console.error("OpenAI API request timed out");
       return {
-        issues: ["The AI service is taking too long to respond"],
-        recommendations: ["Please try again later with a simpler document"]
+        riskAreas: [{
+          clause: "Timeout Error",
+          issue: "The AI service is taking too long to respond",
+          severity: 'Moderate',
+          recommendation: "Please try again later with a simpler document"
+        }],
+        compliantClauses: [],
+        missingClauses: [],
+        overallRisk: 'Medium',
+        summary: "Request timeout error"
       };
     }
     
     return {
-      issues: ["Error analyzing document: " + (error.message || "Unknown error")],
-      recommendations: ["Please try again later or contact support"]
+      riskAreas: [{
+        clause: "System Error",
+        issue: "Error analyzing document: " + (error.message || "Unknown error"),
+        severity: 'Critical',
+        recommendation: "Please try again later or contact support"
+      }],
+      compliantClauses: [],
+      missingClauses: [],
+      overallRisk: 'High',
+      summary: "System error during analysis"
     };
   }
 }

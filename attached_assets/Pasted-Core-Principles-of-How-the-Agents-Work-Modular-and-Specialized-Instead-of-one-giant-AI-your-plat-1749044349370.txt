@@ -1,0 +1,68 @@
+Core Principles of How the Agents Work:
+
+Modular and Specialized: Instead of one giant AI, your platform uses a team of "specialist AI agents." Each agent is designed and trained for specific NEC4 tasks or domains. This is reflected in your initial breakdown:
+
+Email Intake Agent
+Contract Control Agent
+Operational Agent
+Commercial Agent
+Procurement Agent
+Data-Driven: The agents operate by processing various forms of project data:
+
+User Inputs: Information manually entered by users (e.g., creating a new CE via "Quick Create," pasting text into "Document Analysis," typing a query into the "Chat Interface").
+Document Parsing: The Email Intake Agent is the primary gateway for unstructured data like emails and attached PDFs. It uses Natural Language Processing (NLP) to understand, classify, and extract key information from these documents.   
+Structured Data: Information from forms, project databases (e.g., lists of CEs, EWs, programme details, financial data).
+External Integrations: Data from systems like MS Project or P6 (primarily for the Operational Agent).
+Contractual Knowledge Base: A digitized understanding of NEC4 clauses, including the project-specific context (Main Options, Secondary Options, Z-Clauses) shown in your Clause Library mockups.
+Processing and "Intelligence":
+
+Once data is ingested or received, the relevant agent processes it. For example:   
+The Email Intake Agent classifies an email as a potential Early Warning and routes it to the Contract Control Agent.
+The Contract Control Agent then:
+Matches the details against NEC4 Clause 15 criteria.
+Updates the "Early Warnings" count on the Dashboard (your first mockup).
+Logs it in the "Active Early Warnings" list.
+Tracks deadlines for responses or risk reduction meetings.
+Its intelligence also powers parts of the AI Contract Assistant's Document Analysis (to flag contractual risks in pasted text) and informs the "Practical Meaning" and "Risk Alerts" in the Clause Library.
+The Operational Agent analyzes programme data from MS Project/P6 to:
+Track slippage against the Accepted Programme.
+Identify critical path impacts.
+Recommend programme updates (these would then be reviewed by a human).
+The Commercial Agent monitors:
+Equipment hire durations (to send off-hire alerts).
+Payment certificate data.
+Spend drift against budgets/forecasts.
+The Procurement Agent analyzes supplier data to:
+Score performance.
+Parse requisitions.
+Detect cost anomalies.
+Output and User Interaction (Visible in Your Mockups):
+
+Dashboard: The summary metrics (CEs, EWs, Non-Conformances, Next Payment) and the lists of "Recent Compensation Events" and "Active Early Warnings" are direct outputs of agent processing.
+AI Contract Assistant: This is the primary user-facing hub for interacting with the agents' collective intelligence:
+Chat Interface: You ask a question (e.g., about a clause, CE status). An AI (likely an orchestrating layer or the relevant specialized agent) processes your natural language query, retrieves information from the project data or its knowledge base, and formulates a response.   
+Document Analysis: You paste text. An agent (likely leveraging the Contract Control Agent's logic) analyzes it against NEC4 principles and project-specific rules to identify issues and make recommendations.
+Clause Library: While it's a library, the "Practical Meaning," "Risk Alerts," "Related Clauses," and the project-specific context banner (showing active options and Z-clauses) are all layers of intelligence provided or curated by the agents, making the static clauses dynamic and actionable. The filtering ("Time-Critical," "Contractor Actions") is also a form of intelligent presentation.
+Alerts and Notifications (Implied): Though not explicitly detailed in every mockup, agents would generate alerts for things like missed CE/EW deadlines, equipment needing off-hire, programme slippage, or critical risks identified. These might appear as notifications within the platform (like the bell icon in your mockups) or via email.
+Interoperability and Collaboration Between Agents:
+
+Your initial description mentioned "All agents are collaborative, interoperable." This is crucial.
+Example Flow:
+Email Intake Agent receives an email about a site instruction that changes the scope.
+It classifies this and routes it to the Contract Control Agent.
+The Contract Control Agent identifies it as a potential Compensation Event (CE), logs it, and flags it on the Dashboard.
+If the CE has a time impact, the Contract Control Agent might communicate this to the Operational Agent to assess the effect on the programme.
+If it has a cost impact, the Commercial Agent would be involved in tracking the quotation and eventual cost.
+Human-in-the-Loop (HITL) Oversight:
+
+This is a fundamental principle you stated: "all with human-in-the-loop oversight" and "always include a human-approval loop before changes are made."
+The agents assist, analyze, flag, recommend, and automate tracking. They don't (or shouldn't, based on your description) make final contractual decisions or send out formal notices without human approval.
+The UI facilitates this by presenting information clearly (dashboards, AI Assistant outputs) so that Jane Cooper (or other users) can review the AI's findings and then take the appropriate action (e.g., formally issuing an EW created via "Quick Create" after the AI flagged a need for one).
+In summary, the agents work by:
+
+Ingesting data from various sources (user input, documents, system integrations).   
+Applying specialized AI logic (NLP, rule-based systems, machine learning for pattern detection/prediction) within their specific domain (contract control, operations, commercial, procurement).
+Collaborating and sharing information with other agents to provide a holistic view.
+Presenting insights, analyses, and alerts to the user through the various UI components you've designed (Dashboard, AI Assistant, etc.).
+Operating under human oversight, where users validate AI suggestions and make the final decisions.   
+The "AI Contract Assistant" section you've designed is the most direct window into how users interact with the outputs and capabilities of these underlying specialist agents. It's where the "intelligence" is surfaced for user consumption and action.
