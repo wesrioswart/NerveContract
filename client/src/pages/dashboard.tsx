@@ -5,6 +5,7 @@ import EWTable from "@/components/early-warnings/ew-table";
 import ChatInterface from "@/components/ai-assistant/chat-interface";
 import Timeline from "@/components/dashboard/timeline";
 import NewProjectModal from "@/components/projects/new-project-modal";
+import AgentAlerts from "@/components/dashboard/agent-alerts";
 import { CompensationEvent, EarlyWarning, NonConformanceReport, PaymentCertificate, ProgrammeMilestone, Project } from "@shared/schema";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,13 @@ export default function Dashboard() {
   const { data: programmeMilestones = [], isLoading: milestoneLoading } = useQuery<ProgrammeMilestone[]>({
     queryKey: [`/api/projects/${projectId}/programme-milestones`],
     enabled: projectId > 0,
+  });
+
+  // Fetch agent alerts
+  const { data: agentAlerts = [], isLoading: alertsLoading } = useQuery({
+    queryKey: [`/api/projects/${projectId}/agent-alerts`],
+    enabled: projectId > 0,
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // Calculate stats for summary cards
@@ -88,7 +96,7 @@ export default function Dashboard() {
     Math.ceil((new Date(nextPayment.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
   // Loading state
-  const isLoading = projectsLoading || ceLoading || ewLoading || ncrLoading || pcLoading || milestoneLoading;
+  const isLoading = projectsLoading || ceLoading || ewLoading || ncrLoading || pcLoading || milestoneLoading || alertsLoading;
 
   // Loading view
   const loadingView = (

@@ -1864,6 +1864,80 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   });
 
   // Z-Clauses endpoints
+  // Agent system routes
+  app.get("/api/projects/:projectId/agent-alerts", async (req: Request, res: Response) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      
+      // Import the agent coordinator
+      const { agentCoordinator } = await import('./agents/agent-coordinator');
+      const alerts = agentCoordinator.getActiveAlerts(projectId);
+      
+      res.json(alerts);
+    } catch (error) {
+      console.error('Error getting agent alerts:', error);
+      res.status(500).json({ message: 'Failed to retrieve agent alerts' });
+    }
+  });
+
+  app.post("/api/agent/trigger-demo", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { scenarioType, projectId } = req.body;
+      
+      // Import the agent coordinator
+      const { agentCoordinator } = await import('./agents/agent-coordinator');
+      
+      // Trigger the appropriate scenario
+      switch (scenarioType) {
+        case 'archaeological-delay':
+          await agentCoordinator.processProgrammeUpdate(projectId, {
+            projectId,
+            activities: [{
+              id: 'foundation-phase-2',
+              name: 'Foundation Works - Phase 2',
+              startDate: new Date('2024-12-01'),
+              endDate: new Date('2024-12-15'),
+              duration: 14,
+              progress: 60,
+              isCritical: true,
+              predecessors: [],
+              successors: [],
+              resources: ['Excavator', 'Foundation Team'],
+              status: 'delayed'
+            }],
+            milestones: [],
+            criticalPath: ['foundation-phase-2'],
+            plannedCompletion: new Date('2024-12-20'),
+            forecastCompletion: new Date('2025-01-10'),
+            overallProgress: 65
+          });
+          break;
+          
+        case 'equipment-cost-validation':
+          await agentCoordinator.processEquipmentHireUpdate(projectId, {
+            id: 3,
+            projectId,
+            equipmentName: 'Concrete Pump - 42m',
+            supplierName: 'Pumping Solutions Ltd',
+            hireReference: 'PSL-CP-0089',
+            startDate: new Date('2024-12-05'),
+            endDate: new Date('2024-12-06'),
+            dailyRate: 850.00,
+            totalCost: 1700.00,
+            status: 'active',
+            sccCompliant: false,
+            workingAreasOnly: false
+          });
+          break;
+      }
+      
+      res.json({ success: true, message: `${scenarioType} scenario triggered successfully` });
+    } catch (error) {
+      console.error('Error triggering agent demo:', error);
+      res.status(500).json({ message: 'Failed to trigger agent demo' });
+    }
+  });
+
   app.get("/api/projects/:projectId/z-clauses", async (req: Request, res: Response) => {
     try {
       const projectId = parseInt(req.params.projectId);
