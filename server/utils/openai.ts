@@ -148,13 +148,6 @@ const NEC4_KNOWLEDGE_BASE: KnowledgeBase = {
     actionableBy: "Contractor",
     timeframe: "Within 8 weeks of receiving request for programme"
   },
-  "32.1": {
-    text: "The Contractor submits a revised programme to the Project Manager for acceptance within the period for reply after the Project Manager has instructed the Contractor to submit a revised programme or the Contractor has notified the Project Manager of a compensation event.",
-    explanation: "Requires the Contractor to submit revised programmes when instructed or after compensation events.",
-    relatedClauses: ["31.2", "61.1", "63.5", "36"],
-    actionableBy: "Contractor",
-    timeframe: "Within the period for reply after instruction or CE notification"
-  },
   
   // Instructions Clauses
   "14.3": {
@@ -255,7 +248,6 @@ async function askContractAssistant(question: string): Promise<string> {
       "defined cost": ["11.2(23)", "52.1"],
       "scc": ["SCC-Item1", "SCC-Item2", "SCC-Item3", "SCC-Item4", "SCC-Item5"],
       "commercial agent": ["52.1", "11.2(23)", "SCC-Item2"],
-      "northern gateway": ["Z1.1", "13.4", "SCC-Item2"],
       "option e": ["11.2(23)", "52.1", "SCC-Item2"]
     };
     
@@ -550,22 +542,41 @@ async function analyzeContractDocument(documentText: string): Promise<{
     if (!response.choices || response.choices.length === 0 || !response.choices[0].message.content) {
       console.error("Empty response from OpenAI");
       return {
-        issues: ["Error: Received empty response from AI service"],
-        recommendations: ["Please try again later"]
+        riskAreas: [{
+          clause: "System Error",
+          issue: "Error: Received empty response from AI service",
+          severity: 'Critical',
+          recommendation: "Please try again later"
+        }],
+        compliantClauses: [],
+        missingClauses: [],
+        overallRisk: 'High',
+        summary: "Empty response received from AI service"
       };
     }
     
     try {
       const parsedResponse = JSON.parse(response.choices[0].message.content);
       return {
-        issues: parsedResponse.issues || [],
-        recommendations: parsedResponse.recommendations || []
+        riskAreas: parsedResponse.riskAreas || [],
+        compliantClauses: parsedResponse.compliantClauses || [],
+        missingClauses: parsedResponse.missingClauses || [],
+        overallRisk: parsedResponse.overallRisk || 'Medium',
+        summary: parsedResponse.summary || 'Analysis completed successfully'
       };
     } catch (parseError) {
       console.error("Error parsing JSON response:", parseError);
       return {
-        issues: ["Error parsing AI response"],
-        recommendations: ["The AI service returned an invalid response format. Please try again later."]
+        riskAreas: [{
+          clause: "Parse Error",
+          issue: "Error parsing AI response",
+          severity: 'Critical',
+          recommendation: "The AI service returned an invalid response format. Please try again later."
+        }],
+        compliantClauses: [],
+        missingClauses: [],
+        overallRisk: 'High',
+        summary: "Error parsing analysis response"
       };
     }
   } catch (error: any) {
@@ -575,14 +586,30 @@ async function analyzeContractDocument(documentText: string): Promise<{
     if (error.name === 'AuthenticationError') {
       console.error("OpenAI API authentication error - check your API key");
       return {
-        issues: ["AI features are unavailable due to an authentication issue"],
-        recommendations: ["Please contact the administrator"]
+        riskAreas: [{
+          clause: "Authentication Error",
+          issue: "AI features are unavailable due to an authentication issue",
+          severity: 'Critical',
+          recommendation: "Please contact the administrator"
+        }],
+        compliantClauses: [],
+        missingClauses: [],
+        overallRisk: 'High',
+        summary: "Authentication error preventing analysis"
       };
     } else if (error.name === 'RateLimitError') {
       console.error("OpenAI API rate limit exceeded");
       return {
-        issues: ["The AI service is currently experiencing high demand"],
-        recommendations: ["Please try again in a few minutes"]
+        riskAreas: [{
+          clause: "Rate Limit Error",
+          issue: "The AI service is currently experiencing high demand",
+          severity: 'Moderate',
+          recommendation: "Please try again in a few minutes"
+        }],
+        compliantClauses: [],
+        missingClauses: [],
+        overallRisk: 'Medium',
+        summary: "Rate limit exceeded"
       };
     } else if (error.name === 'TimeoutError') {
       console.error("OpenAI API request timed out");
