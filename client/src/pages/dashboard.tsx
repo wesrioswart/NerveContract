@@ -183,6 +183,9 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Agent Alerts Section */}
+      <AgentAlerts alerts={agentAlerts} projectId={projectId} />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-5 rounded-lg shadow">
           <h2 className="text-lg font-bold mb-4">Recent Compensation Events</h2>
