@@ -46,7 +46,7 @@ export default function Dashboard() {
   });
 
   // Fetch agent alerts
-  const { data: agentAlerts = [], isLoading: alertsLoading } = useQuery({
+  const { data: agentAlerts = [], isLoading: alertsLoading } = useQuery<any[]>({
     queryKey: [`/api/projects/${projectId}/agent-alerts`],
     enabled: projectId > 0,
     refetchInterval: 30000, // Refresh every 30 seconds
