@@ -32,6 +32,23 @@ type KnowledgeBase = {
 };
 
 const NEC4_KNOWLEDGE_BASE: KnowledgeBase = {
+  // Standard Progress Reporting Clause
+  "13.4": {
+    text: "The Contractor submits a report on progress and performance to the Project Manager at the intervals stated in the Contract Data.",
+    explanation: "Standard NEC4 progress reporting requirement, typically monthly unless amended by contract-specific provisions.",
+    relatedClauses: ["13.1", "13.2", "50.1"],
+    actionableBy: "Contractor",
+    timeframe: "At intervals stated in Contract Data (usually monthly)"
+  },
+  // Northern Gateway Z-Clause for reporting
+  "Z1.1": {
+    text: "Notwithstanding Clause 13.4, the Contractor shall submit a detailed progress report to the Project Manager every two weeks, in the format specified in the Scope.",
+    explanation: "Project-specific amendment for Northern Gateway Interchange that overrides standard monthly reporting with fortnightly requirements.",
+    relatedClauses: ["13.4", "50.1", "51.1"],
+    actionableBy: "Contractor",
+    timeframe: "Every two weeks throughout the project",
+    riskTrigger: "Failure to submit fortnightly reports may impact payment certification and contract compliance"
+  },
   // Compensation Event Clauses
   "61.3": {
     text: "The Contractor notifies the Project Manager of an event which has happened or which is expected to happen as a compensation event if the Contractor believes that the event is a compensation event and the Project Manager has not notified the event to the Contractor.",
@@ -137,15 +154,6 @@ const NEC4_KNOWLEDGE_BASE: KnowledgeBase = {
     relatedClauses: ["13.1", "13.7"],
     actionableBy: "All parties",
     timeframe: "For all communications throughout the project"
-  },
-  
-  // Communication and Collaboration
-  "13.4": {
-    text: "The Project Manager, Supervisor and Contractor acknowledge that their collaboration is important to the success of the project.",
-    explanation: "This clause emphasizes the importance of collaboration between all parties for project success.",
-    relatedClauses: ["15.1", "15.2", "10.1"],
-    actionableBy: "All parties",
-    timeframe: "Throughout the project"
   }
 };
 
@@ -177,7 +185,17 @@ async function askContractAssistant(question: string): Promise<string> {
       "completion": ["30.1", "31.2", "35.1", "36"],
       "risk": ["15.1", "80.1", "81.1", "82.1", "83.1"],
       "document": ["13.1", "13.2", "13.4"],
-      "certificate": ["35.2", "50.1", "51.1"]
+      "certificate": ["35.2", "50.1", "51.1"],
+      "report": ["13.4", "Z1.1"],
+      "reporting": ["13.4", "Z1.1"],
+      "progress report": ["13.4", "Z1.1"],
+      "northern gateway": ["Z1.1", "13.4"],
+      "z clause": ["Z1.1"],
+      "z-clause": ["Z1.1"],
+      "project specific": ["Z1.1"],
+      "two weeks": ["Z1.1"],
+      "fortnightly": ["Z1.1"],
+      "weekly": ["Z1.1"]
     };
     
     // Search for relevant clauses in our knowledge base

@@ -437,6 +437,15 @@ const NEC4_CLAUSE_LIBRARY = {
           isProjectSpecific: true,
           riskTrigger: "Ground conditions above 2m depth remain Contractor's risk - ensure thorough investigation",
           relatedClauses: ["60.1(12)", "15.1", "61.3"]
+        },
+        "Z1.1": {
+          text: "Notwithstanding Clause 13.4, the Contractor shall submit a detailed progress report to the Project Manager every two weeks, in the format specified in the Scope.",
+          explanation: "Standard NEC4 reporting under Clause 13.4 is amended. For this project, you must submit detailed progress reports every two weeks instead of the standard monthly reporting.",
+          actionableBy: "Contractor",
+          timeframe: "Every two weeks throughout the project",
+          isProjectSpecific: true,
+          riskTrigger: "Ensure reports are submitted fortnightly to avoid potential non-compliance or issues with payment certification if linked to reporting",
+          relatedClauses: ["13.4", "50.1", "51.1"]
         }
       }
     }
@@ -477,7 +486,7 @@ const NEC4_CLAUSE_LIBRARY = {
       }
     }
   },
-  "Project Z-Clauses": {
+  "Standard Z-Clauses": {
     "Custom Contract Amendments": {
       clauses: {
         "Z1.1": {
