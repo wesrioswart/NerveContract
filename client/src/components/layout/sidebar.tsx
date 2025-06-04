@@ -135,6 +135,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
 
   // Financial items
   const financialNavItems = [
+    { path: "/financial", label: "Financial", icon: DollarSign },
     { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
   ];
   

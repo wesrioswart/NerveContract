@@ -66,6 +66,32 @@ const NEC4_KNOWLEDGE_BASE: KnowledgeBase = {
     timeframe: "With compensation event quotation (3 weeks from instruction)",
     riskTrigger: "Inadequate time impact assessment can lead to quotation rejection and Project Manager assessment"
   },
+  // Option E Defined Cost and Schedule of Cost Components
+  "11.2(23)": {
+    text: "Defined Cost is the cost of the components in the Schedule of Cost Components whether work is subcontracted or not, but excluding the cost of preparing quotations for compensation events.",
+    explanation: "For Option E contracts, Defined Cost includes all costs listed in the Schedule of Cost Components. This covers people, equipment, plant and materials, charges, manufacture and fabrication.",
+    relatedClauses: ["52.1", "SCC-Item2"],
+    actionableBy: "Contractor",
+    timeframe: "Ongoing cost recording throughout project",
+    riskTrigger: "Costs not included in SCC or improperly recorded become Disallowed Cost"
+  },
+  "52.1": {
+    text: "The amount due in each assessment period is the Price for Work Done to Date plus other amounts to be paid to the Contractor minus amounts to be paid by or retained from the Contractor.",
+    explanation: "For Option E, Price for Work Done to Date is the total Defined Cost which the Contractor has paid plus the Fee. Critical for equipment hire cost validation.",
+    relatedClauses: ["11.2(23)", "SCC-Item2"],
+    actionableBy: "Project Manager",
+    timeframe: "Each assessment period (usually monthly)",
+    riskTrigger: "Incorrect Defined Cost assessment affects payment amounts"
+  },
+  // Schedule of Cost Components - Item 2: Equipment
+  "SCC-Item2": {
+    text: "Schedule of Cost Components - Item 2: Equipment. For equipment hired from others, the amounts paid to the hiring company as stated in the hire contract for the period of hire within the Working Areas.",
+    explanation: "Equipment hire costs are Defined Cost only when: (1) Paid to external hiring company as per hire contract, (2) Used within Working Areas, (3) For Providing the Works. Requires hire agreements, invoices, and proof of payment.",
+    relatedClauses: ["11.2(23)", "52.1"],
+    actionableBy: "Contractor",
+    timeframe: "For duration of equipment hire",
+    riskTrigger: "Equipment used outside Working Areas or without proper documentation becomes Disallowed Cost"
+  },
   // Compensation Event Clauses
   "61.3": {
     text: "The Contractor notifies the Project Manager of an event which has happened or which is expected to happen as a compensation event if the Contractor believes that the event is a compensation event and the Project Manager has not notified the event to the Contractor.",
@@ -221,7 +247,16 @@ async function askContractAssistant(question: string): Promise<string> {
       "slippage": ["32.1", "15.1", "62.2"],
       "critical path": ["32.1", "31.2"],
       "archaeological": ["60.1", "15.1", "61.3"],
-      "ce-040": ["60.1", "61.3", "62.2"]
+      "ce-040": ["60.1", "61.3", "62.2"],
+      "equipment cost": ["11.2(23)", "52.1", "SCC-Item2"],
+      "hired equipment": ["11.2(23)", "52.1", "SCC-Item2"],
+      "equipment hire": ["11.2(23)", "52.1", "SCC-Item2"],
+      "schedule of cost components": ["SCC-Item1", "SCC-Item2", "SCC-Item3", "SCC-Item4", "SCC-Item5"],
+      "defined cost": ["11.2(23)", "52.1"],
+      "scc": ["SCC-Item1", "SCC-Item2", "SCC-Item3", "SCC-Item4", "SCC-Item5"],
+      "commercial agent": ["52.1", "11.2(23)", "SCC-Item2"],
+      "northern gateway": ["Z1.1", "13.4", "SCC-Item2"],
+      "option e": ["11.2(23)", "52.1", "SCC-Item2"]
     };
     
     // Search for relevant clauses in our knowledge base

@@ -1,0 +1,26 @@
+cenario 6: Checking Equipment Hire Costs (Commercial Agent - Northern Gateway Interchange)
+
+Project: Northern Gateway Interchange (Option E - Cost Reimbursable)
+Situation: Jane is reviewing the monthly cost report. She wants to ensure that the charges for hired-in excavators align with NEC4 Option E principles and the Schedule of Cost Components.
+User (Jane Cooper) Actions & Platform Interaction:
+Jane ensures "Northern Gateway Interchange" is the active project.
+She navigates to the Financial section (from the main left-hand menu). (Again, we haven't seen mockups, so imagine a view showing cost summaries or links to cost reports).
+She then goes to AI Assistant -> Chat Interface.
+Jane types: "How are hired equipment costs assessed as Defined Cost under NEC4 Option E for the Northern Gateway project?"
+Jane then navigates to AI Assistant -> Clause Library.
+She wants to find the specific rules. She might search for "Schedule of Cost Components" or "equipment cost."
+She would then navigate to the section displaying the Schedule of Cost Components (SCC) (you'll need to decide how this is presented – perhaps as a top-level expandable item in the Clause Library, or linked from Option E clauses). She looks for item 2 (Equipment) in the SCC.
+Expected AI/Platform Response (Simulated in Replit):
+Financial Section (Simulated View):
+Might show a summary of costs, with a line item for "Equipment Costs."
+Chat Interface:
+AI Responds: "Under NEC4 Option E for Northern Gateway, Defined Cost for hired equipment is assessed according to the Schedule of Cost Components (SCC), specifically item 2. This typically includes amounts paid to the hiring company as stated in the hire contract, provided the equipment is used within the Working Areas to Provide the Works. Ensure you have records like hire agreements, invoices, and proof of payment."
+Clause Library (Schedule of Cost Components - Item 2: Equipment):
+Displays the detailed text from the SCC regarding how equipment costs are calculated for:
+Equipment listed in Contract Data.
+Contractor-owned equipment.
+Equipment hired from a subsidiary.
+Equipment hired from others.
+Might have a "Practical Meaning:" "For equipment you hire from external suppliers, the Defined Cost is what you actually pay them according to the hire agreement. Keep good records!"
+Might have a "Risk Alert:" "Ensure equipment is only claimed for the period it's used on site for the works. Idle time might be Disallowed Cost if not properly justified."
+Could link to relevant Core Clauses (e.g., 11.2(23) - Definition of Defined Cost, 52.1 - Defined Cost).

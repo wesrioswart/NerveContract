@@ -556,6 +556,42 @@ const NEC4_CLAUSE_LIBRARY = {
       }
     }
   },
+  "Option E - Cost Reimbursable": {
+    "Defined Cost & Schedule of Cost Components": {
+      clauses: {
+        "11.2(23)": {
+          text: "Defined Cost is the cost of the components in the Schedule of Cost Components whether work is subcontracted or not, but excluding the cost of preparing quotations for compensation events.",
+          explanation: "For Option E contracts, Defined Cost includes all costs listed in the Schedule of Cost Components. This covers people, equipment, plant and materials, charges, manufacture and fabrication.",
+          actionableBy: "Contractor",
+          timeframe: "Ongoing cost recording throughout project",
+          riskTrigger: "Costs not included in SCC or improperly recorded become Disallowed Cost",
+          relatedClauses: ["52.1", "SCC-Item2"]
+        },
+        "52.1": {
+          text: "The amount due in each assessment period is the Price for Work Done to Date plus other amounts to be paid to the Contractor minus amounts to be paid by or retained from the Contractor.",
+          explanation: "For Option E, Price for Work Done to Date is the total Defined Cost which the Contractor has paid plus the Fee. Critical for equipment hire cost validation.",
+          actionableBy: "Project Manager",
+          timeframe: "Each assessment period (usually monthly)",
+          riskTrigger: "Incorrect Defined Cost assessment affects payment amounts",
+          relatedClauses: ["11.2(23)", "SCC-Item2"]
+        }
+      }
+    },
+    "Schedule of Cost Components - Equipment": {
+      clauses: {
+        "SCC-Item2": {
+          text: "Schedule of Cost Components - Item 2: Equipment. For equipment hired from others, the amounts paid to the hiring company as stated in the hire contract for the period of hire within the Working Areas.",
+          explanation: "Equipment hire costs are Defined Cost only when: (1) Paid to external hiring company as per hire contract, (2) Used within Working Areas, (3) For Providing the Works. Requires hire agreements, invoices, and proof of payment.",
+          actionableBy: "Contractor",
+          timeframe: "For duration of equipment hire",
+          riskTrigger: "Equipment used outside Working Areas or without proper documentation becomes Disallowed Cost",
+          relatedClauses: ["11.2(23)", "52.1"],
+          practicalMeaning: "For equipment you hire from external suppliers, the Defined Cost is what you actually pay them according to the hire agreement. Keep good records!",
+          riskAlert: "Ensure equipment is only claimed for the period it's used on site for the works. Idle time might be Disallowed Cost if not properly justified."
+        }
+      }
+    }
+  },
   "Secondary Option Clauses": {
     "X1: Price adjustment for inflation": {
       clauses: {
