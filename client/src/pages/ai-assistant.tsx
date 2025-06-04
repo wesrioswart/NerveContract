@@ -18,7 +18,18 @@ export default function AIAssistant() {
   const userId = 1;
   
   const [documentText, setDocumentText] = useState("");
-  const [documentAnalysis, setDocumentAnalysis] = useState<{ issues: string[], recommendations: string[] } | null>(null);
+  const [documentAnalysis, setDocumentAnalysis] = useState<{
+    riskAreas: Array<{
+      clause: string;
+      issue: string;
+      severity: 'Critical' | 'Moderate' | 'Minor';
+      recommendation: string;
+    }>;
+    compliantClauses: string[];
+    missingClauses: string[];
+    overallRisk: 'High' | 'Medium' | 'Low';
+    summary: string;
+  } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   const handleDocumentAnalysis = async () => {
@@ -44,8 +55,9 @@ export default function AIAssistant() {
       }
       
       // Validate response format
-      if (!result.issues || !result.recommendations || 
-          !Array.isArray(result.issues) || !Array.isArray(result.recommendations)) {
+      if (!result.riskAreas || !result.compliantClauses || !result.missingClauses || 
+          !Array.isArray(result.riskAreas) || !Array.isArray(result.compliantClauses) || 
+          !Array.isArray(result.missingClauses)) {
         throw new Error('Invalid response format from the server');
       }
       
@@ -59,8 +71,16 @@ export default function AIAssistant() {
       }
       
       setDocumentAnalysis({
-        issues: ["An error occurred during document analysis: " + errorMessage],
-        recommendations: ["Please try again or contact support if the problem persists"]
+        riskAreas: [{
+          clause: "Analysis Error",
+          issue: "An error occurred during document analysis: " + errorMessage,
+          severity: 'Critical',
+          recommendation: "Please try again or contact support if the problem persists"
+        }],
+        compliantClauses: [],
+        missingClauses: [],
+        overallRisk: 'High',
+        summary: "Document analysis could not be completed due to an error."
       });
     } finally {
       setIsAnalyzing(false);
@@ -128,24 +148,76 @@ export default function AIAssistant() {
                 </Button>
                 
                 {documentAnalysis && (
-                  <div className="mt-4 p-4 border border-gray-200 rounded-md">
-                    <div className="mb-4">
-                      <h3 className="text-lg font-semibold mb-2">Potential Issues</h3>
-                      <ul className="list-disc list-inside space-y-1">
-                        {documentAnalysis.issues.map((issue, index) => (
-                          <li key={index} className="text-sm">{issue}</li>
-                        ))}
-                      </ul>
+                  <div className="mt-6 space-y-6">
+                    {/* Overall Risk Assessment */}
+                    <div className="p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold">Overall Risk Assessment</h3>
+                        <Badge variant={documentAnalysis.overallRisk === 'High' ? 'destructive' : 
+                                      documentAnalysis.overallRisk === 'Medium' ? 'default' : 'secondary'}>
+                          {documentAnalysis.overallRisk} Risk
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600">{documentAnalysis.summary}</p>
                     </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Recommendations</h3>
-                      <ul className="list-disc list-inside space-y-1">
-                        {documentAnalysis.recommendations.map((rec, index) => (
-                          <li key={index} className="text-sm">{rec}</li>
-                        ))}
-                      </ul>
-                    </div>
+
+                    {/* Potential Risk Areas */}
+                    {documentAnalysis.riskAreas.length > 0 && (
+                      <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+                        <h3 className="text-lg font-semibold mb-3 text-red-800 flex items-center">
+                          <AlertTriangle className="w-5 h-5 mr-2" />
+                          Potential Risk Areas Identified
+                        </h3>
+                        <div className="space-y-4">
+                          {documentAnalysis.riskAreas.map((risk, index) => (
+                            <div key={index} className="bg-white p-3 rounded border border-red-200">
+                              <div className="flex items-start justify-between mb-2">
+                                <h4 className="font-medium text-red-900">{risk.clause}</h4>
+                                <Badge variant={risk.severity === 'Critical' ? 'destructive' : 
+                                              risk.severity === 'Moderate' ? 'default' : 'secondary'}>
+                                  {risk.severity}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-gray-700 mb-2">{risk.issue}</p>
+                              <div className="text-sm">
+                                <span className="font-medium text-gray-900">Recommendation: </span>
+                                <span className="text-gray-700">{risk.recommendation}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Missing Clauses */}
+                    {documentAnalysis.missingClauses.length > 0 && (
+                      <div className="p-4 border border-yellow-200 rounded-lg bg-yellow-50">
+                        <h3 className="text-lg font-semibold mb-3 text-yellow-800">Missing Clauses</h3>
+                        <ul className="space-y-2">
+                          {documentAnalysis.missingClauses.map((clause, index) => (
+                            <li key={index} className="text-sm text-yellow-700 flex items-start">
+                              <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                              {clause}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Compliant Clauses */}
+                    {documentAnalysis.compliantClauses.length > 0 && (
+                      <div className="p-4 border border-green-200 rounded-lg bg-green-50">
+                        <h3 className="text-lg font-semibold mb-3 text-green-800">Key Clauses Matched</h3>
+                        <ul className="space-y-2">
+                          {documentAnalysis.compliantClauses.map((clause, index) => (
+                            <li key={index} className="text-sm text-green-700 flex items-start">
+                              <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                              {clause}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

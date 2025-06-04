@@ -375,23 +375,47 @@ Consider whether this might relate to:
 
 // Function to analyze documents for potential contract issues
 async function analyzeContractDocument(documentText: string): Promise<{
-  issues: string[],
-  recommendations: string[]
+  riskAreas: Array<{
+    clause: string;
+    issue: string;
+    severity: 'Critical' | 'Moderate' | 'Minor';
+    recommendation: string;
+  }>;
+  compliantClauses: string[];
+  missingClauses: string[];
+  overallRisk: 'High' | 'Medium' | 'Low';
+  summary: string;
 }> {
   try {
     // Check if API key is available
     if (!apiKey) {
       console.error("OpenAI API key is not set");
       return {
-        issues: ["AI features are currently unavailable"],
-        recommendations: ["Please contact the administrator to set up the OpenAI API key"]
+        riskAreas: [{
+          clause: "System Error",
+          issue: "AI features are currently unavailable",
+          severity: 'Critical',
+          recommendation: "Please contact the administrator to set up the OpenAI API key"
+        }],
+        compliantClauses: [],
+        missingClauses: [],
+        overallRisk: 'High',
+        summary: "Document analysis unavailable due to missing API configuration."
       };
     }
     
     if (!documentText || documentText.trim().length === 0) {
       return {
-        issues: ["Empty document provided"],
-        recommendations: ["Please provide a valid document to analyze"]
+        riskAreas: [{
+          clause: "Input Error",
+          issue: "Empty document provided",
+          severity: 'Critical',
+          recommendation: "Please provide a valid document to analyze"
+        }],
+        compliantClauses: [],
+        missingClauses: [],
+        overallRisk: 'High',
+        summary: "No document content available for analysis."
       };
     }
     

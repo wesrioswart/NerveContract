@@ -1,0 +1,24 @@
+cenario 4: Document Analysis for Potential Risks (Westfield Development Project)
+
+Project: Westfield Development Project
+Situation: Jane Cooper receives a draft subcontract agreement from a new key subcontractor for a critical package of works on the Westfield project. Before sending it for full legal review, she wants to use the AI Contract Assistant to get an initial overview of any potential deviations from their standard terms or NEC4 principles.
+User (Jane Cooper) Actions & Platform Interaction:
+Jane ensures "Westfield Development Project" is the active project.
+She navigates to AI Assistant -> Document Analysis (as per your mockup Image 2 from the set showing the AI Assistant tabs).
+She copies the text from the draft subcontract agreement (let's imagine it's a few pages long and contains some non-standard liability clauses and ambiguous payment terms).
+She pastes the text into the "Paste contract text here for analysis..." text area.
+She clicks the "Analyze Document" button.
+Expected AI/Platform Response (Simulated in Replit):
+Document Analysis Screen:
+After a short simulated "processing" animation, the screen displays a summary of findings. This could be structured with headings like:
+"Potential Risk Areas Identified:"
+"Clause 5.3 (Liability): Wording deviates significantly from standard NEC4 back-to-back principles. Potential for uncapped liability. Recommend review."
+"Clause 7.1 (Payment Terms): Ambiguity regarding the definition of 'practical completion' for milestone payments. Could lead to disputes."
+"Missing Clause: No clear provision for Early Warnings. This is a core NEC4 requirement."
+"Key Clauses Matched:"
+Lists some standard clauses that were found and appear compliant.
+"Recommendations:"
+"Prioritize legal review for Clause 5.3."
+"Seek clarification on payment terms in Clause 7.1."
+"Consider inserting a standard NEC4 Early Warning clause."
+Ideally, parts of the analysis (like "Clause 5.3") could be clickable, perhaps linking to a view of that specific text section or to relevant standard clauses in the Clause Library for comparison. (This linking is an advanced feature for simulation).
