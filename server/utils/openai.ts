@@ -424,44 +424,37 @@ async function analyzeContractDocument(documentText: string): Promise<{
                             documentText.toLowerCase().includes('z1') || 
                             documentText.toLowerCase().includes('additional conditions of contract');
     
-    const prompt = isZClauseAnalysis ? 
-    `
-    Analyze the following Z clauses added to an NEC4 construction contract for specific legal and practical issues:
+    const prompt = `
+    Analyze the following construction contract document for deviations from NEC4 principles and potential risks:
     
     ${documentText}
     
-    Provide a structured analysis with:
-    1. Clear, specific issues that could create liability, shift risk inappropriately, or conflict with NEC4 principles
-    2. For each issue, reference the specific NEC4 core clause that conflicts with the Z clause
-    3. Identify ambiguous wording that could lead to disputes
-    4. Assess impact on time, cost, and quality management
-    5. Provide specific, actionable recommendations to improve the Z clause wording
-    6. For each issue, explain which party (Client or Contractor) is disadvantaged by the clause
+    Provide a comprehensive structured analysis with:
+    1. Specific risk areas with clause references, severity, and recommendations
+    2. Missing clauses that are core NEC4 requirements
+    3. Compliant clauses that align with NEC4 principles
+    4. Overall risk assessment and summary
     
-    Categorize issues by severity:
-    - Critical: Fundamentally alters NEC4 risk allocation or creates severe contractual imbalance
-    - Moderate: Creates potential disputes or ambiguity but doesn't fundamentally undermine the contract
-    - Minor: Technical issues that should be addressed but don't create significant risk
+    For risk areas, categorize severity as:
+    - Critical: Fundamentally conflicts with NEC4 or creates severe liability
+    - Moderate: Creates potential disputes or ambiguity
+    - Minor: Technical issues that should be addressed
     
-    Focus on clarity and practical application. Avoid vague statements.
-    For each issue and recommendation, include the specific NEC4 clause number it relates to.
-    Format your response as JSON with 'issues' and 'recommendations' arrays.
-    ` :
-    `
-    Analyze the following NEC4 construction contract document extract for specific practical issues:
-    
-    ${documentText}
-    
-    Provide a structured analysis with:
-    1. Clear, specific issues that could impact project delivery or create liability
-    2. For each issue, reference the specific NEC4 clause number that relates to the issue
-    3. Practical, actionable recommendations for addressing each issue
-    4. For each issue, identify which party (Contractor, Subcontractor, Project Manager) should take action and by when
-    
-    Focus on clarity and practical application. Avoid vague statements.
-    For each issue and recommendation, include the specific NEC4 clause number.
-    Format your response as JSON with 'issues' and 'recommendations' arrays.
-    `;
+    Respond ONLY in valid JSON format:
+    {
+      "riskAreas": [
+        {
+          "clause": "Clause reference (e.g., 'Clause 5.3 Liability')",
+          "issue": "Specific issue description",
+          "severity": "Critical|Moderate|Minor",
+          "recommendation": "Specific actionable recommendation"
+        }
+      ],
+      "missingClauses": ["List of missing NEC4 requirements"],
+      "compliantClauses": ["List of clauses that appear compliant"],
+      "overallRisk": "High|Medium|Low",
+      "summary": "Brief overall assessment"
+    }`;
 
     console.log("Sending document analysis request to OpenAI...");
     
