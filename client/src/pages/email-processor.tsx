@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EmailConfiguration from '@/components/email/email-configuration';
 import { AnimationWrapper } from '@/components/ui/animation-wrapper';
 import { RfiEmailProcessor } from '@/components/email/rfi-email-processor';
+import { SimpleEmailDemo } from '@/components/email/simple-email-demo';
 import { 
   Inbox, Server, FileUp, AlertTriangle, Mail, MailCheck, Truck, Clock, Loader2,
   CheckCircle2, XCircle, Info, ChevronDown, ChevronUp, HelpCircle, MessageSquare
@@ -29,8 +30,12 @@ export default function EmailProcessorPage() {
       </AnimationWrapper>
       
       <AnimationWrapper type="fadeIn" delay={0.2}>
-        <Tabs defaultValue="configuration" className="w-full">
+        <Tabs defaultValue="demo" className="w-full">
           <TabsList className="w-full justify-start mb-6">
+            <TabsTrigger value="demo" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Email Processing Demo
+            </TabsTrigger>
             <TabsTrigger value="configuration" className="flex items-center gap-2">
               <Server className="h-4 w-4" />
               Email Configuration
@@ -52,6 +57,10 @@ export default function EmailProcessorPage() {
               RFI Emails
             </TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="demo">
+            <SimpleEmailDemo />
+          </TabsContent>
           
           <TabsContent value="configuration">
             <EmailConfiguration />

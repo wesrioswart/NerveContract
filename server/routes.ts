@@ -1408,6 +1408,86 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   app.post("/api/email/add-mock-email", EmailController.addMockEmail);
   app.get("/api/email/test-connection", EmailController.testConnection);
   app.post("/api/email/process", EmailController.processEmails);
+  
+  // Helper function to extract equipment type from subject
+  function extractEquipmentType(subject: string): string {
+    const match = subject.match(/HIRE:\s*([^-]+)/i);
+    return match ? match[1].trim() : 'Equipment';
+  }
+
+  // Simple email processing demo
+  app.post("/api/email/process-demo", async (req: Request, res: Response) => {
+    try {
+      const { emails } = req.body;
+      
+      if (!emails || !Array.isArray(emails)) {
+        return res.status(400).json({ error: "Invalid email data" });
+      }
+      
+      let recordsCreated = 0;
+      const processedEmails = [];
+      
+      for (const email of emails) {
+        const subject = email.subject.toLowerCase();
+        
+        if (subject.includes('hire:')) {
+          // Create equipment hire record
+          await storage.createEquipmentHire({
+            equipmentType: extractEquipmentType(email.subject),
+            projectId: 1, // Default to current project
+            status: 'requested',
+            requestedBy: email.from,
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+            dailyRate: 150.00,
+            notes: email.body
+          });
+          recordsCreated++;
+          processedEmails.push({ type: 'equipment-hire', subject: email.subject });
+        } else if (subject.includes('rfi:')) {
+          // Create RFI record
+          await storage.createRfi({
+            projectId: 1,
+            reference: `RFI-${String(Date.now()).slice(-3)}`,
+            title: email.subject.replace(/^rfi:\s*/i, ''),
+            description: email.body,
+            submittedBy: email.from,
+            submittedAt: new Date().toISOString(),
+            status: 'submitted',
+            priority: 'medium'
+          });
+          recordsCreated++;
+          processedEmails.push({ type: 'rfi', subject: email.subject });
+        } else if (subject.includes('ce:')) {
+          // Create Compensation Event record
+          await storage.createCompensationEvent({
+            projectId: 1,
+            reference: `CE-${String(Date.now()).slice(-3)}`,
+            title: email.subject.replace(/^ce:\s*/i, ''),
+            description: email.body,
+            clauseReference: '60.1(1)',
+            status: 'Notification',
+            raisedBy: 1, // Current user
+            raisedAt: new Date().toISOString(),
+            estimatedValue: 5000
+          });
+          recordsCreated++;
+          processedEmails.push({ type: 'compensation-event', subject: email.subject });
+        }
+      }
+      
+      res.json({
+        success: true,
+        recordsCreated,
+        processedEmails,
+        message: `Successfully processed ${recordsCreated} email(s)`
+      });
+      
+    } catch (error) {
+      console.error("Error processing demo emails:", error);
+      res.status(500).json({ error: "Failed to process emails" });
+    }
+  });
 
   // Register portfolio routes for executives
   app.use("/api/portfolio", portfolioRouter);
