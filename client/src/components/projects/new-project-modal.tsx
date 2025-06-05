@@ -48,8 +48,13 @@ export default function NewProjectModal({ isOpen, onClose }: NewProjectModalProp
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      description: "",
       contractReference: "",
       clientName: "",
+      siteAddress: "",
+      postcode: "",
+      contractValue: "",
+      contractType: "",
       startDate: new Date().toISOString().split("T")[0],
       endDate: new Date(Date.now() + 31536000000).toISOString().split("T")[0], // Default to 1 year later
     },

@@ -218,21 +218,43 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-          <h1 className="text-2xl font-bold text-gray-900">Project Dashboard</h1>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {currentProject ? currentProject.name : "Project Dashboard"}
+            </h1>
+            {currentProject && (
+              <div className="mt-2 space-y-1">
+                <p className="text-sm text-gray-600">{currentProject.description}</p>
+                <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                  {currentProject.siteAddress && (
+                    <span>{currentProject.siteAddress}</span>
+                  )}
+                  {currentProject.postcode && (
+                    <span>{currentProject.postcode}</span>
+                  )}
+                  {currentProject.contractType && (
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      {currentProject.contractType}
+                    </span>
+                  )}
+                  {currentProject.contractValue && (
+                    <span className="font-medium">
+                      Contract Value: £{Number(currentProject.contractValue).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           
           <Button
             onClick={() => setIsNewProjectModalOpen(true)}
-            className="bg-blue-600 text-white hover:bg-blue-700"
+            className="bg-blue-600 text-white hover:bg-blue-700 mt-4 md:mt-0"
           >
             <PlusIcon className="h-4 w-4 mr-2" />
             New Project
           </Button>
         </div>
-        <p className="text-gray-500">
-          {currentProject 
-            ? `Overview of ${currentProject.name} contract activity` 
-            : "Overview of your NEC4 contract activity"}
-        </p>
       </div>
       
       {/* New Project Modal */}

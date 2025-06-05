@@ -27,16 +27,26 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  description: text("description"),
   contractReference: text("contract_reference").notNull(),
   clientName: text("client_name").notNull(),
+  siteAddress: text("site_address"),
+  postcode: text("postcode"),
+  contractValue: decimal("contract_value", { precision: 15, scale: 2 }),
+  contractType: text("contract_type"), // e.g., "NEC4 Option C", "NEC4 Option E"
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
 });
 
 export const insertProjectSchema = createInsertSchema(projects).pick({
   name: true,
+  description: true,
   contractReference: true,
   clientName: true,
+  siteAddress: true,
+  postcode: true,
+  contractValue: true,
+  contractType: true,
   startDate: true,
   endDate: true,
 });
