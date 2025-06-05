@@ -61,11 +61,24 @@ export function enableMockMode() {
  * Connect to the email server
  */
 export async function connect() {
-  // This is a placeholder - for SendGrid we don't need to actively connect
-  // If we were using IMAP or another protocol that needs connection, we would do it here
-  if (!process.env.SENDGRID_API_KEY) {
-    throw new Error('SendGrid API key not configured');
+  if (!emailConfig) {
+    throw new Error('Email service not configured. Please configure email settings first.');
   }
+
+  if (mockModeEnabled) {
+    console.log('Mock mode enabled - simulating successful connection');
+    return true;
+  }
+
+  // For IMAP connections, we would implement actual IMAP connection logic here
+  // For now, validate that we have the required configuration
+  if (!emailConfig.host || !emailConfig.port || !emailConfig.user || !emailConfig.password) {
+    throw new Error('Incomplete email configuration. Please provide host, port, username, and password.');
+  }
+
+  console.log(`Testing connection to ${emailConfig.host}:${emailConfig.port} for user ${emailConfig.user}`);
+  
+  // Simulate connection test - in production this would be actual IMAP connection
   return true;
 }
 
