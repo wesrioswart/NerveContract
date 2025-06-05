@@ -1473,6 +1473,21 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
           });
           recordsCreated++;
           processedEmails.push({ type: 'compensation-event', subject: email.subject });
+        } else if (subject.includes('ew:') || subject.includes('early warning')) {
+          // Create Early Warning record
+          await storage.createEarlyWarning({
+            projectId: 1,
+            reference: `EW-${String(Date.now()).slice(-3)}`,
+            description: email.body,
+            raisedBy: 1,
+            raisedAt: new Date(),
+            ownerId: 1,
+            attachments: {},
+            mitigationPlan: null,
+            meetingDate: null
+          });
+          recordsCreated++;
+          processedEmails.push({ type: 'early-warning', subject: email.subject });
         }
       }
       
