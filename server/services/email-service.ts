@@ -150,10 +150,10 @@ export async function processEmails(): Promise<{processedCount: number, processe
       console.log('Connecting to email server...');
       
       // Simulate connection verification
-      if (emailConfig.server && emailConfig.port) {
-        console.log(`Connecting to ${emailConfig.server}:${emailConfig.port}...`);
+      if (emailConfig.host && emailConfig.port) {
+        console.log(`Connecting to ${emailConfig.host}:${emailConfig.port}...`);
       } else {
-        throw new Error('Invalid email server configuration: missing server or port');
+        throw new Error('Invalid email server configuration: missing host or port');
       }
     }
     
