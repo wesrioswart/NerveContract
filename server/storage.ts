@@ -144,6 +144,12 @@ export interface IStorage {
   // Resource Allocations
   getResourceAllocationsByProject(projectId: number): Promise<any[]>;
   createResourceAllocation(allocation: any): Promise<any>;
+  
+  // Equipment Hire
+  createEquipmentHire(hire: any): Promise<any>;
+  
+  // RFI
+  createRfi(rfi: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -1437,6 +1443,30 @@ export class DatabaseStorage implements IStorage {
     };
     
     return newAllocation;
+  }
+
+  async createEquipmentHire(hire: any): Promise<any> {
+    // Simple demo implementation for email processing
+    const newHire = {
+      id: Date.now(),
+      ...hire,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    return newHire;
+  }
+
+  async createRfi(rfi: any): Promise<any> {
+    // Simple demo implementation for email processing
+    const newRfi = {
+      id: Date.now(),
+      ...rfi,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    return newRfi;
   }
 }
 

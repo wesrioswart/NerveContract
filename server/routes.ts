@@ -1468,7 +1468,7 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
             clauseReference: '60.1(1)',
             status: 'Notification',
             raisedBy: 1, // Current user
-            raisedAt: new Date().toISOString(),
+            raisedAt: new Date(),
             estimatedValue: 5000
           });
           recordsCreated++;
