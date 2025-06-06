@@ -2051,6 +2051,19 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
+  // Serve design mockups for video demonstration
+  app.get('/api/mockups', (req: Request, res: Response) => {
+    const htmlPath = path.join(process.cwd(), 'mockup-designs.html');
+    try {
+      const html = fs.readFileSync(htmlPath, 'utf8');
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      console.error('Error serving mockups:', error);
+      res.status(500).json({ error: 'Failed to load design mockups' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
