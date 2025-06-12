@@ -21,6 +21,7 @@ import EquipmentHire from "@/pages/equipment-hire";
 import RfiManagement from "@/pages/rfi-management";
 import ResourceAllocation from "@/pages/resource-allocation";
 import Financial from "@/pages/financial";
+import Settings from "@/pages/settings";
 import Login from "@/pages/login";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -133,6 +134,7 @@ function AppContent() {
                   <Route path="/email-processor" component={EmailProcessor} />
                   <Route path="/rfi-management" component={RfiManagement} />
                   <Route path="/resource-allocation" component={ResourceAllocation} />
+                  <Route path="/settings" component={Settings} />
                   <Route component={NotFound} />
                 </Switch>
               </div>
