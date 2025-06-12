@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedDatabase } from "./seed";
+import { initializeEventBus } from "./event-bus";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -52,6 +53,9 @@ app.use((req, res, next) => {
 (async () => {
   // Seed the database with initial data
   await seedDatabase();
+  
+  // Initialize the event-driven agent communication system
+  initializeEventBus();
   
   const server = await registerRoutes(app);
 

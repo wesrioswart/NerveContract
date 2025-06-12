@@ -150,6 +150,15 @@ export interface IStorage {
   
   // RFI
   createRfi(rfi: any): Promise<any>;
+  
+  // Agent Activity Logging
+  logAgentActivity(activity: {
+    agentType: string;
+    action: string;
+    projectId: number | null;
+    details: string;
+    userId?: number | null;
+  }): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -1467,6 +1476,30 @@ export class DatabaseStorage implements IStorage {
     };
     
     return newRfi;
+  }
+
+  async logAgentActivity(activity: {
+    agentType: string;
+    action: string;
+    projectId: number | null;
+    details: string;
+    userId?: number | null;
+  }): Promise<void> {
+    // Log agent activity for monitoring and analytics
+    console.log(`[${activity.agentType.toUpperCase()} AGENT] ${activity.action}: ${activity.details}`);
+    
+    // In production, this would save to an agent_activity_logs table
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      agentType: activity.agentType,
+      action: activity.action,
+      projectId: activity.projectId,
+      userId: activity.userId,
+      details: activity.details
+    };
+    
+    // Store in memory for demo purposes (would be database in production)
+    // await db.insert(agentActivityLogs).values(logEntry);
   }
 }
 

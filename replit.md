@@ -1,0 +1,150 @@
+# NEC4 Contract Management Platform
+
+## Overview
+
+This is a comprehensive AI-powered NEC4 contract management platform built with a full-stack TypeScript architecture. The system integrates contract intelligence, document management, real-time analytics, and specialized AI agents to streamline construction project management with intelligent contract handling and automated workflows.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React with TypeScript
+- **UI Components**: shadcn/ui component library with Radix UI primitives
+- **Styling**: Tailwind CSS with custom theme configuration
+- **State Management**: React Context (UserContext, ProjectContext) + TanStack Query for server state
+- **Build Tool**: Vite with custom configuration for development and production
+
+### Backend Architecture
+- **Framework**: Express.js with TypeScript (ESM modules)
+- **Authentication**: Passport.js with local strategy and express-session
+- **Template Engine**: EJS for PDF generation and email templates
+- **File Handling**: Multer for file uploads with 50MB limit for programme files
+- **API Design**: RESTful endpoints with proper error handling and validation
+
+### Database Architecture
+- **Primary Database**: Neon PostgreSQL (serverless)
+- **ORM**: Drizzle ORM with schema-first approach
+- **Connection**: Connection pooling with WebSocket support
+- **Migrations**: Drizzle Kit for schema management
+
+## Key Components
+
+### AI Agent System
+The platform features a sophisticated multi-agent architecture with five specialized agents:
+
+1. **Email Intake Agent**: Processes incoming emails, classifies content, and extracts relevant data
+2. **Contract Control Agent**: Monitors contract compliance, manages deadlines, and tracks NEC4 clause requirements
+3. **Commercial Agent**: Handles cost analysis, equipment hire validation, and SCC compliance
+4. **Operational Agent**: Manages programme data, critical path analysis, and milestone tracking
+5. **Procurement Agent**: Monitors supplier performance and manages procurement workflows
+
+### Core Modules
+
+#### Project Management
+- Project creation and management with NEC4 contract types
+- Multi-user project access with role-based permissions
+- Executive-level portfolio view for cross-project analytics
+
+#### Document Processing
+- AI-powered document analysis using OpenAI GPT-4o
+- MS Project XML file parsing for programme import
+- Automatic NEC4 compliance checking
+- Multi-format file upload support (PDF, DOC, XLS, MPP, XML)
+
+#### Contract Intelligence
+- NEC4 knowledge base with clause-specific guidance
+- Automated compensation event detection
+- Early warning system with risk assessment
+- Contract assistant for clause interpretation
+
+#### Equipment Management
+- Equipment categorization and tracking
+- Hire/off-hire workflow automation
+- Email-driven equipment requests
+- Supplier performance monitoring
+
+#### RFI Management
+- Comprehensive RFI lifecycle management
+- PDF report generation for client distribution
+- Attachment handling and comment tracking
+- Performance metrics and analytics
+
+#### Procurement System
+- Purchase order management with GPSMACS coding
+- Supplier relationship management
+- Inventory tracking with stock level monitoring
+- Export capabilities for reporting
+
+## Data Flow
+
+### Email Processing Flow
+1. Email received by intake agent
+2. Content classified using AI pattern matching
+3. Relevant data extracted and validated
+4. Appropriate records created in database
+5. Notifications sent to project team
+6. Follow-up actions scheduled
+
+### Document Analysis Flow
+1. File uploaded through web interface
+2. Content extracted and preprocessed
+3. AI analysis for NEC4 compliance and issues
+4. Results stored with recommendations
+5. Integration with project records
+6. Alert generation for critical findings
+
+### Programme Management Flow
+1. MS Project XML file imported
+2. Activities and relationships parsed
+3. Critical path analysis performed
+4. Progress tracking initiated
+5. Milestone monitoring activated
+6. Variance alerts generated
+
+## External Dependencies
+
+### AI Services
+- **OpenAI API**: GPT-4o model for document analysis and contract intelligence
+- **Anthropic Claude**: Alternative AI provider for text analysis
+
+### Communication Services
+- **SendGrid**: Email service for notifications and confirmations
+- **SMTP**: Direct email integration for intake processing
+
+### File Processing
+- **xml2js**: XML parsing for MS Project files
+- **multer**: File upload handling
+- **PDFKit**: PDF generation for reports
+- **html2pdf**: HTML to PDF conversion
+
+### Authentication & Security
+- **Passport.js**: Authentication framework
+- **express-session**: Session management
+- **connect-pg-simple**: PostgreSQL session store
+
+## Deployment Strategy
+
+### Development Environment
+- **Runtime**: Node.js 20 with TypeScript compilation
+- **Development Server**: Vite dev server with HMR
+- **Database**: Neon PostgreSQL with connection pooling
+- **File Storage**: Local filesystem with organized directory structure
+
+### Production Deployment
+- **Platform**: Replit autoscale deployment
+- **Build Process**: Vite build + ESBuild for server bundling
+- **Port Configuration**: Port 5000 internal, Port 80 external
+- **Environment Variables**: DATABASE_URL, OPENAI_API_KEY, SENDGRID_API_KEY
+
+### Database Schema Management
+- **Migrations**: Drizzle Kit with SQL migration files
+- **Seeding**: Automated database seeding with sample data
+- **Backup**: Neon built-in backup and recovery
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## Changelog
+
+Changelog:
+- June 12, 2025. Initial setup

@@ -1,0 +1,42 @@
+Improvement Suggestions:
+ • 
+Event-Driven Architecture: Introduce an internal publish/subscribe or event emitter system for
+ agent communication. For example, when the Email Intake Agent parses a new email and
+ detects it’s an Early Warning, it could emit an 
+earlyWarning.received event with the
+ relevant data. The Contract Agent or Early Warning module could subscribe to that event and
+ immediately handle creating a new Early Warning record in the database and sending
+ notifications. Decoupling agents via events makes the flow more asynchronous and resilient. It
+ prevents tight coupling (e.g., Email agent having to directly call functions in other agents) and
+ makes it easy to add new agents or actions in response to events without modifying the core
+ email processing code. 
+Code Example – using Node’s EventEmitter: Suppose we have an 
+eventBus instance of EventEmitter.
+ After classifying an email: 
+import EventEmitter from 'events';
+ const eventBus = new EventEmitter();
+ // Somewhere in initialization
+ eventBus.on('earlyWarning.received', async (ewData) => {
+ await EarlyWarningAgent.createEarlyWarning(ewData);
+ logger.info(`Early Warning created for project ${ewData.projectId}`);
+ });
+ eventBus.on('compEvent.notice', async (ceData) => {
+ // Contract Agent handles a compensation event notice
+ await ContractAgent.registerCompensationEvent(ceData);
+ await NotificationService.alertContractManager(ceData);
+ });
+ // ... other subscriptions ...
+ In the Email Intake processing route, after using AI to classify the email: 
+// After determining type and extracting data from email
+ if (result.classification === 'Early Warning') {
+ eventBus.emit('earlyWarning.received', result.data);
+ res.status(202).json({ message: 'Early Warning identified. Processing 
+initiated.' });
+ } else if (result.classification === 'Compensation Event') {
+ eventBus.emit('compEvent.notice', result.data);
+ res.status(202).json({ message: 'Compensation Event notice identified. 
+Processing initiated.' });
+ }
+ // etc.
+ Using events in this way ensures that each agent’s reaction to an event is handled in its own module,
+ improving separation of concerns
