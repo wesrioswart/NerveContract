@@ -144,7 +144,17 @@ The platform features a sophisticated multi-agent architecture with five special
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+- June 12, 2025: Implemented event-driven email processing architecture
+  - Replaced simple email processing with AI-powered classification using Anthropic Claude
+  - Added EventBus system for decoupled agent communication
+  - Enhanced email intake with intelligent document type detection
+  - Integrated agent event handlers for automated workflow processing
+  - Updated frontend to display AI classification results with confidence scores
+
 ## Changelog
 
 Changelog:
 - June 12, 2025. Initial setup
+- June 12, 2025. Event-driven architecture implementation

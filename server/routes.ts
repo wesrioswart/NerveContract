@@ -1458,7 +1458,12 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
 
       let classification;
       try {
-        classification = JSON.parse(classificationResponse.content[0].text);
+        const content = classificationResponse.content[0];
+        if (content.type === 'text') {
+          classification = JSON.parse(content.text);
+        } else {
+          throw new Error('Unexpected content type');
+        }
       } catch (parseError) {
         // Fallback classification if AI response is not valid JSON
         classification = {
@@ -1496,7 +1501,12 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
 
       let extractedData;
       try {
-        extractedData = JSON.parse(extractionResponse.content[0].text);
+        const content = extractionResponse.content[0];
+        if (content.type === 'text') {
+          extractedData = JSON.parse(content.text);
+        } else {
+          throw new Error('Unexpected content type');
+        }
       } catch (parseError) {
         extractedData = {
           description: body.substring(0, 200),
