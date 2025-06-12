@@ -21,6 +21,8 @@ import { setupRfiRoutes } from "./routes/rfi-routes";
 import { requireAuth, requireProjectAccess, hasProjectAccess } from "./middleware/auth-middleware";
 import { populateForm, compareProgrammes } from "./controllers/ai-assistant-controller";
 import { exportProcurementReport, downloadReport } from "./controllers/export-controller";
+import { eventBus } from "./event-bus";
+import Anthropic from '@anthropic-ai/sdk';
 import fs from "fs";
 import multer from "multer";
 import passport from './auth/passport-config';
@@ -1415,92 +1417,180 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     return match ? match[1].trim() : 'Equipment';
   }
 
-  // Simple email processing demo
+  // Event-Driven Email Processing with AI Classification
   app.post("/api/email/process-demo", async (req: Request, res: Response) => {
     try {
-      const { emails } = req.body;
+      const { subject, body, from, selectedTemplate, attachments } = req.body;
       
-      if (!emails || !Array.isArray(emails)) {
-        return res.status(400).json({ error: "Invalid email data" });
+      if (!subject || !body || !from) {
+        return res.status(400).json({ error: "Missing required email data: subject, body, and from are required" });
       }
       
-      let recordsCreated = 0;
-      const processedEmails = [];
-      
-      for (const email of emails) {
-        const subject = email.subject.toLowerCase();
-        
-        if (subject.includes('hire:')) {
-          // Create equipment hire record
-          await storage.createEquipmentHire({
-            equipmentType: extractEquipmentType(email.subject),
-            projectId: 1, // Default to current project
-            status: 'requested',
-            requestedBy: email.from,
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-            dailyRate: 150.00,
-            notes: email.body
-          });
-          recordsCreated++;
-          processedEmails.push({ type: 'equipment-hire', subject: email.subject });
-        } else if (subject.includes('rfi:')) {
-          // Create RFI record
-          await storage.createRfi({
-            projectId: 1,
-            reference: `RFI-${String(Date.now()).slice(-3)}`,
-            title: email.subject.replace(/^rfi:\s*/i, ''),
-            description: email.body,
-            submittedBy: email.from,
-            submittedAt: new Date().toISOString(),
-            status: 'submitted',
-            priority: 'medium'
-          });
-          recordsCreated++;
-          processedEmails.push({ type: 'rfi', subject: email.subject });
-        } else if (subject.includes('ce:')) {
-          // Create Compensation Event record
-          await storage.createCompensationEvent({
-            projectId: 1,
-            reference: `CE-${String(Date.now()).slice(-3)}`,
-            title: email.subject.replace(/^ce:\s*/i, ''),
-            description: email.body,
-            clauseReference: '60.1(1)',
-            status: 'Notification',
-            raisedBy: 1, // Current user
-            raisedAt: new Date(),
-            estimatedValue: 5000
-          });
-          recordsCreated++;
-          processedEmails.push({ type: 'compensation-event', subject: email.subject });
-        } else if (subject.includes('ew:') || subject.includes('early warning')) {
-          // Create Early Warning record
-          await storage.createEarlyWarning({
-            projectId: 1,
-            reference: `EW-${String(Date.now()).slice(-3)}`,
-            description: email.body,
-            raisedBy: 1,
-            raisedAt: new Date(),
-            ownerId: 1,
-            attachments: {},
-            mitigationPlan: null,
-            meetingDate: null
-          });
-          recordsCreated++;
-          processedEmails.push({ type: 'early-warning', subject: email.subject });
-        }
-      }
-      
-      res.json({
-        success: true,
-        recordsCreated,
-        processedEmails,
-        message: `Successfully processed ${recordsCreated} email(s)`
+      // Initialize Anthropic client for AI classification
+      const anthropic = new Anthropic({
+        apiKey: process.env.OPENAI_API_KEY, // Using OpenAI key for Anthropic
       });
+
+      // AI Classification of email content
+      const classificationPrompt = `
+        Analyze this email and classify it for NEC4 contract management:
+        
+        Subject: ${subject}
+        From: ${from}
+        Body: ${body}
+        
+        Determine:
+        1. Document type (early_warning, compensation_event, equipment_request, payment_certificate, rfi, programme_submission, variation_instruction, or general)
+        2. Confidence level (0-1)
+        3. Suggested NEC4 template
+        4. Project reference if mentioned
+        5. Urgency level (low, medium, high, critical)
+        
+        Respond in JSON format with: { "type": "document_type", "confidence": 0.85, "suggestedTemplate": "template_name", "projectReference": "ref", "urgency": "medium" }
+      `;
+
+      const classificationResponse = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514', // Latest Claude model
+        system: 'You are a NEC4 contract management expert. Analyze emails and provide structured classification in valid JSON format.',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: classificationPrompt }],
+      });
+
+      let classification;
+      try {
+        classification = JSON.parse(classificationResponse.content[0].text);
+      } catch (parseError) {
+        // Fallback classification if AI response is not valid JSON
+        classification = {
+          type: 'general',
+          confidence: 0.5,
+          suggestedTemplate: 'general_correspondence',
+          projectReference: null,
+          urgency: 'medium'
+        };
+      }
+
+      // AI Data Extraction based on classification
+      const extractionPrompt = `
+        Extract key information from this ${classification.type} email for NEC4 contract processing:
+        
+        Email Content: ${body}
+        Document Type: ${classification.type}
+        
+        Extract relevant information based on the document type:
+        - Project references, contract references
+        - Estimated values, deadlines, dates
+        - Clause references (NEC4 specific)
+        - Description and details
+        - Risk levels and mitigation suggestions
+        
+        Respond in JSON format with extracted structured data.
+      `;
+
+      const extractionResponse = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        system: 'Extract structured data from construction project emails. Provide valid JSON output.',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: extractionPrompt }],
+      });
+
+      let extractedData;
+      try {
+        extractedData = JSON.parse(extractionResponse.content[0].text);
+      } catch (parseError) {
+        extractedData = {
+          description: body.substring(0, 200),
+          projectReference: null,
+          estimatedValue: null
+        };
+      }
+
+      // Generate unique email ID for tracking
+      const emailId = `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
+      // Emit email classification event to trigger agent processing
+      eventBus.emitEvent('email.classified', {
+        emailId,
+        from,
+        subject,
+        classification: classification.type,
+        confidence: classification.confidence,
+        projectId: extractedData.projectReference ? 1 : undefined, // Map to actual project
+        extractedData: {
+          ...extractedData,
+          urgency: classification.urgency,
+          suggestedTemplate: classification.suggestedTemplate
+        }
+      });
+
+      // Generate suggested actions based on classification
+      const suggestedActions = [];
+      switch (classification.type) {
+        case 'early_warning':
+          suggestedActions.push(
+            'Create Early Warning record',
+            'Schedule risk assessment meeting',
+            'Notify project stakeholders',
+            'Update risk register'
+          );
+          break;
+        case 'compensation_event':
+          suggestedActions.push(
+            'Create Compensation Event notification',
+            'Review contract clauses',
+            'Prepare quotation request',
+            'Set response deadline (14 days)'
+          );
+          break;
+        case 'equipment_request':
+          suggestedActions.push(
+            'Process equipment hire request',
+            'Check equipment availability',
+            'Generate hire agreement',
+            'Schedule delivery'
+          );
+          break;
+        case 'rfi':
+          suggestedActions.push(
+            'Create RFI record',
+            'Assign to technical team',
+            'Set response deadline',
+            'Acknowledge receipt'
+          );
+          break;
+        default:
+          suggestedActions.push(
+            'File in project correspondence',
+            'Review for action items',
+            'Forward to relevant team',
+            'Update project logs'
+          );
+      }
+
+      // Return comprehensive processing result
+      const result = {
+        success: true,
+        emailId,
+        classification: {
+          type: classification.type,
+          confidence: classification.confidence,
+          suggestedTemplate: classification.suggestedTemplate
+        },
+        extractedData,
+        suggestedActions,
+        processedAt: new Date().toISOString(),
+        agentStatus: 'processing_initiated'
+      };
+
+      console.log(`[EMAIL INTAKE AGENT] Processed email from ${from}: classified as ${classification.type} (confidence: ${Math.round(classification.confidence * 100)}%)`);
+      
+      res.status(202).json(result); // 202 Accepted - processing initiated
     } catch (error) {
-      console.error("Error processing demo emails:", error);
-      res.status(500).json({ error: "Failed to process emails" });
+      console.error("Error in event-driven email processing:", error);
+      res.status(500).json({ 
+        error: "Email processing failed", 
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 

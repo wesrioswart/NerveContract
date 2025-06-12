@@ -21,16 +21,20 @@ export function SimpleEmailDemo() {
   });
 
   const processEmailMutation = useMutation({
-    mutationFn: async (data: typeof emailData) => {
+    mutationFn: async (data: typeof emailData & { selectedTemplate?: string }) => {
       const response = await apiRequest('POST', '/api/email/process-demo', {
-        emails: [data]
+        subject: data.subject,
+        body: data.body,
+        from: data.from,
+        selectedTemplate: data.selectedTemplate || 'general',
+        attachments: []
       });
       return await response.json();
     },
     onSuccess: (data) => {
       toast({
-        title: 'Email Processed Successfully',
-        description: `Created ${data.recordsCreated || 1} new project record(s)`,
+        title: 'Email Classified Successfully',
+        description: `Classified as ${data.classification?.type} with ${Math.round((data.classification?.confidence || 0) * 100)}% confidence`,
       });
       
       // Refresh relevant data
