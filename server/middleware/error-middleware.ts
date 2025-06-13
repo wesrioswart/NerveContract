@@ -4,8 +4,9 @@ import DOMPurify from 'isomorphic-dompurify';
 
 // Enhanced error response structure
 interface ErrorResponse {
+  success: false;
   error: string;
-  message: string;
+  message?: string;
   code?: string;
   timestamp: string;
   path: string;
@@ -94,8 +95,8 @@ export const errorHandler = (
   // Handle operational errors
   if (error instanceof AppError) {
     const response: ErrorResponse = {
-      error: error.name,
-      message: DOMPurify.sanitize(error.message),
+      success: false,
+      error: DOMPurify.sanitize(error.message),
       code: error.code,
       timestamp: new Date().toISOString(),
       path: req.path
@@ -123,8 +124,8 @@ export const errorHandler = (
   if (err.message?.includes('connect') || err.message?.includes('timeout') || 
       err.message?.includes('ECONNREFUSED') || err.message?.includes('pool')) {
     const response: ErrorResponse = {
-      error: 'DatabaseConnectionError',
-      message: 'Database service temporarily unavailable',
+      success: false,
+      error: 'Database service temporarily unavailable',
       code: 'DATABASE_CONNECTION_ERROR',
       timestamp: new Date().toISOString(),
       path: req.path
@@ -144,8 +145,8 @@ export const errorHandler = (
   // Handle CORS errors
   if (err.message?.includes('CORS') || err.message?.includes('origin')) {
     const response: ErrorResponse = {
-      error: 'CORSError',
-      message: 'Cross-origin request blocked',
+      success: false,
+      error: 'Cross-origin request blocked',
       code: 'CORS_ERROR',
       timestamp: new Date().toISOString(),
       path: req.path
@@ -168,8 +169,8 @@ export const errorHandler = (
 
   // Generic response for unexpected errors
   const response: ErrorResponse = {
-    error: 'InternalServerError',
-    message: 'An unexpected error occurred. Our team has been notified.',
+    success: false,
+    error: 'An unexpected error occurred. Our team has been notified.',
     code: 'INTERNAL_ERROR',
     timestamp: new Date().toISOString(),
     path: req.path

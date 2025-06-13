@@ -124,10 +124,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(200).json(userWithoutPassword);
   });
 
-  // Project routes
-  app.get("/api/projects", async (_req: Request, res: Response) => {
-    const projects = await storage.getAllProjects();
-    return res.status(200).json(projects);
+  // Project routes with enhanced error handling
+  app.get("/api/projects", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const projects = await storage.getAllProjects();
+      res.json({ success: true, data: projects });
+    } catch (error) {
+      next(new AppError(500, 'Failed to fetch projects', 'PROJECTS_FETCH_ERROR'));
+    }
   });
 
   app.post("/api/projects", requireAuth, async (req: Request, res: Response) => {
