@@ -13,6 +13,7 @@ import * as equipmentHireController from "./controllers/equipment-hire-controlle
 import { generateRfiPdf, getRfiHtmlPreview } from "./controllers/rfi-pdf-controller";
 import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured, extractResourceAllocationData } from "./utils/openai";
 import { requireOpenAI, requireAnthropic, validateAPIConfiguration } from "./utils/api-security";
+import { createValidationMiddleware, createRateLimit, validateProjectAccess } from "./utils/input-validation";
 import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
 import { parseProgrammeFile } from "./services/programme-parser";
 import { analyzeProgramme } from "./services/programme-analysis";
@@ -184,32 +185,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(200).json(compensationEvents);
   });
 
-  app.post("/api/compensation-events", async (req: Request, res: Response) => {
-    try {
-      console.log("Received compensation event data:", req.body);
-      
-      // Convert date strings to Date objects
-      const processedData = {
-        ...req.body,
-        raisedAt: req.body.raisedAt ? new Date(req.body.raisedAt) : undefined,
-        responseDeadline: req.body.responseDeadline ? new Date(req.body.responseDeadline) : undefined,
-        implementedDate: req.body.implementedDate ? new Date(req.body.implementedDate) : undefined
-      };
-      
-      console.log("Processed compensation event data:", processedData);
-      const validatedData = insertCompensationEventSchema.parse(processedData);
-      console.log("Validated compensation event data:", validatedData);
-      const compensationEvent = await storage.createCompensationEvent(validatedData);
-      console.log("Created compensation event:", compensationEvent);
-      return res.status(201).json(compensationEvent);
-    } catch (error) {
-      console.error("Error creating compensation event:", error);
-      if (error instanceof Error) {
-        return res.status(400).json({ message: "Invalid compensation event data", error: error.message });
-      }
-      return res.status(400).json({ message: "Invalid compensation event data" });
+  // Create validation middleware with enhanced security
+  const ceValidation = createValidationMiddleware(
+    insertCompensationEventSchema,
+    'compensation-event',
+    {
+      maxStringLength: 5000,
+      checkSqlInjection: true,
+      checkXssAttempts: true,
+      sanitizeHtml: true
     }
-  });
+  );
+
+  app.post("/api/compensation-events",
+    createRateLimit(15 * 60 * 1000, 50), // 50 requests per 15 minutes
+    ceValidation,
+    async (req: Request, res: Response) => {
+      try {
+        console.log("Received compensation event data:", req.body);
+        
+        // Use validated data from middleware
+        const validatedData = req.validatedData;
+        
+        // Convert date strings to Date objects
+        const processedData = {
+          ...validatedData,
+          raisedAt: validatedData.raisedAt ? new Date(validatedData.raisedAt) : new Date(),
+          responseDeadline: validatedData.responseDeadline ? new Date(validatedData.responseDeadline) : undefined,
+          implementedDate: validatedData.implementedDate ? new Date(validatedData.implementedDate) : undefined
+        };
+        
+        console.log("Processed compensation event data:", processedData);
+        const compensationEvent = await storage.createCompensationEvent(processedData);
+        console.log("Created compensation event:", compensationEvent);
+        
+        // Log agent activity
+        await storage.logAgentActivity({
+          agentType: 'commercial',
+          action: 'compensation_event_created',
+          projectId: processedData.projectId,
+          details: `CE ${compensationEvent.reference} created`,
+          userId: processedData.raisedBy
+        });
+        
+        return res.status(201).json(compensationEvent);
+      } catch (error) {
+        console.error("Error creating compensation event:", error);
+        if (error instanceof Error) {
+          return res.status(400).json({ 
+            error: "Failed to create compensation event", 
+            details: [error.message] 
+          });
+        }
+        return res.status(400).json({ 
+          error: "Failed to create compensation event",
+          details: ["Invalid compensation event data"]
+        });
+      }
+    }
+  );
 
   app.get("/api/compensation-events/:id", async (req: Request, res: Response) => {
     const ceId = parseInt(req.params.id);
@@ -269,26 +303,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(200).json(earlyWarnings);
   });
 
-  app.post("/api/early-warnings", async (req: Request, res: Response) => {
-    try {
-      // Convert date strings to Date objects
-      const processedData = {
-        ...req.body,
-        raisedAt: req.body.raisedAt ? new Date(req.body.raisedAt) : undefined,
-        meetingDate: req.body.meetingDate ? new Date(req.body.meetingDate) : undefined
-      };
-      
-      const validatedData = insertEarlyWarningSchema.parse(processedData);
-      const earlyWarning = await storage.createEarlyWarning(validatedData);
-      return res.status(201).json(earlyWarning);
-    } catch (error) {
-      console.error("Error creating early warning:", error);
-      if (error instanceof Error) {
-        return res.status(400).json({ message: "Invalid early warning data", error: error.message });
-      }
-      return res.status(400).json({ message: "Invalid early warning data" });
+  // Create validation middleware for early warnings
+  const ewValidation = createValidationMiddleware(
+    insertEarlyWarningSchema,
+    'early-warning',
+    {
+      maxStringLength: 5000,
+      checkSqlInjection: true,
+      checkXssAttempts: true,
+      sanitizeHtml: true
     }
-  });
+  );
+
+  app.post("/api/early-warnings",
+    createRateLimit(15 * 60 * 1000, 50), // 50 requests per 15 minutes
+    ewValidation,
+    async (req: Request, res: Response) => {
+      try {
+        // Use validated data from middleware
+        const validatedData = req.validatedData;
+        
+        // Convert date strings to Date objects
+        const processedData = {
+          ...validatedData,
+          raisedAt: validatedData.raisedAt ? new Date(validatedData.raisedAt) : new Date(),
+          meetingDate: validatedData.meetingDate ? new Date(validatedData.meetingDate) : undefined
+        };
+        
+        const earlyWarning = await storage.createEarlyWarning(processedData);
+        
+        // Log agent activity
+        await storage.logAgentActivity({
+          agentType: 'operational',
+          action: 'early_warning_created',
+          projectId: processedData.projectId,
+          details: `Early Warning ${earlyWarning.reference} created`,
+          userId: processedData.raisedBy
+        });
+        
+        return res.status(201).json(earlyWarning);
+      } catch (error) {
+        console.error("Error creating early warning:", error);
+        if (error instanceof Error) {
+          return res.status(400).json({ 
+            error: "Failed to create early warning", 
+            details: [error.message] 
+          });
+        }
+        return res.status(400).json({ 
+          error: "Failed to create early warning",
+          details: ["Invalid early warning data"]
+        });
+      }
+    }
+  );
 
   app.get("/api/early-warnings/:id", async (req: Request, res: Response) => {
     const ewId = parseInt(req.params.id);
