@@ -43,7 +43,11 @@ export function AIChatCitations({
   contextUsed,
   confidenceLevel
 }: AIChatCitationsProps) {
-  if (!sourceCitations.length && !clauseReferences.length && !contextUsed) {
+  // Defensive null checks
+  const safeCitations = sourceCitations || [];
+  const safeClauseRefs = clauseReferences || [];
+  
+  if (!safeCitations.length && !safeClauseRefs.length && !contextUsed) {
     return null;
   }
 
@@ -89,22 +93,22 @@ export function AIChatCitations({
 
       {/* Quick Source References */}
       <div className="flex flex-wrap gap-1">
-        {clauseReferences && clauseReferences.slice(0, 3).map((clause, index) => (
+        {safeClauseRefs.slice(0, 3).map((clause, index) => (
           <Badge key={index} variant="outline" className="text-xs">
-            {clause.clause || 'Unknown'}
+            {clause?.clause || 'Unknown'}
           </Badge>
         ))}
         
-        {sourceCitations && sourceCitations.slice(0, 3).map((source, index) => (
+        {safeCitations.slice(0, 3).map((source, index) => (
           <Badge key={index} variant="secondary" className="text-xs">
-            {getSourceIcon(source.type)}
-            <span className="ml-1">{source.reference}</span>
+            {getSourceIcon(source?.type || 'project_document')}
+            <span className="ml-1">{source?.reference || 'Unknown'}</span>
           </Badge>
         ))}
         
-        {(clauseReferences.length > 3 || sourceCitations.length > 3) && (
+        {(safeClauseRefs.length > 3 || safeCitations.length > 3) && (
           <Badge variant="outline" className="text-xs">
-            +{(clauseReferences.length + sourceCitations.length) - 6} more
+            +{(safeClauseRefs.length + safeCitations.length) - 6} more
           </Badge>
         )}
       </div>
@@ -124,7 +128,7 @@ export function AIChatCitations({
           
           <div className="space-y-6">
             {/* NEC4 Clause References */}
-            {clauseReferences.length > 0 && (
+            {safeClauseRefs.length > 0 && (
               <Card>
                 <CardContent className="pt-6">
                   <h3 className="font-medium mb-3 flex items-center gap-2">
@@ -133,7 +137,7 @@ export function AIChatCitations({
                   </h3>
                   
                   <div className="space-y-3">
-                    {clauseReferences.map((clause, index) => (
+                    {safeClauseRefs.map((clause, index) => (
                       <div key={index} className="border-l-2 border-blue-200 pl-3">
                         <div className="flex items-center gap-2 mb-1">
                           <Badge variant="outline">{clause.clause}</Badge>
@@ -156,7 +160,7 @@ export function AIChatCitations({
             )}
 
             {/* Source Citations */}
-            {sourceCitations.length > 0 && (
+            {safeCitations.length > 0 && (
               <Card>
                 <CardContent className="pt-6">
                   <h3 className="font-medium mb-3 flex items-center gap-2">
@@ -165,7 +169,7 @@ export function AIChatCitations({
                   </h3>
                   
                   <div className="space-y-3">
-                    {sourceCitations.map((source, index) => (
+                    {safeCitations.map((source, index) => (
                       <div key={index} className="flex items-center justify-between border rounded p-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
