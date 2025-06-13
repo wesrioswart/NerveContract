@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/utils";
 import { ChatMessage } from "@shared/schema";
 import { Bot, User, Send, RefreshCw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { AIChatCitations } from "../ai-evidence/ai-chat-citations";
 
 type ChatInterfaceProps = {
   projectId: number;
@@ -145,6 +146,14 @@ How can I assist with your NEC4 contract today?`;
                 {msg.role === 'assistant' ? (
                   <div className="text-sm selection:bg-blue-200 selection:text-blue-800">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    
+                    {/* AI Source Citations for Assistant Messages */}
+                    <AIChatCitations
+                      sourceCitations={(msg as any).sourceCitations}
+                      clauseReferences={(msg as any).clauseReferences}
+                      contextUsed={(msg as any).contextUsed}
+                      confidenceLevel={(msg as any).confidenceLevel}
+                    />
                   </div>
                 ) : (
                   <p className="text-sm whitespace-pre-wrap selection:bg-blue-200 selection:text-blue-800">{msg.content}</p>
