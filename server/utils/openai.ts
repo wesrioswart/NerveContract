@@ -1,21 +1,24 @@
 import OpenAI from "openai";
+import { getOpenAIClient } from "./api-security";
 
 // The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const apiKey = process.env.OPENAI_API_KEY;
-
-// Validate OpenAI API key
-if (!apiKey) {
-  console.warn("WARNING: OPENAI_API_KEY environment variable is not set. AI features will not work properly.");
-}
 
 // Function to check if the OpenAI API key is properly configured
 function isOpenAIConfigured(): boolean {
-  return !!apiKey;
+  const config = getOpenAIClient();
+  return config.isConfigured;
 }
 
-const openai = new OpenAI({ 
-  apiKey: apiKey || "dummy-key", // Use a dummy key to prevent initialization errors, actual requests will be checked
-});
+// Secure OpenAI client getter
+function getSecureOpenAIClient(): OpenAI {
+  const config = getOpenAIClient();
+  
+  if (!config.isConfigured) {
+    throw new Error(`OpenAI not configured: ${config.error}`);
+  }
+  
+  return config.client as OpenAI;
+}
 
 // Structure for NEC4 contract knowledge base
 type ClauseInfo = {
@@ -196,11 +199,8 @@ const NEC4_KNOWLEDGE_BASE: KnowledgeBase = {
 // Function to ask question to OpenAI about NEC4 contracts
 async function askContractAssistant(question: string): Promise<string> {
   try {
-    // Check if API key is available
-    if (!apiKey) {
-      console.error("OpenAI API key is not set");
-      return "AI features are currently unavailable. Please contact the administrator to set up the OpenAI API key.";
-    }
+    // Use secure OpenAI client
+    const openai = getSecureOpenAIClient();
     
     // Define common NEC4 topics and their related clauses
     const topicMap: Record<string, string[]> = {

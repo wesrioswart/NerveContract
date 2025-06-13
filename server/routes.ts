@@ -1426,10 +1426,29 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
         return res.status(400).json({ error: "Missing required email data: subject, body, and from are required" });
       }
       
-      // Initialize Anthropic client for AI classification
-      const anthropic = new Anthropic({
-        apiKey: process.env.OPENAI_API_KEY, // Using OpenAI key for Anthropic
-      });
+      // Use secure Anthropic client with validation
+      const { getAnthropicClient, APIRateLimiter } = await import("./utils/api-security");
+      const clientConfig = getAnthropicClient();
+      
+      if (!clientConfig.isConfigured) {
+        return res.status(503).json({ 
+          error: "Anthropic service unavailable",
+          message: clientConfig.error,
+          code: 'ANTHROPIC_NOT_CONFIGURED'
+        });
+      }
+
+      // Rate limiting check
+      const clientId = req.ip || 'anonymous';
+      if (!APIRateLimiter.checkLimit(clientId)) {
+        return res.status(429).json({
+          error: "Rate limit exceeded",
+          message: "Too many AI requests. Please try again later.",
+          remainingRequests: APIRateLimiter.getRemainingRequests(clientId)
+        });
+      }
+
+      const anthropic = clientConfig.client as any;
 
       // AI Classification of email content
       const classificationPrompt = `
