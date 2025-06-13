@@ -397,13 +397,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
             details: [error.message] 
           });
         }
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: "Failed to create early warning",
           details: ["Invalid early warning data"]
         });
       }
+    });
+
+  // Batch Operations - Optimized bulk insert endpoints
+  // Compensation Events Batch Creation
+  app.post("/api/batch/compensation-events",
+    requireAuth,
+    async (req: Request, res: Response) => {
+      try {
+        const { events } = req.body;
+        
+        if (!Array.isArray(events) || events.length === 0) {
+          return res.status(400).json({ message: "Events array is required and cannot be empty" });
+        }
+        
+        if (events.length > 100) {
+          return res.status(400).json({ message: "Maximum 100 events per batch operation" });
+        }
+        
+        // Process and sanitize each event
+        const processedEvents = events.map((event: any) => ({
+          ...event,
+          title: event.title ? DOMPurify.sanitize(event.title) : event.title,
+          description: event.description ? DOMPurify.sanitize(event.description) : event.description,
+          clauseReference: event.clauseReference ? DOMPurify.sanitize(event.clauseReference) : event.clauseReference,
+          raisedAt: event.raisedAt ? new Date(event.raisedAt) : new Date(),
+          responseDeadline: event.responseDeadline ? new Date(event.responseDeadline) : undefined,
+          implementedDate: event.implementedDate ? new Date(event.implementedDate) : undefined
+        }));
+        
+        // Single optimized database operation instead of N individual inserts
+        const createdEvents = await storage.createMultipleCompensationEvents(processedEvents);
+        
+        // Log batch operation
+        await storage.logAgentActivity({
+          agentType: 'operational',
+          action: 'batch_compensation_events_created',
+          projectId: processedEvents[0]?.projectId || 0,
+          details: `Batch created ${createdEvents.length} compensation events`,
+          userId: processedEvents[0]?.raisedBy || 0
+        });
+        
+        return res.status(201).json({
+          success: true,
+          created: createdEvents.length,
+          events: createdEvents
+        });
+      } catch (error) {
+        console.error("Error in batch compensation events creation:", error);
+        return res.status(500).json({ 
+          message: "Failed to create compensation events batch",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
+  // Early Warnings Batch Creation
+  app.post("/api/batch/early-warnings",
+    requireAuth,
+    async (req: Request, res: Response) => {
+      try {
+        const { warnings } = req.body;
+        
+        if (!Array.isArray(warnings) || warnings.length === 0) {
+          return res.status(400).json({ message: "Warnings array is required and cannot be empty" });
+        }
+        
+        if (warnings.length > 100) {
+          return res.status(400).json({ message: "Maximum 100 warnings per batch operation" });
+        }
+        
+        // Process and sanitize each warning
+        const processedWarnings = warnings.map((warning: any) => ({
+          ...warning,
+          description: warning.description ? DOMPurify.sanitize(warning.description) : warning.description,
+          mitigationPlan: warning.mitigationPlan ? DOMPurify.sanitize(warning.mitigationPlan) : warning.mitigationPlan,
+          raisedAt: warning.raisedAt ? new Date(warning.raisedAt) : new Date(),
+          meetingDate: warning.meetingDate ? new Date(warning.meetingDate) : undefined
+        }));
+        
+        // Single optimized database operation
+        const createdWarnings = await storage.createMultipleEarlyWarnings(processedWarnings);
+        
+        // Log batch operation
+        await storage.logAgentActivity({
+          agentType: 'operational',
+          action: 'batch_early_warnings_created',
+          projectId: processedWarnings[0]?.projectId || 0,
+          details: `Batch created ${createdWarnings.length} early warnings`,
+          userId: processedWarnings[0]?.raisedBy || 0
+        });
+        
+        return res.status(201).json({
+          success: true,
+          created: createdWarnings.length,
+          warnings: createdWarnings
+        });
+      } catch (error) {
+        console.error("Error in batch early warnings creation:", error);
+        return res.status(500).json({ 
+          message: "Failed to create early warnings batch",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+  });
+
+  app.put("/api/early-warnings/:id", async (req: Request, res: Response) => {
+    const ewId = parseInt(req.params.id);
+    
+    if (isNaN(ewId)) {
+      return res.status(400).json({ message: "Invalid early warning ID" });
     }
-  );
+    
+    try {
+      // Convert date strings to Date objects
+      const processedData = {
+        ...req.body,
+        raisedAt: req.body.raisedAt ? new Date(req.body.raisedAt) : undefined,
+        meetingDate: req.body.meetingDate ? new Date(req.body.meetingDate) : undefined
+      };
+      
+      const earlyWarning = await storage.updateEarlyWarning(ewId, processedData);
+      return res.status(200).json(earlyWarning);
+    } catch (error) {
+      console.error("Error updating early warning:", error);
+      if (error instanceof Error) {
+        return res.status(400).json({ message: "Error updating early warning", error: error.message });
+      }
+      return res.status(404).json({ message: "Early warning not found" });
+    }
+  });
 
   app.get("/api/early-warnings/:id", async (req: Request, res: Response) => {
     const ewId = parseInt(req.params.id);

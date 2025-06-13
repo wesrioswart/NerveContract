@@ -788,6 +788,17 @@ export class DatabaseStorage implements IStorage {
     return event;
   }
 
+  // Batch operations for compensation events - optimized for bulk inserts
+  async createMultipleCompensationEvents(events: InsertCompensationEvent[]): Promise<CompensationEvent[]> {
+    if (events.length === 0) return [];
+    
+    // Single optimized query instead of N individual queries
+    return await db
+      .insert(compensationEvents)
+      .values(events)
+      .returning();
+  }
+
   async updateCompensationEvent(id: number, ce: Partial<CompensationEvent>): Promise<CompensationEvent> {
     const [updated] = await db
       .update(compensationEvents)
@@ -823,6 +834,17 @@ export class DatabaseStorage implements IStorage {
     return warning;
   }
 
+  // Batch operations for early warnings - optimized for bulk inserts
+  async createMultipleEarlyWarnings(warnings: InsertEarlyWarning[]): Promise<EarlyWarning[]> {
+    if (warnings.length === 0) return [];
+    
+    // Single optimized query instead of N individual queries
+    return await db
+      .insert(earlyWarnings)
+      .values(warnings)
+      .returning();
+  }
+
   async updateEarlyWarning(id: number, ew: Partial<EarlyWarning>): Promise<EarlyWarning> {
     const [updated] = await db
       .update(earlyWarnings)
@@ -856,6 +878,16 @@ export class DatabaseStorage implements IStorage {
       .values(ncr)
       .returning();
     return report;
+  }
+
+  // Batch operations for non-conformance reports - optimized for bulk inserts
+  async createMultipleNonConformanceReports(reports: InsertNonConformanceReport[]): Promise<NonConformanceReport[]> {
+    if (reports.length === 0) return [];
+    
+    return await db
+      .insert(nonConformanceReports)
+      .values(reports)
+      .returning();
   }
 
   async updateNonConformanceReport(id: number, ncr: Partial<NonConformanceReport>): Promise<NonConformanceReport> {
