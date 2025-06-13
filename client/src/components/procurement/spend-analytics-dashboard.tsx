@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -282,37 +282,46 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
   // Comparison mode
   const [comparisonMode, setComparisonMode] = useState<'previous-period' | 'budget' | 'none'>('none');
   
-  // Calculate maximum values for chart scaling
-  const maxWeeklyAmount = Math.max(...spendData.weeklySpend.map(w => w.amount));
-  const maxMonthlyAmount = Math.max(...spendData.monthlySpend.map(m => m.amount));
+  // Memoized maximum values for chart scaling to prevent recalculation
+  const maxWeeklyAmount = useMemo(() => 
+    Math.max(...spendData.weeklySpend.map(w => w.amount)), 
+    [spendData.weeklySpend]
+  );
   
-  // Filter and sort data based on current selections
-  const filteredCategories = spendData.categoryBreakdown
-    .filter(cat => selectedCategories.includes(cat.category))
-    .filter(cat => {
-      if (thresholdType === 'above') return cat.amount >= thresholdValue;
-      return cat.amount <= thresholdValue;
-    })
-    .sort((a, b) => {
-      if (sortField === 'amount') {
-        return sortDirection === 'asc' ? a.amount - b.amount : b.amount - a.amount;
-      } else if (sortField === 'percentage') {
-        return sortDirection === 'asc' ? a.percentage - b.percentage : b.percentage - a.percentage;
-      } else if (sortField === 'name') {
-        return sortDirection === 'asc' 
-          ? a.category.localeCompare(b.category) 
-          : b.category.localeCompare(a.category);
-      } else {
-        // Sort by trend (up, stable, down)
-        const trendOrder = { up: 0, stable: 1, down: 2 };
-        const aOrder = trendOrder[a.trend as keyof typeof trendOrder];
-        const bOrder = trendOrder[b.trend as keyof typeof trendOrder];
-        return sortDirection === 'asc' ? aOrder - bOrder : bOrder - aOrder;
-      }
-    });
+  const maxMonthlyAmount = useMemo(() => 
+    Math.max(...spendData.monthlySpend.map(m => m.amount)), 
+    [spendData.monthlySpend]
+  );
   
-  // Simulate generating a forecast report
-  const generateForecastReport = () => {
+  // Optimized filtering and sorting with useMemo to prevent expensive recalculations on every render
+  const filteredCategories = useMemo(() => {
+    return spendData.categoryBreakdown
+      .filter(cat => selectedCategories.includes(cat.category))
+      .filter(cat => {
+        if (thresholdType === 'above') return cat.amount >= thresholdValue;
+        return cat.amount <= thresholdValue;
+      })
+      .sort((a, b) => {
+        if (sortField === 'amount') {
+          return sortDirection === 'asc' ? a.amount - b.amount : b.amount - a.amount;
+        } else if (sortField === 'percentage') {
+          return sortDirection === 'asc' ? a.percentage - b.percentage : b.percentage - a.percentage;
+        } else if (sortField === 'name') {
+          return sortDirection === 'asc' 
+            ? a.category.localeCompare(b.category) 
+            : b.category.localeCompare(a.category);
+        } else {
+          // Sort by trend (up, stable, down)
+          const trendOrder = { up: 0, stable: 1, down: 2 };
+          const aOrder = trendOrder[a.trend as keyof typeof trendOrder];
+          const bOrder = trendOrder[b.trend as keyof typeof trendOrder];
+          return sortDirection === 'asc' ? aOrder - bOrder : bOrder - aOrder;
+        }
+      });
+  }, [selectedCategories, thresholdType, thresholdValue, sortField, sortDirection]);
+  
+  // Memoized event handlers to prevent unnecessary re-renders
+  const generateForecastReport = useCallback(() => {
     setExportInProgress(true);
     
     // Simulate API call delay
@@ -321,22 +330,19 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
       // Show success message or trigger download
       alert("Forecast report generated successfully!");
     }, 1500);
-  };
+  }, []);
   
-  // Open anomaly details dialog
-  const openAnomalyDetails = (anomaly: typeof spendData.anomalies[0]) => {
+  const openAnomalyDetails = useCallback((anomaly: typeof spendData.anomalies[0]) => {
     setSelectedAnomaly(anomaly);
     setAnomalyDialogOpen(true);
-  };
+  }, []);
   
-  // Open forecast details dialog
-  const openForecastDetails = (forecast: typeof spendData.aiForecasts[0]) => {
+  const openForecastDetails = useCallback((forecast: typeof spendData.aiForecasts[0]) => {
     setSelectedForecast(forecast);
     setForecastDialogOpen(true);
-  };
+  }, []);
   
-  // Handle taking action on an anomaly
-  const handleAnomalyAction = (anomalyId: number) => {
+  const handleAnomalyAction = useCallback((anomalyId: number) => {
     // Track this anomaly as being resolved
     setResolvedAnomalies(prev => [...prev, anomalyId]);
     
@@ -346,7 +352,7 @@ const SpendAnalyticsDashboard: React.FC<SpendAnalyticsDashboardProps> = ({ class
     
     // Show success message
     alert(`Action started for anomaly #${anomalyId}. A notification has been sent to the procurement team.`);
-  };
+  }, []);
   
   // Handle undoing a resolved anomaly
   const handleUndoAnomalyResolution = (anomalyId: number) => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { ProgrammeMilestone } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,17 +14,31 @@ export default function ProgrammeTable({ milestones, isLoading }: ProgrammeTable
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   
-  // Filter milestones based on search term and status filter
-  const filteredMilestones = milestones.filter((milestone) => {
-    const matchesSearch = milestone.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || milestone.status.toLowerCase() === statusFilter.toLowerCase();
-    return matchesSearch && matchesStatus;
-  });
+  // Optimized filtering with useMemo to prevent recalculation on every render
+  const filteredAndSortedMilestones = useMemo(() => {
+    if (!milestones) return [];
+    
+    // Filter milestones based on search term and status filter
+    const filtered = milestones.filter((milestone) => {
+      const matchesSearch = milestone.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === "all" || milestone.status.toLowerCase() === statusFilter.toLowerCase();
+      return matchesSearch && matchesStatus;
+    });
+    
+    // Sort milestones by planned date
+    return [...filtered].sort(
+      (a, b) => new Date(a.plannedDate).getTime() - new Date(b.plannedDate).getTime()
+    );
+  }, [milestones, searchTerm, statusFilter]);
   
-  // Sort milestones by planned date
-  const sortedMilestones = [...filteredMilestones].sort(
-    (a, b) => new Date(a.plannedDate).getTime() - new Date(b.plannedDate).getTime()
-  );
+  // Memoized event handlers to prevent unnecessary re-renders
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  }, []);
+  
+  const handleStatusFilterChange = useCallback((value: string) => {
+    setStatusFilter(value);
+  }, []);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
@@ -33,7 +47,7 @@ export default function ProgrammeTable({ milestones, isLoading }: ProgrammeTable
           <Input
             placeholder="Search milestones..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
             className="w-full"
             prefix={<span className="material-icons text-gray-400">search</span>}
           />
@@ -42,7 +56,7 @@ export default function ProgrammeTable({ milestones, isLoading }: ProgrammeTable
         <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
           <Select
             value={statusFilter}
-            onValueChange={setStatusFilter}
+            onValueChange={handleStatusFilterChange}
           >
             <SelectTrigger className="w-full md:w-48">
               <SelectValue placeholder="Filter by status" />
@@ -86,7 +100,7 @@ export default function ProgrammeTable({ milestones, isLoading }: ProgrammeTable
               </tr>
             </thead>
             <tbody>
-              {sortedMilestones.map((milestone) => {
+              {filteredAndSortedMilestones.map((milestone) => {
                 const { bgColor, textColor } = getStatusColor(milestone.status);
                 
                 return (
