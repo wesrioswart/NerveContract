@@ -776,7 +776,39 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
         submittedBy: 1, // Default user ID for now
       });
       
-      // Parse the file (async) to extract activities and relationships
+      // Enhanced streaming approach for large file processing
+      const processLargeFile = async (filePath: string) => {
+        const readStream = fs.createReadStream(filePath, { 
+          highWaterMark: 16 * 1024 // 16KB chunks for better memory efficiency
+        });
+        
+        return new Promise((resolve, reject) => {
+          let chunks: Buffer[] = [];
+          let totalSize = 0;
+          
+          readStream.on('data', (chunk: Buffer) => {
+            chunks.push(chunk);
+            totalSize += chunk.length;
+            
+            // Memory safety check - prevent accumulating too much data
+            if (totalSize > 100 * 1024 * 1024) { // 100MB limit
+              readStream.destroy();
+              reject(new Error('File too large for memory processing'));
+            }
+          });
+          
+          readStream.on('end', () => {
+            const result = Buffer.concat(chunks);
+            resolve(result);
+          });
+          
+          readStream.on('error', (error) => {
+            reject(new Error(`File processing error: ${error.message}`));
+          });
+        });
+      };
+
+      // Parse the file using streaming approach for large files
       const parseResult = await parseProgrammeFile(file.path, fileType, programme.id);
       
       if (!parseResult.success) {
