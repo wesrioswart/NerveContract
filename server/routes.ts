@@ -1374,31 +1374,57 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
-  // Document Analysis route
-  app.post("/api/document/analyze", async (req: Request, res: Response) => {
-    try {
-      // Check if OpenAI is configured
-      if (!isOpenAIConfigured()) {
-        console.warn("OpenAI API key is not set - document analysis will be limited");
+  // Document Analysis route with comprehensive security validation
+  app.post("/api/document/analyze",
+    createRateLimit(10 * 60 * 1000, 20), // 20 requests per 10 minutes
+    async (req: Request, res: Response) => {
+      try {
+        // 1. API configuration check
+        if (!isOpenAIConfigured()) {
+          console.warn("OpenAI API key is not set - document analysis will be limited");
+        }
+        
+        // 2. Enhanced input validation with security checks
+        const securityErrors = validateContentSecurity(req.body, {
+          maxStringLength: 50000, // 50KB text limit
+          checkSqlInjection: true,
+          checkXssAttempts: true
+        });
+        
+        if (securityErrors.length > 0) {
+          return res.status(400).json({
+            error: "Security validation failed",
+            details: securityErrors
+          });
+        }
+        
+        // 3. Schema validation
+        const { documentText } = documentAnalysisSchema.parse(req.body);
+        
+        // 4. Business rules validation
+        if (!documentText || documentText.trim().length < 10) {
+          return res.status(400).json({
+            error: "Validation failed",
+            details: ["Document text must be at least 10 characters long"]
+          });
+        }
+        
+        // 5. Call OpenAI to analyze the document
+        const analysis = await analyzeContractDocument(documentText);
+        
+        return res.status(200).json(analysis);
+      } catch (error) {
+        console.error("Error in document analysis:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        
+        return res.status(400).json({ 
+          error: "Document analysis failed",
+          details: ["Error analyzing document: " + errorMessage],
+          recommendations: ["Please try again later or contact support"]
+        });
       }
-      
-      const { documentText } = documentAnalysisSchema.parse(req.body);
-      
-      // Call OpenAI to analyze the document
-      const analysis = await analyzeContractDocument(documentText);
-      
-      return res.status(200).json(analysis);
-    } catch (error) {
-      console.error("Error in document analysis:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      
-      return res.status(400).json({ 
-        message: "Invalid document text or analysis failed", 
-        issues: ["Error analyzing document: " + errorMessage],
-        recommendations: ["Please try again later or contact support"]
-      });
     }
-  });
+  );
 
   // Export routes
   app.post("/api/export/compensation-events", async (req: Request, res: Response) => {
