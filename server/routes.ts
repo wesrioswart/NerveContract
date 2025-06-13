@@ -13,7 +13,7 @@ import * as equipmentHireController from "./controllers/equipment-hire-controlle
 import { generateRfiPdf, getRfiHtmlPreview } from "./controllers/rfi-pdf-controller";
 import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured, extractResourceAllocationData } from "./utils/openai";
 import { requireOpenAI, requireAnthropic, validateAPIConfiguration } from "./utils/api-security";
-import { createValidationMiddleware, createRateLimit, validateProjectAccess } from "./utils/input-validation";
+import { createValidationMiddleware, createRateLimit, validateProjectAccess, validateFileUpload, validateContentSecurity } from "./utils/input-validation";
 import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
 import { parseProgrammeFile } from "./services/programme-parser";
 import { analyzeProgramme } from "./services/programme-analysis";
@@ -620,23 +620,58 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
 
   // Programme routes
   
-  // Programme file upload route
-  app.post("/api/programme/upload", upload.single('file'), async (req: Request, res: Response) => {
-    try {
-      console.log("Programme file upload request received");
-      
-      // Create uploads directory if it doesn't exist
-      const uploadsDir = path.join(process.cwd(), 'uploads/programme');
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
-      
-      const file = req.file;
-      if (!file) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
-      
-      const { projectId, name, version } = req.body;
+  // Programme file upload route with comprehensive security validation
+  app.post("/api/programme/upload", 
+    createRateLimit(10 * 60 * 1000, 10), // 10 requests per 10 minutes
+    upload.single('file'), 
+    async (req: Request, res: Response) => {
+      try {
+        console.log("Programme file upload request received");
+        
+        // 1. File validation with security checks
+        const file = req.file;
+        if (!file) {
+          return res.status(400).json({ 
+            error: "File upload failed",
+            details: ["No file uploaded"] 
+          });
+        }
+        
+        // 2. Enhanced file security validation
+        const fileErrors = validateFileUpload(file, {
+          maxFileSize: 50 * 1024 * 1024, // 50MB
+          allowedFileTypes: ['xml', 'mpp', 'xer'],
+          checkSqlInjection: true,
+          checkXssAttempts: true
+        });
+        
+        if (fileErrors.length > 0) {
+          return res.status(400).json({
+            error: "File validation failed",
+            details: fileErrors
+          });
+        }
+        
+        // 3. Request body validation with security checks
+        const { projectId, name, version } = req.body;
+        const securityErrors = validateContentSecurity({ projectId, name, version }, {
+          maxStringLength: 500,
+          checkSqlInjection: true,
+          checkXssAttempts: true
+        });
+        
+        if (securityErrors.length > 0) {
+          return res.status(400).json({
+            error: "Security validation failed",
+            details: securityErrors
+          });
+        }
+        
+        // Create uploads directory if it doesn't exist
+        const uploadsDir = path.join(process.cwd(), 'uploads/programme');
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
       
       if (!projectId || !name || !version) {
         return res.status(400).json({ 
