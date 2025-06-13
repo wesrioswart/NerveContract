@@ -68,7 +68,7 @@ export default function HiresList() {
   });
 
   // Get equipment items for reference
-  const { data: equipment, isLoading: isLoadingEquipment } = useQuery({
+  const { data: equipment = [], isLoading: isLoadingEquipment } = useQuery({
     queryKey: ["/api/equipment/items"],
   });
 

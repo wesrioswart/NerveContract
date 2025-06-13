@@ -49,7 +49,7 @@ export class StreamProcessor {
         });
 
         readStream.on('error', (error) => {
-          reject(new AppError(500, `File processing error: ${error.message}`, 'FILE_PROCESSING_ERROR'));
+          reject(new AppError(`File processing error: ${error.message}`, 500, 'FILE_PROCESSING_ERROR'));
         });
       });
     } finally {

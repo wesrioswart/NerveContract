@@ -49,7 +49,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExtension)) {
     cb(null, true);
   } else {
-    cb(new AppError(`File type not allowed: ${file.mimetype}`, 400, 'INVALID_FILE_TYPE'), false);
+    cb(new Error(`File type not allowed: ${file.mimetype}`), false);
   }
 };
 
@@ -89,7 +89,7 @@ export class StreamingFileProcessor {
     processor: (chunk: Buffer) => Promise<void> | void
   ): Promise<void> {
     if (this.activeStreams >= this.MAX_CONCURRENT_STREAMS) {
-      throw new AppError(429, 'Too many concurrent file operations', 'STREAM_LIMIT_EXCEEDED');
+      throw new AppError('Too many concurrent file operations', 429, 'STREAM_LIMIT_EXCEEDED');
     }
 
     this.activeStreams++;
@@ -119,7 +119,7 @@ export class StreamingFileProcessor {
 
   static async copyFileStream(sourcePath: string, destPath: string): Promise<void> {
     if (this.activeStreams >= this.MAX_CONCURRENT_STREAMS) {
-      throw new AppError(429, 'Too many concurrent file operations', 'STREAM_LIMIT_EXCEEDED');
+      throw new AppError('Too many concurrent file operations', 429, 'STREAM_LIMIT_EXCEEDED');
     }
 
     this.activeStreams++;
