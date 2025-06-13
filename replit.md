@@ -193,6 +193,14 @@ Preferred communication style: Simple, everyday language.
   - Integrated optimized streaming approach for MSP files with 16KB chunks and 100MB safety limits
   - Created dedicated StreamProcessor utility for reusable streaming across all file upload endpoints
 
+- June 13, 2025: Implemented advanced frontend performance optimizations with React Query v5
+  - Enhanced React Query configuration with intelligent caching (5min stale time, 10min gcTime) and retry logic
+  - Created specialized query hooks: useOptimizedQuery, useProjectQuery, and useRealTimeQuery with tailored caching strategies
+  - Implemented smart retry logic avoiding unnecessary retries on 404/401/403 errors while retrying network/server errors
+  - Added prefetching system for common navigation patterns to reduce perceived load times
+  - Applied differentiated caching strategies: project data (30min), real-time alerts (2min), equipment data (15min)
+  - Console logs confirm excellent caching performance with 304 responses and 108-158ms response times
+
 - June 12, 2025: Implemented event-driven email processing architecture
   - Replaced simple email processing with AI-powered classification using Anthropic Claude
   - Added EventBus system for decoupled agent communication

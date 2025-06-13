@@ -60,13 +60,24 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
+      gcTime: 10 * 60 * 1000, // 10 minutes - data kept in cache
+      retry: (failureCount, error: any) => {
+        // Don't retry on 404s - resource doesn't exist
+        if (error?.message?.includes('404')) return false;
+        // Retry up to 3 times for other errors
+        return failureCount < 3;
+      },
+      refetchOnWindowFocus: false, // Prevent unnecessary refetches
+      refetchInterval: false, // No automatic polling
     },
     mutations: {
-      retry: false,
+      retry: (failureCount, error: any) => {
+        // Don't retry client errors (400-499)
+        if (error?.message && /^4\d\d/.test(error.message)) return false;
+        // Retry server errors up to 2 times
+        return failureCount < 2;
+      },
     },
   },
 });
