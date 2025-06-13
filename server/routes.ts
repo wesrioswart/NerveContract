@@ -28,17 +28,22 @@ import { exportProcurementReport, downloadReport } from "./controllers/export-co
 import { eventBus } from "./event-bus";
 import Anthropic from '@anthropic-ai/sdk';
 import fs from "fs";
+import { 
+  documentUpload, 
+  programmeUpload, 
+  imageUpload, 
+  memoryMonitoring, 
+  fileCleanupMiddleware,
+  handleMemoryErrors,
+  StreamingFileProcessor
+} from "./middleware/memory-management.js";
+import { AppError } from "./middleware/error-middleware.js";
 import multer from "multer";
 import passport from './auth/passport-config';
 import session from 'express-session';
 
-// Configure multer for file uploads
-const upload = multer({
-  dest: "uploads/programme/",
-  limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB max file size
-  }
-});
+// Memory-efficient file upload configuration (replaced memory-intensive version)
+// Using disk-based storage instead of memory storage to prevent memory leaks
 
 const parseXMLSchema = z.object({
   xmlContent: z.string(),
@@ -670,11 +675,12 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     legacyHeaders: false
   });
 
-  // Programme file upload route with comprehensive security validation
+  // Programme file upload route with memory-efficient handling
   app.post("/api/programme/upload", 
     requireAuth,
     programmeUploadLimiter,
-    upload.single('file'), 
+    fileCleanupMiddleware,
+    programmeUpload.single('file'), 
     async (req: Request, res: Response) => {
       try {
         console.log("Programme file upload request received");
@@ -2163,7 +2169,7 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
-  app.post("/api/resource-allocation/extract", requireAuth, upload.single('file'), async (req: Request, res: Response) => {
+  app.post("/api/resource-allocation/extract", requireAuth, fileCleanupMiddleware, documentUpload.single('file'), async (req: Request, res: Response) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });

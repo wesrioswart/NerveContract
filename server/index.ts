@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { seedDatabase } from "./seed";
 import { initializeEventBus } from "./event-bus";
 import { errorHandler, requestLogger } from "./middleware/error-middleware.js";
+import { memoryMonitoring, handleMemoryErrors, scheduleMemoryCleanup } from "./middleware/memory-management.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -20,6 +21,9 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // Set up view engine for templates
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+
+// Add memory monitoring middleware
+app.use(memoryMonitoring);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -58,10 +62,16 @@ app.use((req, res, next) => {
   // Initialize the event-driven agent communication system
   initializeEventBus();
   
+  // Schedule periodic memory cleanup
+  scheduleMemoryCleanup();
+  
   // Add request logging middleware
   app.use(requestLogger);
   
   const server = await registerRoutes(app);
+
+  // Add memory error handling middleware
+  app.use(handleMemoryErrors);
 
   // Use comprehensive error handling middleware
   app.use(errorHandler);
