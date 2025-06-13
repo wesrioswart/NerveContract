@@ -2,6 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import path from "path";
 import { storage } from "./storage";
+import { db } from "./db";
 import { z } from "zod";
 import { insertChatMessageSchema, insertCompensationEventSchema, insertEarlyWarningSchema, 
   insertProgrammeSchema, insertProgrammeActivitySchema, insertActivityRelationshipSchema,

@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
       await fs.mkdir(uploadDir, { recursive: true });
       cb(null, uploadDir);
     } catch (error) {
-      cb(new AppError(500, 'Failed to create upload directory', 'UPLOAD_DIR_ERROR'), '');
+      cb(new AppError(500, 'Failed to create upload directory', 'UPLOAD_DIR_ERROR'));
     }
   },
   filename: (req, file, cb) => {
@@ -49,7 +49,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExtension)) {
     cb(null, true);
   } else {
-    cb(new AppError(400, `File type not allowed: ${file.mimetype}`, 'INVALID_FILE_TYPE'));
+    cb(new AppError(400, `File type not allowed: ${file.mimetype}`, 'INVALID_FILE_TYPE'), false);
   }
 };
 

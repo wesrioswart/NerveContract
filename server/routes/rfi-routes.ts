@@ -2,6 +2,7 @@ import express from 'express';
 import { requireAuth, requireProjectAccess } from '../middleware/auth-middleware';
 import * as rfiController from '../controllers/rfi-controller';
 import { generateRfiPdf, getRfiHtmlPreview } from '../controllers/rfi-pdf-controller';
+import { documentUpload, fileCleanupMiddleware } from '../middleware/memory-management.js';
 
 export const rfiRouter = express.Router();
 
@@ -16,10 +17,11 @@ rfiRouter.get('/rfis/:id', requireAuth, rfiController.getRfiById);
 rfiRouter.patch('/rfis/:id', requireAuth, rfiController.updateRfi);
 rfiRouter.delete('/rfis/:id', requireAuth, rfiController.deleteRfi);
 
-// RFI attachments
+// RFI attachments with memory-efficient upload
 rfiRouter.post('/rfis/:id/attachments', 
   requireAuth, 
-  rfiController.upload.single('file'), 
+  fileCleanupMiddleware,
+  documentUpload.single('file'), 
   rfiController.addRfiAttachment
 );
 rfiRouter.delete('/rfis/:id/attachments/:attachmentId', requireAuth, rfiController.deleteRfiAttachment);
