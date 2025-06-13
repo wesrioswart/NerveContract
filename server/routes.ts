@@ -2551,6 +2551,67 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
+  // API Performance Monitoring Endpoints
+  app.get('/api/performance/compression-stats', (req: Request, res: Response) => {
+    try {
+      const stats = compressionAnalytics.getCompressionStats();
+      res.json({
+        success: true,
+        data: stats,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting compression stats:', error);
+      res.status(500).json({ message: 'Failed to retrieve compression statistics' });
+    }
+  });
+
+  app.get('/api/performance/compression-metrics', (req: Request, res: Response) => {
+    try {
+      const metrics = compressionAnalytics.getMetrics();
+      const topEndpoints = compressionAnalytics.getTopEndpointsByCompression();
+      
+      res.json({
+        success: true,
+        data: {
+          recentMetrics: metrics.slice(-50), // Last 50 requests
+          topEndpoints,
+          summary: compressionAnalytics.getCompressionStats()
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting compression metrics:', error);
+      res.status(500).json({ message: 'Failed to retrieve compression metrics' });
+    }
+  });
+
+  app.get('/api/performance/bandwidth-savings', (req: Request, res: Response) => {
+    try {
+      const stats = compressionAnalytics.getCompressionStats();
+      const topEndpoints = compressionAnalytics.getTopEndpointsByCompression();
+      
+      // Calculate bandwidth savings in different units
+      const bandwidthSavings = {
+        totalBytesSaved: stats.totalBytesSaved,
+        kiloByteSaved: Math.round(stats.totalBytesSaved / 1024 * 100) / 100,
+        megaBytesSaved: Math.round(stats.totalBytesSaved / (1024 * 1024) * 100) / 100,
+        averageCompressionRatio: stats.averageCompressionRatio,
+        totalRequests: stats.totalRequests,
+        topSavingEndpoints: topEndpoints.slice(0, 5)
+      };
+      
+      res.json({
+        success: true,
+        data: bandwidthSavings,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error calculating bandwidth savings:', error);
+      res.status(500).json({ message: 'Failed to calculate bandwidth savings' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

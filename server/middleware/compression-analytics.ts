@@ -77,14 +77,14 @@ export function compressionMonitoring(req: Request, res: Response, next: NextFun
   const originalWrite = res.write;
   const originalEnd = res.end;
   
-  res.write = function(chunk: any, ...args: any[]): boolean {
+  res.write = function(chunk: any, encoding?: any, callback?: any): boolean {
     if (chunk) {
       originalSize += Buffer.byteLength(chunk);
     }
-    return originalWrite.apply(res, [chunk, ...args]);
+    return originalWrite.call(res, chunk, encoding, callback);
   };
 
-  res.end = function(chunk?: any, ...args: any[]): Response {
+  res.end = function(chunk?: any, encoding?: any, callback?: any): Response {
     if (chunk) {
       originalSize += Buffer.byteLength(chunk);
     }
@@ -112,7 +112,7 @@ export function compressionMonitoring(req: Request, res: Response, next: NextFun
       }
     }
 
-    return originalEnd.apply(res, [chunk, ...args]);
+    return originalEnd.call(res, chunk, encoding, callback);
   };
 
   next();
