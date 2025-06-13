@@ -67,6 +67,14 @@ export const compensationEvents = pgTable("compensation_events", {
   responseDeadline: timestamp("response_deadline"),
   implementedDate: timestamp("implemented_date"),
   attachments: jsonb("attachments"),
+  // AI Evidence and Source Attribution
+  aiGenerated: boolean("ai_generated").default(false),
+  sourceEmailId: text("source_email_id"), // Link to original email that triggered this
+  sourceDocumentPath: text("source_document_path"), // Path to source document
+  aiConfidenceScore: real("ai_confidence_score"), // 0-1 confidence in AI analysis
+  aiReasoningEvidence: jsonb("ai_reasoning_evidence"), // Detailed evidence for AI decision
+  clauseJustification: jsonb("clause_justification"), // NEC4 clause references with reasoning
+  triggerCriteria: jsonb("trigger_criteria"), // What specific criteria triggered this CE
 });
 
 export const insertCompensationEventSchema = createInsertSchema(compensationEvents).omit({
@@ -86,6 +94,15 @@ export const earlyWarnings = pgTable("early_warnings", {
   mitigationPlan: text("mitigation_plan"),
   meetingDate: timestamp("meeting_date"),
   attachments: jsonb("attachments"),
+  // AI Evidence and Source Attribution
+  aiGenerated: boolean("ai_generated").default(false),
+  sourceEmailId: text("source_email_id"),
+  sourceDocumentPath: text("source_document_path"),
+  aiConfidenceScore: real("ai_confidence_score"),
+  aiReasoningEvidence: jsonb("ai_reasoning_evidence"),
+  riskIndicators: jsonb("risk_indicators"), // Specific risk factors identified
+  impactAnalysis: jsonb("impact_analysis"), // Potential impact assessment
+  similarHistoricalCases: jsonb("similar_historical_cases"), // References to similar past cases
 });
 
 export const insertEarlyWarningSchema = createInsertSchema(earlyWarnings).omit({
@@ -178,6 +195,11 @@ export const chatMessages = pgTable("chat_messages", {
   role: text("role").notNull(), // user or assistant
   content: text("content").notNull(),
   timestamp: timestamp("timestamp").notNull(),
+  // Source Attribution for AI Responses
+  sourceCitations: jsonb("source_citations"), // Array of sources: {type, reference, section, confidence}
+  clauseReferences: jsonb("clause_references"), // NEC4 clauses referenced with specific sections
+  contextUsed: jsonb("context_used"), // Project context and data used in response
+  confidenceLevel: real("confidence_level"), // Overall confidence in response
 });
 
 export const insertChatMessageSchema = createInsertSchema(chatMessages)
