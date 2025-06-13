@@ -14,6 +14,8 @@ import { generateRfiPdf, getRfiHtmlPreview } from "./controllers/rfi-pdf-control
 import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured, extractResourceAllocationData } from "./utils/openai";
 import { requireOpenAI, requireAnthropic, validateAPIConfiguration } from "./utils/api-security";
 import { createValidationMiddleware, createRateLimit, validateProjectAccess, validateFileUpload, validateContentSecurity } from "./utils/input-validation";
+import rateLimit from 'express-rate-limit';
+import DOMPurify from 'isomorphic-dompurify';
 import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
 import { parseProgrammeFile } from "./services/programme-parser";
 import { analyzeProgramme } from "./services/programme-analysis";
@@ -197,15 +199,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // Enhanced rate limiter for compensation events
+  const createCELimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // Limit each IP to 10 requests per windowMs
+    message: 'Too many compensation events created, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+
   app.post("/api/compensation-events",
-    createRateLimit(15 * 60 * 1000, 50), // 50 requests per 15 minutes
+    requireAuth,
+    createCELimiter,
     ceValidation,
     async (req: Request, res: Response) => {
       try {
         console.log("Received compensation event data:", req.body);
         
-        // Use validated data from middleware
-        const validatedData = req.validatedData;
+        // Sanitize text inputs using DOMPurify
+        const sanitizedBody = {
+          ...req.body,
+          title: req.body.title ? DOMPurify.sanitize(req.body.title) : req.body.title,
+          description: req.body.description ? DOMPurify.sanitize(req.body.description) : req.body.description,
+          clauseReference: req.body.clauseReference ? DOMPurify.sanitize(req.body.clauseReference) : req.body.clauseReference
+        };
+        
+        // Use validated data from middleware with sanitized content
+        const validatedData = { ...req.validatedData, ...sanitizedBody };
         
         // Convert date strings to Date objects
         const processedData = {
@@ -303,6 +323,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(200).json(earlyWarnings);
   });
 
+  // Enhanced rate limiter for early warnings
+  const createEWLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 15, // Limit each IP to 15 requests per windowMs
+    message: 'Too many early warnings created, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+
   // Create validation middleware for early warnings
   const ewValidation = createValidationMiddleware(
     insertEarlyWarningSchema,
@@ -316,12 +345,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   app.post("/api/early-warnings",
-    createRateLimit(15 * 60 * 1000, 50), // 50 requests per 15 minutes
+    requireAuth,
+    createEWLimiter,
     ewValidation,
     async (req: Request, res: Response) => {
       try {
-        // Use validated data from middleware
-        const validatedData = req.validatedData;
+        // Sanitize text inputs using DOMPurify
+        const sanitizedBody = {
+          ...req.body,
+          description: req.body.description ? DOMPurify.sanitize(req.body.description) : req.body.description,
+          mitigationPlan: req.body.mitigationPlan ? DOMPurify.sanitize(req.body.mitigationPlan) : req.body.mitigationPlan
+        };
+        
+        // Use validated data from middleware with sanitized content
+        const validatedData = { ...req.validatedData, ...sanitizedBody };
         
         // Convert date strings to Date objects
         const processedData = {
@@ -620,9 +657,19 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
 
   // Programme routes
   
+  // Enhanced rate limiter for programme file uploads
+  const programmeUploadLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    max: 5, // Limit each IP to 5 file uploads per windowMs
+    message: 'Too many programme file uploads, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+
   // Programme file upload route with comprehensive security validation
   app.post("/api/programme/upload", 
-    createRateLimit(10 * 60 * 1000, 10), // 10 requests per 10 minutes
+    requireAuth,
+    programmeUploadLimiter,
     upload.single('file'), 
     async (req: Request, res: Response) => {
       try {
@@ -746,8 +793,20 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
   
+  // Enhanced rate limiter for programme analysis
+  const programmeAnalysisLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    max: 20, // Limit each IP to 20 analysis requests per windowMs
+    message: 'Too many programme analysis requests, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+
   // Programme analysis route
-  app.post("/api/programme/analyze", async (req: Request, res: Response) => {
+  app.post("/api/programme/analyze", 
+    requireAuth,
+    programmeAnalysisLimiter,
+    async (req: Request, res: Response) => {
     try {
       console.log("Programme analysis request received");
       const { programmeId } = req.body;
