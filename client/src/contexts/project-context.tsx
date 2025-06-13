@@ -18,12 +18,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   
   // Fetch available projects
   const { 
-    data: projects = [], 
+    data: projectsResponse, 
     isLoading
-  } = useQuery<Project[]>({
+  } = useQuery<{ success: boolean; data: Project[] }>({
     queryKey: ['/api/projects'],
     refetchOnWindowFocus: false,
   });
+
+  const projects = projectsResponse?.data || [];
 
   // Set default project when projects load
   useEffect(() => {
