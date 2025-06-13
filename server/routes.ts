@@ -2613,6 +2613,123 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
+  // Critical Performance Monitoring Endpoints
+  app.get("/api/performance/request-analytics", async (req: Request, res: Response) => {
+    try {
+      const stats = requestAnalytics.getPerformanceStats();
+      
+      res.json({
+        success: true,
+        data: {
+          totalRequests: stats.totalRequests,
+          averageResponseTime: stats.averageResponseTime,
+          errorRate: stats.errorRate,
+          slowRequestCount: stats.slowRequestCount,
+          topSlowEndpoints: stats.topSlowEndpoints,
+          statusCodeDistribution: stats.statusCodeDistribution
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching request analytics:', error);
+      res.status(500).json({ message: 'Failed to fetch request analytics' });
+    }
+  });
+
+  app.get("/api/performance/slow-requests", async (req: Request, res: Response) => {
+    try {
+      const severity = req.query.severity as 'low' | 'medium' | 'high' | undefined;
+      const slowRequestAlerts = requestAnalytics.getRecentAlerts('high').filter(alert => 
+        alert.type === 'slow_request'
+      );
+      
+      res.json({
+        success: true,
+        data: {
+          alerts: slowRequestAlerts,
+          count: slowRequestAlerts.length,
+          criticalThreshold: 1000, // ms
+          warningThreshold: 500    // ms
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching slow request alerts:', error);
+      res.status(500).json({ message: 'Failed to fetch slow request alerts' });
+    }
+  });
+
+  app.get("/api/performance/endpoint-analytics/:endpoint(*)", async (req: Request, res: Response) => {
+    try {
+      const endpoint = `/${req.params.endpoint}`;
+      const analytics = requestAnalytics.getEndpointAnalytics(endpoint);
+      
+      if (!analytics) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'No analytics data found for this endpoint' 
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: analytics,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching endpoint analytics:', error);
+      res.status(500).json({ message: 'Failed to fetch endpoint analytics' });
+    }
+  });
+
+  app.get("/api/performance/system-health", async (req: Request, res: Response) => {
+    try {
+      const requestStats = requestAnalytics.getPerformanceStats();
+      const compressionStats = compressionAnalytics.getCompressionStats();
+      const recentAlerts = requestAnalytics.getRecentAlerts().slice(0, 10);
+      
+      // Calculate health score based on performance metrics
+      let healthScore = 100;
+      
+      if (requestStats.errorRate > 5) healthScore -= 20;
+      if (requestStats.averageResponseTime > 500) healthScore -= 15;
+      if (requestStats.slowRequestCount > requestStats.totalRequests * 0.1) healthScore -= 15;
+      
+      const healthStatus = healthScore >= 80 ? 'healthy' : 
+                          healthScore >= 60 ? 'degraded' : 'critical';
+      
+      res.json({
+        success: true,
+        data: {
+          healthScore,
+          healthStatus,
+          performance: {
+            totalRequests: requestStats.totalRequests,
+            averageResponseTime: requestStats.averageResponseTime,
+            errorRate: requestStats.errorRate,
+            slowRequestCount: requestStats.slowRequestCount
+          },
+          compression: {
+            totalRequests: compressionStats.totalRequests,
+            averageCompressionRatio: compressionStats.averageCompressionRatio,
+            estimatedBandwidthSaved: compressionStats.estimatedBandwidthSaved
+          },
+          recentAlerts: recentAlerts.map(alert => ({
+            type: alert.type,
+            severity: alert.severity,
+            endpoint: alert.endpoint,
+            timestamp: alert.timestamp,
+            details: alert.details
+          }))
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching system health:', error);
+      res.status(500).json({ message: 'Failed to fetch system health data' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
