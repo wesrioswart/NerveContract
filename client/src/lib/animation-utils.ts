@@ -1,95 +1,163 @@
-import { MotionProps } from 'framer-motion';
+// Animation utilities for equipment interactions and loading states
 
-// Common animation presets for better user experience
-export const animationPresets = {
-  // Fade in animation for components appearing on page
-  fadeIn: {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    transition: { duration: 0.3 }
+export const equipmentAnimations = {
+  // Slide in from right animation for equipment cards
+  slideInRight: {
+    initial: { x: 300, opacity: 0 },
+    animate: { x: 0, opacity: 1 },
+    exit: { x: -300, opacity: 0 },
+    transition: { type: "spring", stiffness: 300, damping: 30 }
   },
-  
-  // Subtle scale animation for clickable elements
-  buttonHover: {
-    whileHover: { scale: 1.03 },
-    whileTap: { scale: 0.97 }
+
+  // Fade and scale animation for equipment status changes
+  statusChange: {
+    initial: { scale: 1, opacity: 1 },
+    animate: { scale: [1, 1.05, 1], opacity: [1, 0.8, 1] },
+    transition: { duration: 0.6, ease: "easeInOut" }
   },
-  
-  // Card animation for list items
-  cardEntrance: {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.4 }
+
+  // Bounce animation for equipment hire/off-hire actions
+  bounceAction: {
+    initial: { scale: 1 },
+    animate: { scale: [1, 1.2, 0.9, 1.1, 1] },
+    transition: { duration: 0.8, ease: "easeInOut" }
   },
-  
-  // Staggered list item animations
-  listItem: (index: number): MotionProps => ({
-    initial: { opacity: 0, y: 15 },
-    animate: { opacity: 1, y: 0 },
-    transition: { 
-      duration: 0.3,
-      delay: index * 0.05
-    }
-  }),
-  
-  // Success animation for completed actions
-  success: {
-    initial: { scale: 0.8, opacity: 0 },
-    animate: { scale: 1, opacity: 1 },
-    transition: { 
-      type: "spring",
-      stiffness: 200,
-      damping: 10
-    }
-  },
-  
-  // Error shake animation
-  errorShake: {
+
+  // Loading pulse animation for equipment data
+  loadingPulse: {
     animate: { 
-      x: [0, -10, 10, -10, 10, 0],
-      transition: { duration: 0.5 }
+      opacity: [0.5, 1, 0.5],
+      scale: [1, 1.02, 1]
+    },
+    transition: { 
+      duration: 1.5, 
+      repeat: Infinity,
+      ease: "easeInOut"
     }
   },
-  
-  // Expanding animation for panels or accordions
-  expand: {
-    initial: { height: 0, opacity: 0 },
-    animate: { height: "auto", opacity: 1 },
-    exit: { height: 0, opacity: 0 },
-    transition: { duration: 0.3 }
+
+  // Stagger animation for equipment lists
+  staggerContainer: {
+    animate: {
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
   },
-  
-  // Sidebar item hover effect
-  sidebarItem: {
-    whileHover: { x: 5 },
+
+  staggerItem: {
+    initial: { y: 20, opacity: 0 },
+    animate: { y: 0, opacity: 1 },
+    transition: { duration: 0.5, ease: "easeOut" }
+  },
+
+  // Equipment scan animation (QR code scanning effect)
+  scanEffect: {
+    initial: { scaleY: 0, opacity: 0 },
+    animate: { 
+      scaleY: [0, 1, 1, 0],
+      opacity: [0, 1, 1, 0],
+      y: [0, 0, 100, 100]
+    },
+    transition: { 
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }
+  },
+
+  // Success checkmark animation
+  successCheck: {
+    initial: { pathLength: 0, opacity: 0 },
+    animate: { pathLength: 1, opacity: 1 },
+    transition: { duration: 0.8, ease: "easeOut" }
+  },
+
+  // Equipment status indicator pulse
+  statusPulse: {
+    animate: {
+      scale: [1, 1.2, 1],
+      opacity: [0.8, 1, 0.8]
+    },
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }
+  },
+
+  // Modal slide up animation
+  modalSlideUp: {
+    initial: { y: "100%", opacity: 0 },
+    animate: { y: 0, opacity: 1 },
+    exit: { y: "100%", opacity: 0 },
+    transition: { type: "spring", stiffness: 300, damping: 30 }
+  },
+
+  // Equipment card hover effect
+  cardHover: {
+    whileHover: { 
+      scale: 1.02,
+      y: -4,
+      boxShadow: "0 10px 25px rgba(0,0,0,0.1)"
+    },
     transition: { duration: 0.2 }
-  },
-  
-  // Page transition
-  pageTransition: {
-    initial: { opacity: 0, x: -10 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 10 },
-    transition: { duration: 0.3 }
-  },
-  
-  // Notification popup
-  notification: {
-    initial: { opacity: 0, y: -30, scale: 0.9 },
-    animate: { opacity: 1, y: 0, scale: 1 },
-    exit: { opacity: 0, y: 30, scale: 0.9 },
-    transition: { type: "spring", stiffness: 300, damping: 15 }
   }
 };
 
-// Animation utility to stagger children animations
-export function createStaggerAnimation(
-  numItems: number, 
-  staggerDelay: number = 0.05
-) {
-  return Array.from({ length: numItems }, (_, i) => ({
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0 },
-    transition: { delay: i * staggerDelay, duration: 0.3 }
-  }));
-}
+// Predefined loading states for different equipment operations
+export const equipmentLoadingStates = {
+  scanning: "Scanning equipment...",
+  updating: "Updating status...",
+  hiring: "Processing hire request...",
+  returning: "Processing return...",
+  validating: "Validating documents...",
+  calculating: "Calculating costs...",
+  syncing: "Syncing with system...",
+  generating: "Generating report..."
+};
+
+// Equipment status colors and animations
+export const equipmentStatusConfig = {
+  "available": {
+    color: "bg-green-500",
+    textColor: "text-green-700",
+    bgColor: "bg-green-50",
+    animation: equipmentAnimations.statusPulse
+  },
+  "on-hire": {
+    color: "bg-blue-500",
+    textColor: "text-blue-700",
+    bgColor: "bg-blue-50",
+    animation: equipmentAnimations.statusPulse
+  },
+  "maintenance": {
+    color: "bg-yellow-500",
+    textColor: "text-yellow-700",
+    bgColor: "bg-yellow-50",
+    animation: equipmentAnimations.statusPulse
+  },
+  "off-hire": {
+    color: "bg-gray-500",
+    textColor: "text-gray-700",
+    bgColor: "bg-gray-50",
+    animation: equipmentAnimations.statusPulse
+  },
+  "overdue": {
+    color: "bg-red-500",
+    textColor: "text-red-700",
+    bgColor: "bg-red-50",
+    animation: equipmentAnimations.statusPulse
+  }
+};
+
+// Equipment operation icons with animations
+export const equipmentIcons = {
+  hire: "📋",
+  return: "↩️",
+  scan: "📷",
+  maintenance: "🔧",
+  validate: "✅",
+  alert: "⚠️"
+};

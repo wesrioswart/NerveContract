@@ -89,13 +89,13 @@ export function AIChatCitations({
 
       {/* Quick Source References */}
       <div className="flex flex-wrap gap-1">
-        {clauseReferences.slice(0, 3).map((clause, index) => (
+        {clauseReferences && clauseReferences.slice(0, 3).map((clause, index) => (
           <Badge key={index} variant="outline" className="text-xs">
-            {clause.clause}
+            {clause.clause || 'Unknown'}
           </Badge>
         ))}
         
-        {sourceCitations.slice(0, 3).map((source, index) => (
+        {sourceCitations && sourceCitations.slice(0, 3).map((source, index) => (
           <Badge key={index} variant="secondary" className="text-xs">
             {getSourceIcon(source.type)}
             <span className="ml-1">{source.reference}</span>

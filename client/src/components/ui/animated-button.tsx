@@ -1,90 +1,64 @@
-import { ButtonHTMLAttributes, forwardRef } from "react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { animationPresets } from "@/lib/animation-utils";
+import { Button, ButtonProps } from "@/components/ui/button";
+import { equipmentAnimations } from "@/lib/animation-utils";
+import { useState } from "react";
 
-interface AnimatedButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | "success";
-  size?: "default" | "sm" | "lg" | "icon";
-  animation?: "default" | "success" | "subtle" | "bounce" | "none";
+interface AnimatedButtonProps extends ButtonProps {
+  animationType?: "bounceAction" | "statusChange";
+  loadingText?: string;
   isLoading?: boolean;
+  children?: React.ReactNode;
 }
 
-const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>(
-  ({ 
-    className, 
-    variant = "default", 
-    size = "default", 
-    animation = "default",
-    isLoading = false,
-    children, 
-    ...props 
-  }, ref) => {
-    const getAnimationProps = () => {
-      switch (animation) {
-        case "success":
-          return animationPresets.success;
-        case "subtle":
-          return {
-            whileHover: { scale: 1.02 },
-            whileTap: { scale: 0.98 }
-          };
-        case "bounce":
-          return {
-            whileHover: { y: -3 },
-            whileTap: { y: 2 }
-          };
-        case "none":
-          return {};
-        default:
-          return animationPresets.buttonHover;
-      }
-    };
+export function AnimatedButton({ 
+  animationType = "bounceAction",
+  loadingText,
+  isLoading = false,
+  children,
+  disabled,
+  onClick,
+  ...props 
+}: AnimatedButtonProps) {
+  const [isAnimating, setIsAnimating] = useState(false);
+  
+  const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (disabled || isLoading || isAnimating) return;
+    
+    setIsAnimating(true);
+    
+    if (onClick) {
+      await onClick(e);
+    }
+    
+    // Reset animation state after animation completes
+    setTimeout(() => setIsAnimating(false), 800);
+  };
 
-    return (
-      <motion.div {...getAnimationProps()}>
-        <Button
-          className={cn(className)}
-          variant={variant}
-          size={size}
-          ref={ref}
-          disabled={isLoading}
-          {...props}
-        >
-          {isLoading ? (
-            <div className="flex items-center">
-              <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Processing...
-            </div>
-          ) : (
-            children
-          )}
-        </Button>
-      </motion.div>
-    );
-  }
-);
-
-AnimatedButton.displayName = "AnimatedButton";
-
-export { AnimatedButton };
+  const animation = equipmentAnimations[animationType];
+  
+  return (
+    <motion.div
+      animate={isAnimating ? animation.animate : animation.initial}
+      transition={animation.transition}
+    >
+      <Button 
+        {...props}
+        disabled={disabled || isLoading || isAnimating}
+        onClick={handleClick}
+      >
+        {isLoading ? (
+          <div className="flex items-center gap-2">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
+            />
+            {loadingText || "Loading..."}
+          </div>
+        ) : (
+          children
+        )}
+      </Button>
+    </motion.div>
+  );
+}
