@@ -113,15 +113,7 @@ export const equipmentAnimations: Record<string, AnimationConfig> = {
     transition: { type: "spring", stiffness: 300, damping: 30 }
   },
 
-  // Equipment card hover effect
-  cardHover: {
-    whileHover: { 
-      scale: 1.02,
-      y: -4,
-      boxShadow: "0 10px 25px rgba(0,0,0,0.1)"
-    },
-    transition: { duration: 0.2 }
-  }
+
 };
 
 // Predefined loading states for different equipment operations

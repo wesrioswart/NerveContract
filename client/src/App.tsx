@@ -135,6 +135,28 @@ function AppContent() {
                   <Route path="/rfi-management" component={RfiManagement} />
                   <Route path="/resource-allocation" component={ResourceAllocation} />
                   <Route path="/settings" component={Settings} />
+                  
+                  {/* Project-specific routes */}
+                  <Route path="/projects/:id/dashboard" component={Dashboard} />
+                  <Route path="/projects/:id/ai-assistant" component={AIAssistant} />
+                  <Route path="/projects/:id/compensation-events" component={CompensationEvents} />
+                  <Route path="/projects/:id/early-warnings" component={EarlyWarnings} />
+                  <Route path="/projects/:id/ncr-tqr" component={NCRTqr} />
+                  <Route path="/projects/:id/programme" component={Programme} />
+                  <Route path="/projects/:id/programme-management" component={ProgrammeManagement} />
+                  <Route path="/projects/:id/payment-certificates" component={PaymentCertificates} />
+                  <Route path="/projects/:id/reports" component={Reports} />
+                  <Route path="/projects/:id/templates" component={Templates} />
+                  <Route path="/projects/:id/procurement" component={Procurement} />
+                  <Route path="/projects/:id/suppliers" component={Suppliers} />
+                  <Route path="/projects/:id/inventory" component={Inventory} />
+                  <Route path="/projects/:id/equipment-hire" component={EquipmentHire} />
+                  <Route path="/projects/:id/financial" component={Financial} />
+                  <Route path="/projects/:id/email-processor" component={EmailProcessor} />
+                  <Route path="/projects/:id/rfi-management" component={RfiManagement} />
+                  <Route path="/projects/:id/resource-allocation" component={ResourceAllocation} />
+                  <Route path="/projects/:id/settings" component={Settings} />
+                  
                   <Route component={NotFound} />
                 </Switch>
               </div>
