@@ -39,7 +39,7 @@ export class StreamProcessor {
           // Memory safety check - prevent accumulating too much data
           if (totalSize > this.MAX_FILE_SIZE) {
             readStream.destroy();
-            reject(new AppError(413, 'File too large for memory processing', 'FILE_TOO_LARGE'));
+            reject(new AppError('File too large for memory processing', 413, 'FILE_TOO_LARGE'));
           }
         });
 
@@ -88,7 +88,7 @@ export class StreamProcessor {
 
         readStream.on('end', () => resolve());
         readStream.on('error', (error) => {
-          reject(new AppError(500, `Stream processing error: ${error.message}`, 'STREAM_ERROR'));
+          reject(new AppError(`Stream processing error: ${(error as Error).message}`, 500, 'STREAM_ERROR'));
         });
       });
     } finally {
@@ -113,7 +113,7 @@ export class StreamProcessor {
    */
   static async copyFileStream(sourcePath: string, destPath: string): Promise<void> {
     if (this.activeStreams >= this.MAX_CONCURRENT_STREAMS) {
-      throw new AppError(429, 'Too many concurrent file operations', 'STREAM_LIMIT_EXCEEDED');
+      throw new AppError('Too many concurrent file operations', 429, 'STREAM_LIMIT_EXCEEDED');
     }
 
     this.activeStreams++;
@@ -126,7 +126,7 @@ export class StreamProcessor {
       
       await pipeline(readStream, writeStream);
     } catch (error) {
-      throw new AppError(500, `File copy error: ${error.message}`, 'FILE_COPY_ERROR');
+      throw new AppError(`File copy error: ${(error as Error).message}`, 500, 'FILE_COPY_ERROR');
     } finally {
       this.activeStreams--;
     }
