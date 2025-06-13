@@ -440,22 +440,8 @@ async function analyzeContractDocument(documentText: string): Promise<{
   summary: string;
 }> {
   try {
-    // Check if API key is available
-    if (!apiKey) {
-      console.error("OpenAI API key is not set");
-      return {
-        riskAreas: [{
-          clause: "System Error",
-          issue: "AI features are currently unavailable",
-          severity: 'Critical',
-          recommendation: "Please contact the administrator to set up the OpenAI API key"
-        }],
-        compliantClauses: [],
-        missingClauses: [],
-        overallRisk: 'High',
-        summary: "Document analysis unavailable due to missing API configuration."
-      };
-    }
+    // Use secure OpenAI client
+    const openai = getSecureOpenAIClient();
     
     if (!documentText || documentText.trim().length === 0) {
       return {
@@ -645,9 +631,8 @@ async function analyzeContractDocument(documentText: string): Promise<{
 // Function specifically for resource allocation data extraction
 async function extractResourceAllocationData(documentContent: string): Promise<any> {
   try {
-    if (!apiKey) {
-      throw new Error("OpenAI API key is not configured");
-    }
+    // Use secure OpenAI client
+    const openai = getSecureOpenAIClient();
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",

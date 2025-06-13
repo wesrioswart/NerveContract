@@ -12,6 +12,7 @@ import * as inventoryController from "./controllers/inventory-controller";
 import * as equipmentHireController from "./controllers/equipment-hire-controller";
 import { generateRfiPdf, getRfiHtmlPreview } from "./controllers/rfi-pdf-controller";
 import { askContractAssistant, analyzeContractDocument, isOpenAIConfigured, extractResourceAllocationData } from "./utils/openai";
+import { requireOpenAI, requireAnthropic, validateAPIConfiguration } from "./utils/api-security";
 import { processProjectFileUpload, parseProjectXml, analyzeNEC4Compliance } from "./utils/programme-parser";
 import { parseProgrammeFile } from "./services/programme-parser";
 import { analyzeProgramme } from "./services/programme-analysis";

@@ -146,6 +146,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- June 13, 2025: Implemented enterprise-grade security and API protection
+  - Fixed critical API key exposure vulnerabilities throughout the codebase
+  - Created centralized API security management system with proper validation
+  - Corrected Anthropic API configuration that was incorrectly using OpenAI keys
+  - Implemented secure client initialization with API key format validation
+  - Added rate limiting protection (60 requests/minute per client)
+  - Enhanced email processing with secure AI client configuration
+  - Eliminated all hardcoded API key usage across OpenAI and Anthropic integrations
+
 - June 13, 2025: Implemented critical database performance optimizations
   - Enhanced connection pooling with max 20 connections, optimized timeouts (2s connection, 30s idle)
   - Added eager loading methods to eliminate N+1 query problems
