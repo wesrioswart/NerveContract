@@ -146,14 +146,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- June 13, 2025: Implemented comprehensive input validation security system
-  - Created multi-layer validation middleware beyond basic schema validation
-  - Added SQL injection and XSS attack pattern detection across all endpoints
-  - Implemented business rules validation with date and value constraints
-  - Enhanced file upload security with content validation and size limits
-  - Applied rate limiting to critical operations (compensation events, early warnings, file uploads)
-  - Integrated project access validation for all authenticated operations
-  - Added comprehensive error handling with structured security responses
+- June 13, 2025: Implemented enhanced rate limiting and sanitization using express-rate-limit and DOMPurify
+  - Added express-rate-limit package for advanced rate limiting with specific limits per endpoint
+  - Integrated isomorphic-dompurify for HTML sanitization of user text inputs
+  - Created specific rate limiters: Compensation Events (10/15min), Early Warnings (15/15min), File Uploads (5/10min), Programme Analysis (20/10min)
+  - Applied DOMPurify sanitization to all text fields including titles, descriptions, clause references, and mitigation plans
+  - Enhanced security layer beyond existing comprehensive input validation system
+  - Maintained existing multi-layer validation, SQL injection detection, XSS prevention, and file upload security
 
 - June 13, 2025: Implemented enterprise-grade security and API protection
   - Fixed critical API key exposure vulnerabilities throughout the codebase

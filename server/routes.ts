@@ -699,9 +699,16 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
           });
         }
         
-        // 3. Request body validation with security checks
+        // 3. Sanitize text inputs using DOMPurify
         const { projectId, name, version } = req.body;
-        const securityErrors = validateContentSecurity({ projectId, name, version }, {
+        const sanitizedBody = {
+          projectId,
+          name: name ? DOMPurify.sanitize(name) : name,
+          version: version ? DOMPurify.sanitize(version) : version
+        };
+        
+        // 4. Request body validation with security checks
+        const securityErrors = validateContentSecurity(sanitizedBody, {
           maxStringLength: 500,
           checkSqlInjection: true,
           checkXssAttempts: true
