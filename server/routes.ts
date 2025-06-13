@@ -71,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(passport.session());
   // Authentication routes
   app.post("/api/auth/login", (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate('local', (err, user, info) => {
+    passport.authenticate('local', (err: any, user: any, info: any) => {
       if (err) {
         console.error("Login error:", err);
         return res.status(500).json({ message: "Server error during login" });

@@ -6,7 +6,7 @@ import {
   Programme, InsertProgramme, ProgrammeActivity, InsertProgrammeActivity,
   ActivityRelationship, InsertActivityRelationship, ProgrammeAnalysis, InsertProgrammeAnalysis,
   ProgrammeAnnotation, InsertProgrammeAnnotation, Nec4Team, InsertNec4Team, 
-  Nec4TeamMember, InsertNec4TeamMember, UserToProject, InsertUserToProject,
+  Nec4TeamMember, InsertNec4TeamMember,
   ProgressReport, InsertProgressReport,
   users, projects, compensationEvents, earlyWarnings, nonConformanceReports,
   technicalQueries, programmeMilestones, paymentCertificates, chatMessages,

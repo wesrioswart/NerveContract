@@ -461,6 +461,9 @@ export type InsertNec4Team = z.infer<typeof insertNec4TeamSchema>;
 export type Nec4TeamMember = typeof nec4TeamMembers.$inferSelect;
 export type InsertNec4TeamMember = z.infer<typeof insertNec4TeamMemberSchema>;
 
+export type UserToProject = typeof usersToProjects.$inferSelect;
+export type InsertUserToProject = z.infer<typeof insertUserToProjectSchema>;
+
 // Project Periods
 export const projectPeriods = pgTable("project_period", {
   id: serial("id").primaryKey(),
