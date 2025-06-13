@@ -6,6 +6,10 @@ import Anthropic from '@anthropic-ai/sdk';
  * Prevents API key exposure and ensures proper validation
  */
 
+// Create singleton instances for efficient client management
+let anthropicClient: Anthropic | null = null;
+let openaiClient: OpenAI | null = null;
+
 // API Key validation and initialization
 export interface APIClientConfig {
   isConfigured: boolean;
@@ -14,35 +18,37 @@ export interface APIClientConfig {
 }
 
 /**
- * Secure OpenAI client initialization with validation
+ * Secure OpenAI client initialization with singleton pattern
  */
 export function getOpenAIClient(): APIClientConfig {
-  const apiKey = process.env.OPENAI_API_KEY;
-  
-  if (!apiKey || apiKey.trim() === '') {
-    return {
-      isConfigured: false,
-      error: 'OPENAI_API_KEY not configured or empty'
-    };
-  }
-
-  // Validate API key format (should start with 'sk-')
-  if (!apiKey.startsWith('sk-')) {
-    return {
-      isConfigured: false,
-      error: 'Invalid OpenAI API key format'
-    };
-  }
-
   try {
-    const client = new OpenAI({ 
-      apiKey: apiKey,
-      timeout: 30000, // 30 second timeout
-    });
+    if (!openaiClient) {
+      const apiKey = process.env.OPENAI_API_KEY;
+      
+      if (!apiKey || apiKey.trim() === '') {
+        return {
+          isConfigured: false,
+          error: 'OPENAI_API_KEY not configured or empty'
+        };
+      }
+
+      // Validate API key format (should start with 'sk-')
+      if (!apiKey.startsWith('sk-')) {
+        return {
+          isConfigured: false,
+          error: 'Invalid OpenAI API key format'
+        };
+      }
+
+      openaiClient = new OpenAI({ 
+        apiKey: apiKey,
+        timeout: 30000, // 30 second timeout
+      });
+    }
 
     return {
       isConfigured: true,
-      client: client
+      client: openaiClient
     };
   } catch (error) {
     return {
@@ -52,36 +58,40 @@ export function getOpenAIClient(): APIClientConfig {
   }
 }
 
+
+
 /**
- * Secure Anthropic client initialization with validation
+ * Secure Anthropic client initialization with singleton pattern
  */
 export function getAnthropicClient(): APIClientConfig {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  
-  if (!apiKey || apiKey.trim() === '') {
-    return {
-      isConfigured: false,
-      error: 'ANTHROPIC_API_KEY not configured or empty'
-    };
-  }
-
-  // Validate API key format (Anthropic keys start with 'sk-ant-')
-  if (!apiKey.startsWith('sk-ant-')) {
-    return {
-      isConfigured: false,
-      error: 'Invalid Anthropic API key format'
-    };
-  }
-
   try {
-    const client = new Anthropic({
-      apiKey: apiKey,
-      timeout: 30000, // 30 second timeout
-    });
+    if (!anthropicClient) {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      
+      if (!apiKey || apiKey.trim() === '') {
+        return {
+          isConfigured: false,
+          error: 'ANTHROPIC_API_KEY not configured or empty'
+        };
+      }
+
+      // Validate API key format (Anthropic keys start with 'sk-ant-')
+      if (!apiKey.startsWith('sk-ant-')) {
+        return {
+          isConfigured: false,
+          error: 'Invalid Anthropic API key format'
+        };
+      }
+
+      anthropicClient = new Anthropic({
+        apiKey: apiKey,
+        timeout: 30000, // 30 second timeout
+      });
+    }
 
     return {
       isConfigured: true,
-      client: client
+      client: anthropicClient
     };
   } catch (error) {
     return {
@@ -153,6 +163,25 @@ export function requireAnthropic(req: any, res: any, next: any) {
   
   req.anthropic = config.client;
   next();
+}
+
+/**
+ * Helper functions for secure client access
+ */
+export function getSecureOpenAIClient(): OpenAI {
+  const config = getOpenAIClient();
+  if (!config.isConfigured || !config.client) {
+    throw new Error(config.error || 'OpenAI client not properly configured');
+  }
+  return config.client as OpenAI;
+}
+
+export function getSecureAnthropicClient(): Anthropic {
+  const config = getAnthropicClient();
+  if (!config.isConfigured || !config.client) {
+    throw new Error(config.error || 'Anthropic client not properly configured');
+  }
+  return config.client as Anthropic;
 }
 
 /**
