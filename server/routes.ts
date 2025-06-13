@@ -938,8 +938,49 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
         });
       };
 
-      // Parse the file using streaming approach for large files
-      const parseResult = await parseProgrammeFile(file.path, fileType, programme.id);
+      // Enhanced parsing with .mpp support and fallback strategies
+      let parseResult;
+      
+      try {
+        // Use enhanced MSProjectParser for better .mpp support
+        if (fileType === 'mpp') {
+          console.log("Processing .mpp file with enhanced parser");
+          const { default: MSProjectParser } = await import('./utils/mpp-parser.js');
+          const projectData = await MSProjectParser.parseProjectFile(file.path);
+          
+          // Convert to our format and store activities
+          const activities = [];
+          for (const task of projectData.tasks) {
+            const activity = await storage.createProgrammeActivity({
+              programmeId: programme.id,
+              name: task.name,
+              startDate: task.start,
+              endDate: task.finish,
+              duration: task.duration,
+              isCritical: task.critical || false,
+              predecessors: task.predecessors?.join(',') || null,
+              resourceNames: task.resourceNames?.join(',') || null,
+              progress: task.percentComplete || 0
+            });
+            activities.push(activity);
+          }
+          
+          parseResult = {
+            success: true,
+            activityCount: activities.length,
+            milestoneCount: projectData.tasks.filter(t => t.duration === 0).length,
+            criticalPath: projectData.criticalPath
+          };
+        } else {
+          // Use existing parser for XML files
+          parseResult = await parseProgrammeFile(file.path, fileType, programme.id);
+        }
+      } catch (primaryError) {
+        console.warn("Primary parsing failed, attempting fallback:", primaryError);
+        
+        // Fallback to existing parser
+        parseResult = await parseProgrammeFile(file.path, fileType, programme.id);
+      }
       
       if (!parseResult.success) {
         return res.status(400).json({ 

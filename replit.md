@@ -146,6 +146,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- June 13, 2025: Enhanced MS Project Integration with Multi-Format Support
+  - Implemented comprehensive .mpp file parser with fallback strategies for legacy Project files
+  - Added MSProjectParser class supporting both XML exports and direct binary .mpp parsing
+  - Created multi-layer parsing approach: primary MPXJ integration, OLE compound document fallback, basic binary extraction
+  - Enhanced programme upload endpoint with automatic format detection and intelligent routing
+  - Maintains backward compatibility with existing XML workflow while adding enterprise-grade .mpp support
+  - Addresses industry requirement for handling legacy Project 2010-2019 files common in construction
+
 - June 13, 2025: Implemented comprehensive error handling and reliability improvements
   - Created advanced error handling middleware with detailed error classification and context
   - Implemented custom error classes: AppError, ValidationError, NotFoundError, UnauthorizedError, ForbiddenError, DatabaseError, RateLimitError
