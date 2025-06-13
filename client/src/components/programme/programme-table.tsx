@@ -49,7 +49,6 @@ export default function ProgrammeTable({ milestones, isLoading }: ProgrammeTable
             value={searchTerm}
             onChange={handleSearchChange}
             className="w-full"
-            prefix={<span className="material-icons text-gray-400">search</span>}
           />
         </div>
         
@@ -82,7 +81,7 @@ export default function ProgrammeTable({ milestones, isLoading }: ProgrammeTable
           <span className="material-icons animate-spin text-primary">refresh</span>
           <span className="ml-2">Loading programme milestones...</span>
         </div>
-      ) : sortedMilestones.length === 0 ? (
+      ) : filteredAndSortedMilestones.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           {searchTerm || statusFilter !== "all" ? "No matching milestones found" : "No milestones found"}
         </div>

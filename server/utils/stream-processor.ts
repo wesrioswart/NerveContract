@@ -1,4 +1,4 @@
-import { createReadStream } from 'fs';
+import { createReadStream, createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
 import { AppError } from '../middleware/error-middleware.js';
 
