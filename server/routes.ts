@@ -27,6 +27,7 @@ import { requireAuth, requireProjectAccess, hasProjectAccess } from "./middlewar
 import { populateForm, compareProgrammes } from "./controllers/ai-assistant-controller";
 import { exportProcurementReport, downloadReport } from "./controllers/export-controller";
 import { eventBus } from "./event-bus";
+import { compressionAnalytics } from "./middleware/compression-analytics.js";
 import Anthropic from '@anthropic-ai/sdk';
 import fs from "fs";
 import { 

@@ -5,6 +5,8 @@ import { seedDatabase } from "./seed";
 import { initializeEventBus } from "./event-bus";
 import { errorHandler, requestLogger } from "./middleware/error-middleware.js";
 import { memoryMonitoring, handleMemoryErrors, scheduleMemoryCleanup } from "./middleware/memory-management.js";
+import { compressionMonitoring, compressionHeaders } from "./middleware/compression-analytics.js";
+import compression from "compression";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -13,6 +15,33 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// API Response Compression - Optimized for contract management platform
+app.use(compression({
+  filter: (req, res) => {
+    // Skip compression for specific headers or small responses
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    
+    // Always compress JSON API responses
+    if (req.path.startsWith('/api') && res.get('Content-Type')?.includes('application/json')) {
+      return true;
+    }
+    
+    // Skip compression for already compressed file types
+    if (req.path.match(/\.(jpg|jpeg|png|gif|woff|woff2)$/)) {
+      return false;
+    }
+    
+    // Use default compression filter for other content
+    return compression.filter(req, res);
+  },
+  level: 6, // Balance between speed and compression ratio
+  threshold: 1024, // Only compress responses larger than 1KB
+  memLevel: 8, // Memory usage vs speed trade-off
+}));
+
 // Increase JSON payload limit to 10MB for larger files
 app.use(express.json({ limit: '10mb' }));
 // Increase URL-encoded payload limit to 10MB
@@ -24,6 +53,10 @@ app.set('view engine', 'ejs');
 
 // Add memory monitoring middleware
 app.use(memoryMonitoring);
+
+// Add compression monitoring and headers
+app.use(compressionHeaders);
+app.use(compressionMonitoring);
 
 app.use((req, res, next) => {
   const start = Date.now();
