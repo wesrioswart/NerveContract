@@ -604,8 +604,6 @@ export type InsertRFIAttachment = z.infer<typeof insertRfiAttachmentSchema>;
 export type RFIComment = typeof rfiComments.$inferSelect;
 export type InsertRFIComment = z.infer<typeof insertRfiCommentSchema>;
 
-export type UserToProject = typeof usersToProjects.$inferSelect;
-
 // Progress Reports
 export const progressReports = pgTable("progress_reports", {
   id: serial("id").primaryKey(),
