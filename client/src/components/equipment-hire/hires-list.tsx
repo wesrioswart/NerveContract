@@ -63,7 +63,7 @@ export default function HiresList() {
   const { toast } = useToast();
 
   // Get active hires
-  const { data: hires, isLoading: isLoadingHires } = useQuery({
+  const { data: hires = [], isLoading: isLoadingHires } = useQuery({
     queryKey: ["/api/equipment/hires", { projectId: selectedProject?.id }],
   });
 
@@ -81,7 +81,7 @@ export default function HiresList() {
 
   // Optimized filtering with useMemo to prevent expensive recalculations on every render
   const filteredHires = useMemo(() => {
-    if (!hires) return [];
+    if (!hires || !Array.isArray(hires)) return [];
     
     return hires.filter((hire: any) => {
       // Status filter
@@ -159,7 +159,7 @@ export default function HiresList() {
 
   // Memoized equipment lookup to prevent repeated searches
   const getEquipmentDetails = useCallback((equipmentId: number) => {
-    if (!equipment) return null;
+    if (!equipment || !Array.isArray(equipment)) return null;
     return equipment.find((item: any) => item.id === equipmentId);
   }, [equipment]);
   
@@ -308,7 +308,7 @@ export default function HiresList() {
                   filteredHires.map((hire: any) => {
                     const equipmentDetails = getEquipmentDetails(hire.equipmentId);
                     const hireInfo = getHireInfo(hire);
-                    const supplier = suppliers?.find((s: any) => s.id === hire.supplierId);
+                    const supplier = Array.isArray(suppliers) ? suppliers.find((s: any) => s.id === hire.supplierId) : null;
                     
                     return (
                       <TableRow key={hire.id} className={
@@ -403,7 +403,7 @@ export default function HiresList() {
             
             {(() => {
               const equipmentDetails = getEquipmentDetails(selectedHire.equipmentId);
-              const supplier = suppliers?.find((s: any) => s.id === selectedHire.supplierId);
+              const supplier = Array.isArray(suppliers) ? suppliers.find((s: any) => s.id === selectedHire.supplierId) : null;
               const hireInfo = getHireInfo(selectedHire);
               
               if (!equipmentDetails) return <div>Equipment details not available</div>;
