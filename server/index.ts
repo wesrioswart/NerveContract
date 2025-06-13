@@ -6,6 +6,7 @@ import { initializeEventBus } from "./event-bus";
 import { errorHandler, requestLogger } from "./middleware/error-middleware.js";
 import { memoryMonitoring, handleMemoryErrors, scheduleMemoryCleanup } from "./middleware/memory-management.js";
 import { compressionMonitoring, compressionHeaders } from "./middleware/compression-analytics.js";
+import { trackRequestMetrics, requestAnalytics } from "./middleware/request-analytics.js";
 import compression from "compression";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -58,9 +59,14 @@ app.use(memoryMonitoring);
 app.use(compressionHeaders);
 app.use(compressionMonitoring);
 
+// Add request analytics tracking
+app.use(trackRequestMetrics);
+
+// Enhanced request timing and critical monitoring middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
+  let userAgent = req.get("User-Agent") || "";
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
@@ -71,6 +77,35 @@ app.use((req, res, next) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
+    const userId = (req.user as any)?.id;
+    
+    // Enhanced logging with critical monitoring
+    console.log(`${req.method} ${req.originalUrl} - ${res.statusCode} - ${duration}ms - User: ${userId || 'anonymous'}`);
+    
+    // Alert on slow requests (>1000ms)
+    if (duration > 1000) {
+      console.warn(`⚠️  SLOW REQUEST DETECTED: ${req.method} ${req.originalUrl} took ${duration}ms (User: ${userId || 'anonymous'})`);
+      
+      // Additional context for slow API requests
+      if (req.path.startsWith('/api/')) {
+        console.warn(`   API Endpoint: ${req.originalUrl}`);
+        console.warn(`   Response Size: ${res.get('Content-Length') || 'unknown'}`);
+        console.warn(`   User Agent: ${userAgent.substring(0, 50)}...`);
+      }
+    }
+    
+    // Alert on error responses
+    if (res.statusCode >= 400) {
+      const errorLevel = res.statusCode >= 500 ? 'ERROR' : 'WARN';
+      console.log(`🚨 ${errorLevel}: ${req.method} ${req.originalUrl} - ${res.statusCode} - ${duration}ms`);
+    }
+    
+    // Alert on very fast responses that might indicate caching issues
+    if (duration < 5 && req.path.startsWith('/api/') && req.method === 'GET') {
+      console.log(`⚡ FAST RESPONSE: ${req.originalUrl} - ${duration}ms (possible cache hit)`);
+    }
+
+    // Original API logging for compatibility
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {

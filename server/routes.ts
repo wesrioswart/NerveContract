@@ -28,6 +28,7 @@ import { populateForm, compareProgrammes } from "./controllers/ai-assistant-cont
 import { exportProcurementReport, downloadReport } from "./controllers/export-controller";
 import { eventBus } from "./event-bus";
 import { compressionAnalytics } from "./middleware/compression-analytics.js";
+import { requestAnalytics } from "./middleware/request-analytics.js";
 import Anthropic from '@anthropic-ai/sdk';
 import fs from "fs";
 import { 
