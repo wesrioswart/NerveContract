@@ -36,12 +36,14 @@ export interface IStorage {
   // Compensation Events
   getCompensationEvent(id: number): Promise<CompensationEvent | undefined>;
   getCompensationEventsByProject(projectId: number): Promise<CompensationEvent[]>;
+  getCompensationEventsWithRelations(projectId: number): Promise<any[]>;
   createCompensationEvent(ce: InsertCompensationEvent): Promise<CompensationEvent>;
   updateCompensationEvent(id: number, ce: Partial<CompensationEvent>): Promise<CompensationEvent>;
   
   // Early Warnings
   getEarlyWarning(id: number): Promise<EarlyWarning | undefined>;
   getEarlyWarningsByProject(projectId: number): Promise<EarlyWarning[]>;
+  getEarlyWarningsWithRelations(projectId: number): Promise<any[]>;
   createEarlyWarning(ew: InsertEarlyWarning): Promise<EarlyWarning>;
   updateEarlyWarning(id: number, ew: Partial<EarlyWarning>): Promise<EarlyWarning>;
   
@@ -489,6 +491,27 @@ export class MemStorage implements IStorage {
     );
   }
 
+  // Optimized method with eager loading for related data
+  async getCompensationEventsWithRelations(projectId: number): Promise<any[]> {
+    const compensationEvents = Array.from(this.compensationEvents.values()).filter(
+      (ce) => ce.projectId === projectId
+    );
+    
+    // Batch load related users to avoid N+1 queries
+    const userIds = Array.from(new Set(compensationEvents.map(ce => ce.raisedBy)));
+    const users = Array.from(this.users.values()).filter(user => userIds.includes(user.id));
+    const userMap = new Map(users.map(user => [user.id, user]));
+    
+    // Get project data
+    const project = this.projects.get(projectId);
+    
+    return compensationEvents.map(ce => ({
+      compensationEvent: ce,
+      raisedByUser: userMap.get(ce.raisedBy),
+      project: project
+    }));
+  }
+
   async createCompensationEvent(insertCE: InsertCompensationEvent): Promise<CompensationEvent> {
     const id = this.ceCurrentId++;
     const ce: CompensationEvent = { ...insertCE, id };
@@ -515,6 +538,31 @@ export class MemStorage implements IStorage {
     return Array.from(this.earlyWarnings.values()).filter(
       (ew) => ew.projectId === projectId
     );
+  }
+
+  // Optimized method with eager loading for early warnings
+  async getEarlyWarningsWithRelations(projectId: number): Promise<any[]> {
+    const earlyWarnings = Array.from(this.earlyWarnings.values()).filter(
+      (ew) => ew.projectId === projectId
+    );
+    
+    // Batch load related users and owners to avoid N+1 queries
+    const userIds = Array.from(new Set([
+      ...earlyWarnings.map(ew => ew.raisedBy),
+      ...earlyWarnings.map(ew => ew.ownerId)
+    ]));
+    const users = Array.from(this.users.values()).filter(user => userIds.includes(user.id));
+    const userMap = new Map(users.map(user => [user.id, user]));
+    
+    // Get project data
+    const project = this.projects.get(projectId);
+    
+    return earlyWarnings.map(ew => ({
+      earlyWarning: ew,
+      raisedByUser: userMap.get(ew.raisedBy),
+      ownerUser: userMap.get(ew.ownerId),
+      project: project
+    }));
   }
 
   async createEarlyWarning(insertEW: InsertEarlyWarning): Promise<EarlyWarning> {
