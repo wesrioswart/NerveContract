@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useProject } from "@/contexts/project-context";
 import { useToast } from "@/hooks/use-toast";
@@ -79,33 +79,35 @@ export default function HiresList() {
 
   const isLoading = isLoadingHires || isLoadingEquipment;
 
-  // Filter hires based on search term and status
-  const filteredHires = hires 
-    ? hires.filter((hire: any) => {
-        // Status filter
-        if (statusFilter && hire.status !== statusFilter) {
-          return false;
-        }
+  // Optimized filtering with useMemo to prevent expensive recalculations on every render
+  const filteredHires = useMemo(() => {
+    if (!hires) return [];
+    
+    return hires.filter((hire: any) => {
+      // Status filter
+      if (statusFilter && hire.status !== statusFilter) {
+        return false;
+      }
+      
+      // Search term
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const equipmentItem = equipment?.find((item: any) => item.id === hire.equipmentId);
+        const supplier = suppliers?.find((s: any) => s.id === hire.supplierId);
         
-        // Search term
-        if (searchTerm) {
-          const searchLower = searchTerm.toLowerCase();
-          const equipmentItem = equipment?.find((item: any) => item.id === hire.equipmentId);
-          const supplier = suppliers?.find((s: any) => s.id === hire.supplierId);
-          
-          return (
-            hire.hireReference?.toLowerCase().includes(searchLower) ||
-            equipmentItem?.name?.toLowerCase().includes(searchLower) ||
-            equipmentItem?.make?.toLowerCase().includes(searchLower) ||
-            equipmentItem?.model?.toLowerCase().includes(searchLower) ||
-            equipmentItem?.serialNumber?.toLowerCase().includes(searchLower) ||
-            supplier?.name?.toLowerCase().includes(searchLower)
-          );
-        }
-        
-        return true;
-      })
-    : [];
+        return (
+          hire.hireReference?.toLowerCase().includes(searchLower) ||
+          equipmentItem?.name?.toLowerCase().includes(searchLower) ||
+          equipmentItem?.make?.toLowerCase().includes(searchLower) ||
+          equipmentItem?.model?.toLowerCase().includes(searchLower) ||
+          equipmentItem?.serialNumber?.toLowerCase().includes(searchLower) ||
+          supplier?.name?.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return true;
+    });
+  }, [hires, statusFilter, searchTerm, equipment, suppliers]);
 
   // Mutation to initiate off-hire request
   const { mutate: initiateOffHire, isPending: isInitiatingOffHire } = useMutation({
@@ -140,27 +142,34 @@ export default function HiresList() {
     },
   });
 
-  // View hire details
-  const viewHireDetails = (hire: any) => {
+  // Memoized event handlers to prevent unnecessary re-renders
+  const viewHireDetails = useCallback((hire: any) => {
     setSelectedHire(hire);
     setIsViewDialogOpen(true);
-  };
+  }, []);
 
-  // Handle off-hire request
-  const handleOffHireRequest = () => {
+  const handleOffHireRequest = useCallback(() => {
     if (!selectedHire) return;
     
     initiateOffHire({
       hireId: selectedHire.id,
       requestedEndDate: new Date().toISOString().split('T')[0] // Today
     });
-  };
+  }, [selectedHire, initiateOffHire]);
 
-  // Get associated equipment details
-  const getEquipmentDetails = (equipmentId: number) => {
+  // Memoized equipment lookup to prevent repeated searches
+  const getEquipmentDetails = useCallback((equipmentId: number) => {
     if (!equipment) return null;
     return equipment.find((item: any) => item.id === equipmentId);
-  };
+  }, [equipment]);
+  
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  }, []);
+  
+  const handleStatusFilterChange = useCallback((value: string) => {
+    setStatusFilter(value === "all" ? null : value);
+  }, []);
 
   // Render status badge
   const renderStatusBadge = (status: string) => {
