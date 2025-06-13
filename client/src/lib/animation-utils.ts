@@ -1,6 +1,14 @@
 // Animation utilities for equipment interactions and loading states
 
-export const equipmentAnimations = {
+interface AnimationConfig {
+  initial?: any;
+  animate?: any;
+  exit?: any;
+  transition?: any;
+  whileHover?: any;
+}
+
+export const equipmentAnimations: Record<string, AnimationConfig> = {
   // Slide in from right animation for equipment cards
   slideInRight: {
     initial: { x: 300, opacity: 0 },
@@ -25,6 +33,7 @@ export const equipmentAnimations = {
 
   // Loading pulse animation for equipment data
   loadingPulse: {
+    initial: { opacity: 0.5, scale: 1 },
     animate: { 
       opacity: [0.5, 1, 0.5],
       scale: [1, 1.02, 1]
@@ -36,9 +45,18 @@ export const equipmentAnimations = {
     }
   },
 
+  // Card hover animation
+  cardHover: {
+    initial: { scale: 1, y: 0 },
+    whileHover: { scale: 1.02, y: -2, boxShadow: "0 10px 25px rgba(0,0,0,0.1)" },
+    transition: { duration: 0.2 }
+  },
+
   // Stagger animation for equipment lists
   staggerContainer: {
+    initial: { opacity: 0 },
     animate: {
+      opacity: 1,
       transition: {
         staggerChildren: 0.1,
         delayChildren: 0.2

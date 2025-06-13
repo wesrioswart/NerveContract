@@ -16,14 +16,21 @@ export function AnimationWrapper({
 }: AnimationWrapperProps) {
   const animation = equipmentAnimations[animationType];
   
+  // Handle different animation types safely
+  const motionProps: any = { className };
+  
+  if (animation.initial) motionProps.initial = animation.initial;
+  if (animation.animate) motionProps.animate = animation.animate;
+  if (animation.exit) motionProps.exit = animation.exit;
+  
+  if (animation.transition) {
+    motionProps.transition = { ...animation.transition, delay };
+  } else if (delay > 0) {
+    motionProps.transition = { delay };
+  }
+  
   return (
-    <motion.div
-      initial={animation.initial}
-      animate={animation.animate}
-      exit={animation.exit}
-      transition={{ ...animation.transition, delay }}
-      className={className}
-    >
+    <motion.div {...motionProps}>
       {children}
     </motion.div>
   );
@@ -35,11 +42,12 @@ interface StaggerContainerProps {
 }
 
 export function StaggerContainer({ children, className }: StaggerContainerProps) {
+  const containerAnimation = equipmentAnimations.staggerContainer;
+  
   return (
     <motion.div
-      variants={equipmentAnimations.staggerContainer}
-      initial="initial"
-      animate="animate"
+      initial={containerAnimation.initial}
+      animate={containerAnimation.animate}
       className={className}
     >
       {children}
