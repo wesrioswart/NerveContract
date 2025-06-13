@@ -49,7 +49,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExtension)) {
     cb(null, true);
   } else {
-    cb(new AppError(400, `File type not allowed: ${file.mimetype}`, 'INVALID_FILE_TYPE'), false);
+    cb(new AppError(`File type not allowed: ${file.mimetype}`, 400, 'INVALID_FILE_TYPE'), false);
   }
 };
 

@@ -73,7 +73,7 @@ export default function HiresList() {
   });
 
   // Get suppliers for reference
-  const { data: suppliers } = useQuery({
+  const { data: suppliers = [] } = useQuery({
     queryKey: ["/api/suppliers"],
   });
 

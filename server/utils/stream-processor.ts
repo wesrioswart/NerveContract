@@ -18,7 +18,7 @@ export class StreamProcessor {
    */
   static async processLargeFile(filePath: string): Promise<Buffer> {
     if (this.activeStreams >= this.MAX_CONCURRENT_STREAMS) {
-      throw new AppError(429, 'Too many concurrent file operations', 'STREAM_LIMIT_EXCEEDED');
+      throw new AppError('Too many concurrent file operations', 429, 'STREAM_LIMIT_EXCEEDED');
     }
 
     this.activeStreams++;
@@ -66,7 +66,7 @@ export class StreamProcessor {
     chunkHandler: (chunk: Buffer) => Promise<void> | void
   ): Promise<void> {
     if (this.activeStreams >= this.MAX_CONCURRENT_STREAMS) {
-      throw new AppError(429, 'Too many concurrent file operations', 'STREAM_LIMIT_EXCEEDED');
+      throw new AppError('Too many concurrent file operations', 429, 'STREAM_LIMIT_EXCEEDED');
     }
 
     this.activeStreams++;
