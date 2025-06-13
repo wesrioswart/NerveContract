@@ -506,7 +506,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
     });
-  });
 
   app.put("/api/early-warnings/:id", async (req: Request, res: Response) => {
     const ewId = parseInt(req.params.id);
