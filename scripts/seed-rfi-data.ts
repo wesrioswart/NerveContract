@@ -309,31 +309,31 @@ async function seedRFIs() {
     (
       ${projectId}, 'RFI-016', 'Revised Drainage Plan Approval', 
       'With the recent changes to the drainage layout, we need approval for the revised plan before proceeding with the underground work.',
-      'Email', ${todayStr}, 5, ${threeDaysAgoStr}, 
+      'Email', '${todayStr}', 5, '${threeDaysAgoStr}', 
       null, null, 'Open', 'Under Review', null, ${periods[5].id}, ${userId}
     ),
     (
       ${projectId}, 'RFI-017', 'Material Substitution Query', 
       'Due to supply chain issues, we propose substituting the specified cladding material with an alternative that meets the same specifications.',
-      'Email', ${todayStr}, 7, ${yesterdayStr}, 
+      'Email', '${todayStr}', 7, '${yesterdayStr}', 
       null, null, 'Open', 'Under Review', null, ${periods[5].id}, ${userId}
     ),
     (
       ${projectId}, 'RFI-018', 'Window Installation Detail', 
       'Please clarify the window installation detail for the curved façade section as the standard detail doesn't address this unique condition.',
-      'Email', ${todayStr}, 7, ${twoDaysFromNowStr}, 
+      'Email', '${todayStr}', 7, '${twoDaysFromNowStr}', 
       null, null, 'Open', 'Not a CE', null, ${periods[5].id}, ${userId}
     ),
     (
       ${projectId}, 'RFI-019', 'Fire Rating Requirement Clarification', 
       'Please confirm the fire rating requirements for the partition walls between unit types A and B as there is a discrepancy in the documentation.',
-      'Email', ${todayStr}, 10, ${fiveDaysFromNowStr}, 
+      'Email', '${todayStr}', 10, '${fiveDaysFromNowStr}', 
       null, null, 'Open', 'Under Review', null, ${periods[5].id}, ${userId}
     ),
     (
       ${projectId}, 'RFI-020', 'Roof Insulation Specification', 
       'The roof insulation specification refers to an outdated product. Please confirm if we should use the latest version or source the specified product.',
-      'Email', ${todayStr}, 14, ${tenDaysFromNowStr}, 
+      'Email', '${todayStr}', 14, '${tenDaysFromNowStr}', 
       null, null, 'Open', 'Under Review', null, ${periods[5].id}, ${userId}
     )
   `);

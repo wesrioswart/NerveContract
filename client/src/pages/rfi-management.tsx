@@ -140,7 +140,9 @@ export default function RfiManagementPage() {
     queryKey: ['/api/rfis', currentProject?.id],
     queryFn: async () => {
       if (!currentProject) return [];
-      const response = await fetch(`/api/projects/${currentProject.id}/rfis`);
+      const response = await fetch(`/api/projects/${currentProject.id}/rfis`, {
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch RFIs');
       }
