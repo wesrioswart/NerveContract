@@ -457,14 +457,17 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
         </div>
         
         {/* Notifications Section */}
-        {!collapsed && newItemsCount > 0 && (
+        {!collapsed && (
           <div className="mb-3">
             <ActivityBadge 
               icon={Bell} 
               label="New Activity" 
-              count={newItemsCount}
+              count={newItemsCount || 1}
               iconClassName="text-blue-600"
-              onClick={() => setShowNewItemsModal(true)}
+              onClick={() => {
+                console.log('Bell clicked!', { newItemsCount, recentItems });
+                setShowNewItemsModal(true);
+              }}
             />
           </div>
         )}
