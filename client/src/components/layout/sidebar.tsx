@@ -65,13 +65,13 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
 
   // Check if user has viewed notifications recently
   const getNewItemsCount = () => {
-    if (!currentProject?.id || recentItems.length === 0) return 0;
+    if (!currentProject?.id || !Array.isArray(recentItems) || recentItems.length === 0) return 0;
     
     const lastViewed = localStorage.getItem(`notifications_viewed_${currentProject.id}`);
     if (!lastViewed) return recentItems.length;
     
     const lastViewedDate = new Date(lastViewed);
-    const newItems = recentItems.filter((item: any) => 
+    const newItems = (recentItems as any[]).filter((item: any) => 
       new Date(item.createdAt) > lastViewedDate
     );
     return newItems.length;
@@ -455,6 +455,19 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
           )}
         </div>
         
+        {/* Notifications Section */}
+        {!collapsed && newItemsCount > 0 && (
+          <div className="mb-3">
+            <ActivityBadge 
+              icon={Bell} 
+              label="New Activity" 
+              count={newItemsCount}
+              iconClassName="text-blue-600"
+              onClick={() => setShowNewItemsModal(true)}
+            />
+          </div>
+        )}
+        
         {/* Logout Button */}
         <button 
           onClick={onLogout}
@@ -468,6 +481,16 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
           {!collapsed && <span className="text-sm font-medium">Logout</span>}
         </button>
       </div>
+
+      {/* New Items Modal */}
+      {currentProject && (
+        <NewItemsModal
+          open={showNewItemsModal}
+          onOpenChange={setShowNewItemsModal}
+          items={Array.isArray(recentItems) ? recentItems : []}
+          projectId={currentProject.id}
+        />
+      )}
     </div>
   );
 }
