@@ -461,16 +461,26 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
         {/* Notifications Section */}
         {!collapsed && currentProject && (
           <div className="mb-3">
-            <ActivityBadge 
-              icon={Bell} 
-              label="New Activity" 
-              count={newItemsCount || 0}
-              iconClassName="text-blue-600"
+            <Button 
+              variant="outline"
+              size="sm"
+              className="w-full flex items-center gap-2"
               onClick={() => {
-                console.log('Bell clicked - opening modal');
+                console.log('Bell clicked - opening modal', { 
+                  currentModal: showNewItemsModal, 
+                  itemsCount: Array.isArray(recentItems) ? recentItems.length : 0 
+                });
                 setShowNewItemsModal(true);
               }}
-            />
+            >
+              <Bell className="h-4 w-4 text-blue-600" />
+              <span className="text-sm">Notifications</span>
+              {newItemsCount > 0 && (
+                <div className="bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium ml-auto">
+                  {newItemsCount > 9 ? '9+' : newItemsCount}
+                </div>
+              )}
+            </Button>
           </div>
         )}
         
@@ -492,7 +502,10 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
       {currentProject && (
         <NewItemsModal
           open={showNewItemsModal}
-          onOpenChange={setShowNewItemsModal}
+          onOpenChange={(open) => {
+            console.log('Modal state changing to:', open);
+            setShowNewItemsModal(open);
+          }}
           items={Array.isArray(recentItems) ? recentItems : []}
           projectId={currentProject.id}
         />

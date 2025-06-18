@@ -120,6 +120,11 @@ export function NewItemsModal({ open, onOpenChange, items, projectId }: NewItems
                       <Link
                         href={getItemLink(item, projectId)}
                         className="text-sm font-medium text-gray-900 hover:text-blue-600 truncate"
+                        onClick={() => {
+                          console.log('Navigating to:', getItemLink(item, projectId));
+                          // Close modal when clicking link
+                          onOpenChange(false);
+                        }}
                       >
                         {item.title}
                       </Link>
