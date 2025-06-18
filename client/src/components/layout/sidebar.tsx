@@ -59,9 +59,10 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   const [showNewItemsModal, setShowNewItemsModal] = useState(false);
   
   // Get recent items for notifications
-  const { data: recentItems = [] } = useQuery({
+  const { data: recentItems = [], refetch: refetchNotifications } = useQuery({
     queryKey: [`/api/projects/${currentProject?.id}/notifications/recent-items`],
     enabled: !!currentProject?.id,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   // Check if user has viewed notifications recently
@@ -83,9 +84,10 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   // Update project ID in sidebar context when current project changes
   useEffect(() => {
     if (currentProject) {
+      refetchNotifications(); // Refresh notifications when project changes
       setProjectId(currentProject.id);
     }
-  }, [currentProject, setProjectId]);
+  }, [currentProject, setProjectId, refetchNotifications]);
   
   // Template selector options for quick access
   const templateOptions = [
@@ -457,14 +459,17 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
         </div>
         
         {/* Notifications Section */}
-        {!collapsed && newItemsCount > 0 && (
+        {!collapsed && currentProject && (
           <div className="mb-3">
             <ActivityBadge 
               icon={Bell} 
               label="New Activity" 
-              count={newItemsCount}
+              count={newItemsCount || 0}
               iconClassName="text-blue-600"
-              onClick={() => setShowNewItemsModal(true)}
+              onClick={() => {
+                console.log('Bell clicked - opening modal');
+                setShowNewItemsModal(true);
+              }}
             />
           </div>
         )}

@@ -23,24 +23,22 @@ export function ActivityBadge({
   iconClassName,
   onClick
 }: ActivityBadgeProps) {
-  if (count === 0) return null;
+  // Always show the badge, even when count is 0
   
   const content = (
-    <>
-      {Icon && <Icon className={cn("h-4 w-4", iconClassName)} />}
-      {label && <span className="ml-2 text-sm">{label}</span>}
-      <div 
-        className={cn(
-          "rounded-full w-5 h-5 flex items-center justify-center text-xs font-semibold ml-auto",
-          variant === 'default' && "bg-blue-100 text-blue-800",
-          variant === 'warning' && "bg-amber-100 text-amber-800",
-          variant === 'danger' && "bg-red-100 text-red-800",
-          className
-        )}
-      >
-        {count > 9 ? '9+' : count}
-      </div>
-    </>
+    <div className="relative">
+      {Icon && <Icon className={cn("h-5 w-5", iconClassName)} />}
+      {count > 0 && (
+        <div 
+          className={cn(
+            "absolute -top-1 -right-1 bg-red-500 text-white rounded-full min-w-[18px] h-[18px] flex items-center justify-center text-xs font-medium",
+            className
+          )}
+        >
+          {count > 9 ? '9+' : count}
+        </div>
+      )}
+    </div>
   );
 
   if (onClick) {
