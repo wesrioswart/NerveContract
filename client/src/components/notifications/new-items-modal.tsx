@@ -59,13 +59,13 @@ const getItemColor = (type: string) => {
 const getItemLink = (item: NewItem, projectId: number) => {
   switch (item.type) {
     case 'rfi':
-      return `/project/${projectId}/rfi-management`;
+      return `/projects/${projectId}/rfi-management`;
     case 'compensation-event':
-      return `/project/${projectId}/compensation-events`;
+      return `/projects/${projectId}/compensation-events`;
     case 'early-warning':
-      return `/project/${projectId}/early-warnings`;
+      return `/projects/${projectId}/early-warnings`;
     default:
-      return `/project/${projectId}`;
+      return `/projects/${projectId}`;
   }
 };
 
