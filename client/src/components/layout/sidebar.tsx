@@ -18,6 +18,7 @@ import {
   ShoppingCart,
   Package2,
   Building,
+  Bell,
   Truck,
   QrCode,
   MessageSquare,

@@ -2347,6 +2347,9 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   // Setup RFI Management Routes
   setupRfiRoutes(app);
 
+  // Setup notification routes
+  app.use("/api", requireAuth, notificationsRouter);
+
   // Resource Allocation routes
   app.get("/api/projects/:projectId/resource-allocations", requireAuth, async (req: Request, res: Response) => {
     try {
