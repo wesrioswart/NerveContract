@@ -710,11 +710,18 @@ export default function RfiManagementPage() {
           
           <TabsContent value="preview" className="p-4">
             <div className="rounded-lg border bg-white overflow-hidden">
-              <iframe 
-                src="/api/rfi/preview" 
-                className="w-full h-[70vh]"
-                title="RFI Preview"
-              ></iframe>
+              {currentProject ? (
+                <iframe 
+                  src={`/api/projects/${currentProject.id}/rfis/preview`} 
+                  className="w-full h-[70vh] border-0"
+                  title="RFI Preview"
+                  sandbox="allow-same-origin"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-[70vh] text-gray-500">
+                  <p>Select a project to view RFI preview</p>
+                </div>
+              )}
             </div>
             
             <div className="mt-4 text-sm text-gray-500">
@@ -743,7 +750,14 @@ export default function RfiManagementPage() {
                   <p className="text-sm text-gray-500 mb-3">
                     Generate a formatted PDF report of RFIs to share with stakeholders.
                   </p>
-                  <Button className="gap-2">
+                  <Button 
+                    className="gap-2"
+                    onClick={() => {
+                      if (currentProject) {
+                        window.open(`/api/projects/${currentProject.id}/rfis/pdf`, '_blank');
+                      }
+                    }}
+                  >
                     <FileText className="h-4 w-4" />
                     Download PDF
                   </Button>
