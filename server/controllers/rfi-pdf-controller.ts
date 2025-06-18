@@ -240,11 +240,13 @@ export const getRfiHtmlPreview = async (req: Request, res: Response) => {
     // Prepare data for HTML template - Converting format to match our EJS template
     const rfisFormatted = projectRfis.map(item => ({
       ...item.rfi,
+      createdByName: item.createdByName || 'Unknown',
+      periodName: item.periodName || 'N/A',
       createdAt: item.rfi.createdAt,
       plannedResponseDate: item.rfi.plannedResponseDate,
       responseDate: item.rfi.responseDate,
-      closedDate: item.rfi.closedDate,
-      gpsMacsCode: item.rfi.gpsMacsCode || null,
+      // closedDate: item.rfi.closedDate,
+      // gpsMacsCode: item.rfi.gpsMacsCode || null,
       ceStatus: item.rfi.ceStatus || 'Not a CE'
     }));
 
