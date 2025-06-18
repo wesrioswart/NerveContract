@@ -24,6 +24,7 @@ import { EmailController } from "./controllers/email-controller";
 import { portfolioRouter } from "./routes/portfolio-routes";
 import { setupRfiRoutes } from "./routes/rfi-routes";
 import { requireAuth, requireProjectAccess, hasProjectAccess } from "./middleware/auth-middleware";
+import { getNotificationCounts, getNewItems, markAsViewed } from "./controllers/notifications-controller";
 import { populateForm, compareProgrammes } from "./controllers/ai-assistant-controller";
 import { exportProcurementReport, downloadReport } from "./controllers/export-controller";
 import { eventBus } from "./event-bus";
