@@ -40,6 +40,8 @@ import { CollapsibleSection } from "@/components/layout/collapsible-section";
 import { useSidebar } from "@/contexts/sidebar-context";
 import { useProject } from "@/contexts/project-context";
 import { ProjectSelector } from "./project-selector";
+import { NewItemsModal } from "@/components/notifications/new-items-modal";
+import { useQuery } from "@tanstack/react-query";
 
 type SidebarProps = {
   user: any;
@@ -53,6 +55,29 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   const { activityCounts, setProjectId } = useSidebar();
   const { currentProject } = useProject();
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [showNewItemsModal, setShowNewItemsModal] = useState(false);
+  
+  // Get recent items for notifications
+  const { data: recentItems = [] } = useQuery({
+    queryKey: [`/api/projects/${currentProject?.id}/notifications/recent-items`],
+    enabled: !!currentProject?.id,
+  });
+
+  // Check if user has viewed notifications recently
+  const getNewItemsCount = () => {
+    if (!currentProject?.id || recentItems.length === 0) return 0;
+    
+    const lastViewed = localStorage.getItem(`notifications_viewed_${currentProject.id}`);
+    if (!lastViewed) return recentItems.length;
+    
+    const lastViewedDate = new Date(lastViewed);
+    const newItems = recentItems.filter((item: any) => 
+      new Date(item.createdAt) > lastViewedDate
+    );
+    return newItems.length;
+  };
+
+  const newItemsCount = getNewItemsCount();
   
   // Update project ID in sidebar context when current project changes
   useEffect(() => {
