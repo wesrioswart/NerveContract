@@ -417,7 +417,7 @@ export default function RfiManagementPage() {
                   <SelectItem value="all">All Periods</SelectItem>
                   {periods.map((period: any) => (
                     <SelectItem key={period.id} value={period.id.toString()}>
-                      {period.name}
+                      {period?.name || 'Unnamed Period'}
                     </SelectItem>
                   ))}
                 </SelectContent>
