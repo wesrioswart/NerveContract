@@ -831,7 +831,7 @@ export default function RfiManagementPage() {
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
                     <Label className="text-xs text-gray-500">Created By</Label>
-                    <div className="mt-1 text-sm">{selectedRfi.createdBy || 'Unknown'}</div>
+                    <div className="mt-1 text-sm">{selectedRfi.createdBy?.fullName || selectedRfi.createdBy || 'Unknown'}</div>
                   </div>
                   <div>
                     <Label className="text-xs text-gray-500">Assigned To</Label>
@@ -855,7 +855,7 @@ export default function RfiManagementPage() {
                 {selectedRfi.period && (
                   <div className="mb-4">
                     <Label className="text-xs text-gray-500">Period</Label>
-                    <div className="mt-1 text-sm">{selectedRfi.period.name}</div>
+                    <div className="mt-1 text-sm">{selectedRfi.period?.name || selectedRfi.period || 'N/A'}</div>
                   </div>
                 )}
                 
