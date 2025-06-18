@@ -60,10 +60,12 @@ const getItemLink = (item: NewItem, projectId: number) => {
   switch (item.type) {
     case 'rfi':
       return `/projects/${projectId}/rfi-management`;
-    case 'compensation-event':
+    case 'compensation_event':
       return `/projects/${projectId}/compensation-events`;
-    case 'early-warning':
+    case 'early_warning':
       return `/projects/${projectId}/early-warnings`;
+    case 'equipment_hire':
+      return `/projects/${projectId}/equipment-hire`;
     default:
       return `/projects/${projectId}`;
   }

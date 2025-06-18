@@ -35,6 +35,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { ActivityBadge } from "@/components/ui/activity-badge";
 import { CollapsibleSection } from "@/components/layout/collapsible-section";
