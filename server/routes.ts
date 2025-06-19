@@ -2779,6 +2779,11 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   // Mount workflow routes
   app.use('/api/workflows', workflowRoutes);
 
+  // Serve investor diagrams as static content
+  app.get('/investor-workflow-diagrams.html', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'investor-workflow-diagrams.html'));
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
