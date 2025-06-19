@@ -146,13 +146,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- June 19, 2025: Created Professional Investor Workflow Diagrams
-  - Built comprehensive visual presentation demonstrating AI agent system architecture
-  - Created interactive HTML diagrams showing 5 specialized agents and their coordination  
-  - Designed investor-focused ROI analysis with £2.5M annual savings projection
-  - Added business value proposition highlighting 80% faster processing and 99% accuracy
-  - Included technical architecture diagram and implementation roadmap
-  - Created print-ready format for investor presentations and board meetings
+- June 19, 2025: Enhanced Interactive Investor Presentation with Comprehensive Hover Tooltips
+  - Fixed tooltip positioning and alignment issues for professional presentation quality
+  - Added detailed hover explanations for all workflow elements including "12mth payback" financial breakdown
+  - Created comprehensive tooltip system covering: email processing metrics (500+ daily), AI accuracy rates (96-99%), cost savings breakdowns (£2.5M annually)
+  - Enhanced business value tooltips with specific ROI calculations and implementation phase details
+  - Improved responsive design with proper tooltip positioning for desktop and mobile viewing
+  - Added detailed workflow examples with performance metrics (89% auto-approval, 4min analysis times)
+  - Professional investor-ready presentation accessible at /investor-diagrams route
 
 - June 19, 2025: Implemented Comprehensive Agent Workflow System
   - Created five specialized AI agents: Email Intake, Contract Control, Commercial, Operational, and Procurement
