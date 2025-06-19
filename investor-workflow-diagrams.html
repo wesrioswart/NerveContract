@@ -388,8 +388,8 @@
         .tooltip {
             position: relative;
             display: inline-block;
-            cursor: help;
-            border-bottom: 1px dotted #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
         
         .tooltip .tooltiptext {
@@ -405,40 +405,62 @@
             top: -10px;
             left: 105%;
             opacity: 0;
-            transition: opacity 0.3s;
+            transform: translateY(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 0.9rem;
             line-height: 1.4;
             box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            pointer-events: none;
         }
         
         /* Alternative positioning for elements that need bottom placement */
         .tooltip.bottom .tooltiptext {
             top: auto;
-            bottom: 130%;
+            bottom: 140%;
             left: 50%;
             margin-left: -160px;
+            transform: translateY(-10px);
+        }
+        
+        .tooltip.bottom:hover .tooltiptext {
+            transform: translateY(0);
         }
         
         /* Alternative positioning for elements that need top placement */
         .tooltip.top .tooltiptext {
-            top: -120%;
+            top: -130%;
             left: 50%;
             margin-left: -160px;
+            transform: translateY(15px);
+        }
+        
+        .tooltip.top:hover .tooltiptext {
+            transform: translateY(0);
         }
         
         /* Center positioning for roadmap items */
         .tooltip.center .tooltiptext {
             top: -50%;
-            left: -350px;
+            left: -360px;
             margin-left: 0;
+            transform: translateX(-15px);
+        }
+        
+        .tooltip.center:hover .tooltiptext {
+            transform: translateX(0);
         }
         
         /* Component-specific positioning */
         .component.tooltip .tooltiptext {
-            top: -120%;
+            top: -130%;
             left: 50%;
             margin-left: -160px;
             width: 320px;
+            transform: translateY(20px);
+        }
+        
+        .component.tooltip:hover .tooltiptext {
+            transform: translateY(0);
         }
         
         /* Responsive tooltip positioning */
@@ -513,6 +535,12 @@
         .tooltip:hover .tooltiptext {
             visibility: visible;
             opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        
+        .tooltip:hover {
+            transform: scale(1.02);
         }
         
         .workflow-step {
@@ -937,7 +965,7 @@
         <div class="diagram-section roi-section">
             <h2 class="diagram-title">📈 Return on Investment Analysis</h2>
             <div class="roi-stats">
-                <div class="roi-stat tooltip top">
+                <div class="roi-stat tooltip top" style="transition: transform 0.3s ease;">
                     <span class="roi-number">£2.5M</span>
                     <div class="roi-label">Annual Cost Savings</div>
                     <span class="tooltiptext">
@@ -950,7 +978,7 @@
                         <em>Conservative estimates with proven ROI metrics</em>
                     </span>
                 </div>
-                <div class="roi-stat tooltip top">
+                <div class="roi-stat tooltip top" style="transition: transform 0.3s ease;">
                     <span class="roi-number">6x</span>
                     <div class="roi-label">ROI Multiplier</div>
                     <span class="tooltiptext">
@@ -963,7 +991,7 @@
                         <em>15% discount rate applied to calculations</em>
                     </span>
                 </div>
-                <div class="roi-stat tooltip top">
+                <div class="roi-stat tooltip top" style="transition: transform 0.3s ease;">
                     <span class="roi-number">75%</span>
                     <div class="roi-label">Admin Time Saved</div>
                     <span class="tooltiptext">
@@ -976,7 +1004,7 @@
                         <em>Based on typical project management workload</em>
                     </span>
                 </div>
-                <div class="roi-stat tooltip top">
+                <div class="roi-stat tooltip top" style="transition: transform 0.3s ease;">
                     <span class="roi-number">12</span>
                     <div class="roi-label">Months Payback</div>
                     <span class="tooltiptext">
