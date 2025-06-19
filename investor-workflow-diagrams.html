@@ -433,6 +433,14 @@
             margin-left: 0;
         }
         
+        /* Component-specific positioning */
+        .component.tooltip .tooltiptext {
+            top: -120%;
+            left: 50%;
+            margin-left: -160px;
+            width: 320px;
+        }
+        
         /* Responsive tooltip positioning */
         @media (max-width: 768px) {
             .tooltip .tooltiptext {
@@ -491,6 +499,15 @@
             margin-top: -5px;
             margin-left: 0;
             border-color: transparent transparent transparent #2c3e50;
+        }
+        
+        /* Arrow positioning for component tooltips */
+        .component.tooltip .tooltiptext::after {
+            top: auto;
+            bottom: -5px;
+            left: 50%;
+            margin-left: -5px;
+            border-color: #2c3e50 transparent transparent transparent;
         }
         
         .tooltip:hover .tooltiptext {
@@ -768,7 +785,7 @@
             <div class="architecture-diagram">
                 <div class="layer">
                     <span class="layer-title">Presentation Layer</span>
-                    <div class="component tooltip top">React Dashboard
+                    <div class="component tooltip">React Dashboard
                         <span class="tooltiptext">
                             <strong>React Dashboard:</strong><br>
                             • Modern React 18 with TypeScript<br>
@@ -777,7 +794,7 @@
                             <em>Primary project management interface</em>
                         </span>
                     </div>
-                    <div class="component tooltip top">Mobile Interface
+                    <div class="component tooltip">Mobile Interface
                         <span class="tooltiptext">
                             <strong>Mobile Interface:</strong><br>
                             • Progressive Web App (PWA)<br>
@@ -786,7 +803,7 @@
                             <em>Field worker smartphone access</em>
                         </span>
                     </div>
-                    <div class="component tooltip top">PDF Reports
+                    <div class="component tooltip">PDF Reports
                         <span class="tooltiptext">
                             <strong>PDF Reports:</strong><br>
                             • Automated report generation<br>
@@ -801,7 +818,7 @@
                 
                 <div class="layer">
                     <span class="layer-title">AI Agent Layer</span>
-                    <div class="component tooltip top">Email Agent
+                    <div class="component tooltip">Email Agent
                         <span class="tooltiptext">
                             <strong>Email Agent:</strong><br>
                             • 500+ emails daily processing<br>
@@ -810,7 +827,7 @@
                             <em>Intelligent email processing hub</em>
                         </span>
                     </div>
-                    <div class="component tooltip top">Contract Agent
+                    <div class="component tooltip">Contract Agent
                         <span class="tooltiptext">
                             <strong>Contract Agent:</strong><br>
                             • NEC4 compliance monitoring<br>
@@ -819,7 +836,7 @@
                             <em>Contract intelligence automation</em>
                         </span>
                     </div>
-                    <div class="component tooltip top">Commercial Agent
+                    <div class="component tooltip">Commercial Agent
                         <span class="tooltiptext">
                             <strong>Commercial Agent:</strong><br>
                             • Cost analysis validation<br>
@@ -828,7 +845,7 @@
                             <em>Financial oversight control</em>
                         </span>
                     </div>
-                    <div class="component tooltip top">Operational Agent
+                    <div class="component tooltip">Operational Agent
                         <span class="tooltiptext">
                             <strong>Operational Agent:</strong><br>
                             • Programme analysis tracking<br>
@@ -837,7 +854,7 @@
                             <em>Project execution intelligence</em>
                         </span>
                     </div>
-                    <div class="component tooltip top">Procurement Agent
+                    <div class="component tooltip">Procurement Agent
                         <span class="tooltiptext">
                             <strong>Procurement Agent:</strong><br>
                             • Supplier performance monitoring<br>
@@ -852,7 +869,7 @@
                 
                 <div class="layer">
                     <span class="layer-title">API & Business Logic</span>
-                    <div class="component tooltip top">REST APIs
+                    <div class="component tooltip">REST APIs
                         <span class="tooltiptext">
                             <strong>REST APIs:</strong><br>
                             • 50+ data operation endpoints<br>
@@ -861,7 +878,7 @@
                             <em>Secure data exchange layer</em>
                         </span>
                     </div>
-                    <div class="component tooltip top">Workflow Engine
+                    <div class="component tooltip">Workflow Engine
                         <span class="tooltiptext">
                             <strong>Workflow Engine:</strong><br>
                             • Agent coordination orchestration<br>
@@ -870,7 +887,7 @@
                             <em>Central business process coordinator</em>
                         </span>
                     </div>
-                    <div class="component tooltip top">Event Bus
+                    <div class="component tooltip">Event Bus
                         <span class="tooltiptext">
                             <strong>Event Bus:</strong><br>
                             • Real-time message passing<br>
@@ -885,7 +902,7 @@
                 
                 <div class="layer">
                     <span class="layer-title">Data & AI Services</span>
-                    <div class="component tooltip top">PostgreSQL
+                    <div class="component tooltip">PostgreSQL
                         <span class="tooltiptext">
                             <strong>PostgreSQL Database:</strong><br>
                             • Neon serverless architecture<br>
@@ -894,7 +911,7 @@
                             <em>Reliable data persistence</em>
                         </span>
                     </div>
-                    <div class="component tooltip top">Claude AI
+                    <div class="component tooltip">Claude AI
                         <span class="tooltiptext">
                             <strong>Claude AI Service:</strong><br>
                             • Advanced language model<br>
@@ -903,7 +920,7 @@
                             <em>Core AI intelligence engine</em>
                         </span>
                     </div>
-                    <div class="component tooltip top">Document Parser
+                    <div class="component tooltip">Document Parser
                         <span class="tooltiptext">
                             <strong>Document Parser:</strong><br>
                             • Multi-format file processing<br>
