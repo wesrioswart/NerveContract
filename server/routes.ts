@@ -2776,6 +2776,9 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
+  // Mount workflow routes
+  app.use('/api/workflows', workflowRoutes);
+
   const httpServer = createServer(app);
   return httpServer;
 }

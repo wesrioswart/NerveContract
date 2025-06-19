@@ -199,6 +199,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   // Utility items
   const utilityItems = [
     { path: "/email-processor", label: "Email Processor", icon: Mail, badge: "New" },
+    { path: "/workflow-dashboard", label: "Agent Workflows", icon: Zap, badge: "AI" },
     { path: "/settings", label: "Settings", icon: Settings },
     { path: "/api/pdf/overview", label: "NEC4 Overview PDF", icon: FileText, badge: "PDF" },
   ];

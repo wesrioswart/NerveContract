@@ -13,7 +13,7 @@ import {
   projects 
 } from '../../shared/schema';
 import { eq, and } from 'drizzle-orm';
-import { createAnthropic } from '@ai-sdk/anthropic';
+import Anthropic from '@anthropic-ai/sdk';
 
 interface EmailData {
   from: string;
@@ -38,7 +38,7 @@ export class EmailIntakeAgent {
   
   constructor() {
     if (process.env.ANTHROPIC_API_KEY) {
-      this.anthropic = createAnthropic({
+      this.anthropic = new Anthropic({
         apiKey: process.env.ANTHROPIC_API_KEY
       });
     }

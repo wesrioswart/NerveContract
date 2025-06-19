@@ -13,7 +13,7 @@ import {
   projectPeriods
 } from '../../shared/schema';
 import { eq, and, gte, lte, isNull, or } from 'drizzle-orm';
-import { createAnthropic } from '@ai-sdk/anthropic';
+import Anthropic from '@anthropic-ai/sdk';
 
 interface ContractEvent {
   id: number;
@@ -45,7 +45,7 @@ export class ContractControlAgent {
   
   constructor() {
     if (process.env.ANTHROPIC_API_KEY) {
-      this.anthropic = createAnthropic({
+      this.anthropic = new Anthropic({
         apiKey: process.env.ANTHROPIC_API_KEY
       });
     }

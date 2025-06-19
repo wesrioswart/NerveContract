@@ -5,6 +5,7 @@
 
 import { Router } from 'express';
 import { masterOrchestrator } from './master-orchestrator';
+import { requireAuth } from '../middleware/auth-middleware';
 import { emailIntakeAgent } from './email-intake-agent';
 import { contractControlAgent } from './contract-control-agent';
 import { commercialAgent } from './commercial-agent';
@@ -12,6 +13,9 @@ import { operationalAgent } from './operational-agent';
 import { procurementAgent } from './procurement-agent';
 
 export const workflowRouter = Router();
+
+// Apply authentication middleware to all workflow routes
+workflowRouter.use(requireAuth);
 
 /**
  * GET /api/workflows/status

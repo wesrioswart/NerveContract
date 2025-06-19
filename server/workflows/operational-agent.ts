@@ -14,7 +14,7 @@ import {
   compensationEvents
 } from '../../shared/schema';
 import { eq, and, gte, lte, desc, isNull, or } from 'drizzle-orm';
-import { createAnthropic } from '@ai-sdk/anthropic';
+import Anthropic from '@anthropic-ai/sdk';
 
 interface ProgrammeAnalysis {
   projectId: number;
@@ -52,7 +52,7 @@ export class OperationalAgent {
   
   constructor() {
     if (process.env.ANTHROPIC_API_KEY) {
-      this.anthropic = createAnthropic({
+      this.anthropic = new Anthropic({
         apiKey: process.env.ANTHROPIC_API_KEY
       });
     }
