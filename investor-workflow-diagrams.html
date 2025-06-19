@@ -411,23 +411,24 @@
         
         .tooltip .tooltiptext {
             visibility: hidden;
-            width: 320px;
+            width: 300px;
             background-color: #2c3e50;
             color: #fff;
             text-align: left;
             border-radius: 8px;
-            padding: 15px;
+            padding: 12px;
             position: absolute;
-            z-index: 1001;
+            z-index: 2000;
             top: -10px;
             left: 105%;
             opacity: 0;
             transform: translateY(10px);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 0.9rem;
-            line-height: 1.4;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.85rem;
+            line-height: 1.3;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
             pointer-events: none;
+            white-space: nowrap;
         }
         
         /* Alternative positioning for elements that need bottom placement */
@@ -469,15 +470,22 @@
         
         /* Component-specific positioning */
         .component.tooltip .tooltiptext {
-            top: -130%;
+            top: -150%;
             left: 50%;
             margin-left: -160px;
             width: 320px;
             transform: translateY(20px);
+            z-index: 2000;
         }
         
         .component.tooltip:hover .tooltiptext {
             transform: translateY(0);
+        }
+        
+        /* Prevent tooltip overflow */
+        .layer {
+            overflow: visible;
+            position: relative;
         }
         
         /* Responsive tooltip positioning */
@@ -832,29 +840,17 @@
                     <span class="layer-title">Presentation Layer</span>
                     <div class="component tooltip">React Dashboard
                         <span class="tooltiptext">
-                            <strong>React Dashboard:</strong><br>
-                            • Modern React 18 with TypeScript<br>
-                            • Real-time updates via WebSocket<br>
-                            • 99.9% uptime performance<br>
-                            <em>Primary project management interface</em>
+                            React 18 TypeScript • WebSocket updates • 99.9% uptime
                         </span>
                     </div>
                     <div class="component tooltip">Mobile Interface
                         <span class="tooltiptext">
-                            <strong>Mobile Interface:</strong><br>
-                            • Progressive Web App (PWA)<br>
-                            • Offline field capability<br>
-                            • QR code equipment scanning<br>
-                            <em>Field worker smartphone access</em>
+                            PWA • Offline capability • QR scanning • Field access
                         </span>
                     </div>
                     <div class="component tooltip">PDF Reports
                         <span class="tooltiptext">
-                            <strong>PDF Reports:</strong><br>
-                            • Automated report generation<br>
-                            • Client-ready documents<br>
-                            • Scheduled email delivery<br>
-                            <em>Executive compliance summaries</em>
+                            Automated generation • Client-ready • Scheduled delivery
                         </span>
                     </div>
                 </div>
@@ -865,47 +861,27 @@
                     <span class="layer-title">AI Agent Layer</span>
                     <div class="component tooltip">Email Agent
                         <span class="tooltiptext">
-                            <strong>Email Agent:</strong><br>
-                            • 500+ emails daily processing<br>
-                            • 96% classification accuracy<br>
-                            • Automatic data extraction<br>
-                            <em>Intelligent email processing hub</em>
+                            500+ daily emails • 96% accuracy • Auto extraction
                         </span>
                     </div>
                     <div class="component tooltip">Contract Agent
                         <span class="tooltiptext">
-                            <strong>Contract Agent:</strong><br>
-                            • NEC4 compliance monitoring<br>
-                            • Deadline tracking alerts<br>
-                            • 98% clause interpretation accuracy<br>
-                            <em>Contract intelligence automation</em>
+                            NEC4 compliance • Deadline alerts • 98% accuracy
                         </span>
                     </div>
                     <div class="component tooltip">Commercial Agent
                         <span class="tooltiptext">
-                            <strong>Commercial Agent:</strong><br>
-                            • Cost analysis validation<br>
-                            • Equipment hire optimization<br>
-                            • £45K monthly savings<br>
-                            <em>Financial oversight control</em>
+                            Cost validation • Equipment optimization • £45K savings
                         </span>
                     </div>
                     <div class="component tooltip">Operational Agent
                         <span class="tooltiptext">
-                            <strong>Operational Agent:</strong><br>
-                            • Programme analysis tracking<br>
-                            • Critical path monitoring<br>
-                            • 4-minute delay analysis<br>
-                            <em>Project execution intelligence</em>
+                            Programme tracking • Critical path • 4min analysis
                         </span>
                     </div>
                     <div class="component tooltip">Procurement Agent
                         <span class="tooltiptext">
-                            <strong>Procurement Agent:</strong><br>
-                            • Supplier performance monitoring<br>
-                            • Purchase order automation<br>
-                            • 35% efficiency improvement<br>
-                            <em>Supply chain management</em>
+                            Supplier monitoring • Auto POs • 35% efficiency
                         </span>
                     </div>
                 </div>
@@ -916,29 +892,17 @@
                     <span class="layer-title">API & Business Logic</span>
                     <div class="component tooltip">REST APIs
                         <span class="tooltiptext">
-                            <strong>REST APIs:</strong><br>
-                            • 50+ data operation endpoints<br>
-                            • Rate limiting security<br>
-                            • Sub-100ms response time<br>
-                            <em>Secure data exchange layer</em>
+                            50+ endpoints • Rate limiting • Sub-100ms response
                         </span>
                     </div>
                     <div class="component tooltip">Workflow Engine
                         <span class="tooltiptext">
-                            <strong>Workflow Engine:</strong><br>
-                            • Agent coordination orchestration<br>
-                            • Event-driven automation<br>
-                            • 10,000+ daily transactions<br>
-                            <em>Central business process coordinator</em>
+                            Agent coordination • Event-driven • 10K+ transactions
                         </span>
                     </div>
                     <div class="component tooltip">Event Bus
                         <span class="tooltiptext">
-                            <strong>Event Bus:</strong><br>
-                            • Real-time message passing<br>
-                            • Agent communication backbone<br>
-                            • 99.9% delivery reliability<br>
-                            <em>System coordination infrastructure</em>
+                            Real-time messaging • 99.9% reliability • Agent backbone
                         </span>
                     </div>
                 </div>
@@ -949,29 +913,17 @@
                     <span class="layer-title">Data & AI Services</span>
                     <div class="component tooltip">PostgreSQL
                         <span class="tooltiptext">
-                            <strong>PostgreSQL Database:</strong><br>
-                            • Neon serverless architecture<br>
-                            • Automatic scaling backup<br>
-                            • Sub-50ms query performance<br>
-                            <em>Reliable data persistence</em>
+                            Neon serverless • Auto scaling • Sub-50ms queries
                         </span>
                     </div>
                     <div class="component tooltip">Claude AI
                         <span class="tooltiptext">
-                            <strong>Claude AI Service:</strong><br>
-                            • Advanced language model<br>
-                            • Contract analysis interpretation<br>
-                            • 96% reasoning accuracy<br>
-                            <em>Core AI intelligence engine</em>
+                            Advanced LLM • Contract analysis • 96% accuracy
                         </span>
                     </div>
                     <div class="component tooltip">Document Parser
                         <span class="tooltiptext">
-                            <strong>Document Parser:</strong><br>
-                            • Multi-format file processing<br>
-                            • MS Project XML integration<br>
-                            • 94% extraction accuracy<br>
-                            <em>Intelligent document processing</em>
+                            Multi-format • MS Project XML • 94% extraction
                         </span>
                     </div>
                 </div>
