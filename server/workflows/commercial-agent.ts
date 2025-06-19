@@ -11,7 +11,7 @@ import {
   purchaseOrders,
   compensationEvents,
   projects,
-  inventory
+  inventoryItems
 } from '../../shared/schema';
 import { eq, and, gte, lte, desc, sum } from 'drizzle-orm';
 import Anthropic from '@anthropic-ai/sdk';
@@ -460,7 +460,8 @@ Respond with JSON:
         status: 'approved',
         startDate: new Date(),
         endDate: new Date(Date.now() + (requestData.duration || 30) * 24 * 60 * 60 * 1000),
-        dailyRate: costAnalysis.estimatedCost / (requestData.duration || 30),
+        dailyRate: Math.round(costAnalysis.estimatedCost / (requestData.duration || 30)),
+        duration: requestData.duration || 30,
         totalCost: costAnalysis.estimatedCost,
         notes: `Auto-approved by Commercial Agent. Estimated cost: £${costAnalysis.estimatedCost}`
       });

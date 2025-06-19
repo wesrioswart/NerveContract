@@ -8,7 +8,7 @@ import { db } from '../db';
 import { 
   suppliers,
   purchaseOrders,
-  inventory,
+  inventoryItems,
   equipmentHires,
   projects
 } from '../../shared/schema';
@@ -239,19 +239,19 @@ export class ProcurementAgent {
    */
   private async reviewInventoryLevels(projectId: number): Promise<InventoryAnalysis> {
     try {
-      const inventoryItems = await db.select()
-        .from(inventory)
-        .where(eq(inventory.projectId, projectId));
+      const inventoryList = await db.select()
+        .from(inventoryItems)
+        .where(eq(inventoryItems.projectId, projectId));
       
-      const lowStockItems = inventoryItems.filter(item => 
-        item.currentQuantity <= (item.minimumLevel || 10)
+      const lowStockItems = inventoryList.filter(item => 
+        item.currentQuantity <= (item.minimumQuantity || 10)
       );
       
-      const overstockItems = inventoryItems.filter(item => 
-        item.currentQuantity > (item.maximumLevel || 1000)
+      const overstockItems = inventoryList.filter(item => 
+        item.currentQuantity > (item.maximumQuantity || 1000)
       );
       
-      const obsoleteItems = inventoryItems.filter(item => {
+      const obsoleteItems = inventoryList.filter(item => {
         const lastUsed = item.lastUsedDate ? new Date(item.lastUsedDate) : null;
         if (!lastUsed) return false;
         
@@ -259,8 +259,8 @@ export class ProcurementAgent {
         return daysSinceLastUsed > 90; // Items not used in 90 days
       });
       
-      const totalValue = inventoryItems.reduce((sum, item) => sum + (item.unitCost * item.currentQuantity), 0);
-      const turnoverValue = inventoryItems.reduce((sum, item) => sum + (item.usageRate || 0) * item.unitCost, 0);
+      const totalValue = inventoryList.reduce((sum, item) => sum + (item.unitPrice * item.currentQuantity), 0);
+      const turnoverValue = inventoryList.reduce((sum, item) => sum + (item.usageRate || 0) * item.unitPrice, 0);
       const turnaroundRate = totalValue > 0 ? (turnoverValue / totalValue) * 365 : 0; // Annual turnover rate
       
       const recommendations: string[] = [];
@@ -282,7 +282,7 @@ export class ProcurementAgent {
       }
       
       const analysis: InventoryAnalysis = {
-        totalItems: inventoryItems.length,
+        totalItems: inventoryList.length,
         lowStockItems,
         overstockItems,
         obsoleteItems,

@@ -8,7 +8,7 @@ import { db } from '../db';
 import { 
   compensationEvents, 
   earlyWarnings, 
-  rfi, 
+  rfis, 
   equipmentHires,
   projects 
 } from '../../shared/schema';
@@ -327,15 +327,17 @@ Respond with JSON:
           break;
           
         case 'rfi':
-          await db.insert(rfi).values({
+          await db.insert(rfis).values({
             projectId,
             reference: `RFI-${Date.now()}`,
             title: extractedData.subject,
             description: extractedData.description || extractedData.body,
-            status: 'open',
-            priority: 'medium',
-            submittedById: 1,
-            sourceEmail: extractedData.sourceEmail
+            status: 'Open',
+            transmittalMethod: 'Email',
+            submissionDate: new Date().toISOString().split('T')[0],
+            contractualReplyPeriod: 14,
+            plannedResponseDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            createdBy: 1
           });
           break;
       }
