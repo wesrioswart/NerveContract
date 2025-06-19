@@ -168,7 +168,7 @@ export class ProcurementAgent {
    * Get all active projects
    */
   private async getActiveProjects(): Promise<any[]> {
-    return await db.select().from(projects).where(eq(projects.status, 'active'));
+    return await db.select().from(projects);
   }
 
   /**

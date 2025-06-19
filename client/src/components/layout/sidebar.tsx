@@ -374,8 +374,10 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
           
           {!collapsed && <Separator className="my-3" />}
           
-          {/* Core Navigation */}
-          {renderNavItems(coreNavItems)}
+          {/* Core Navigation - Dashboard always visible */}
+          <div className="mb-4">
+            {renderNavItems(coreNavItems)}
+          </div>
           
           {!collapsed && <Separator className="my-3" />}
           
