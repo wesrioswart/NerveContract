@@ -105,7 +105,7 @@ function AppContent() {
             onToggle={toggleSidebar}
           />
           
-          <div className="flex-1 flex flex-col overflow-hidden ml-64">
+          <div className="flex-1 flex flex-col overflow-hidden" style={{ marginLeft: '256px' }}>
             <Header 
               user={user} 
               onToggleSidebar={toggleSidebar}
