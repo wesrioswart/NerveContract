@@ -86,6 +86,9 @@ export class OperationalAgent {
         
         // Step 7: Update programme forecasts
         await this.updateProgrammeForecasts(project.id);
+        
+        // Step 8: Make intelligent programme adjustments
+        await this.makeIntelligentAdjustments(project.id);
       }
       
       console.log('✅ Operational Agent: Operational monitoring complete');
@@ -162,6 +165,178 @@ export class OperationalAgent {
       
     } catch (error) {
       console.error('❌ Document analysis processing error:', error);
+    }
+  }
+
+  /**
+   * Make intelligent programme adjustments based on analysis
+   */
+  private async makeIntelligentAdjustments(projectId: number): Promise<void> {
+    try {
+      console.log(`🤖 Making intelligent programme adjustments for project ${projectId}`);
+      
+      // Get current programme analysis
+      const analysis = await this.analyzeProgrammeStatus(projectId);
+      
+      if (analysis.overallStatus === 'delayed' || analysis.overallStatus === 'at_risk') {
+        // Get programme and activities
+        const programme = await db.select()
+          .from(programmes)
+          .where(eq(programmes.projectId, projectId))
+          .then(p => p[0]);
+          
+        if (!programme) return;
+        
+        const activities = await db.select()
+          .from(programmeActivities)
+          .where(eq(programmeActivities.programmeId, programme.id));
+        
+        // Identify specific adjustments needed
+        const adjustments = await this.identifyRequiredAdjustments(activities, analysis);
+        
+        // Apply adjustments
+        for (const adjustment of adjustments) {
+          await this.applyProgrammeAdjustment(adjustment);
+          
+          // Log the adjustment
+          console.log(`📅 Applied adjustment: ${adjustment.type} for activity ${adjustment.activityId}`);
+          
+          // Create early warning if significant change
+          if (adjustment.impactDays > 7) {
+            await this.createDelayEarlyWarning(projectId, adjustment);
+          }
+        }
+        
+        // Recalculate critical path after adjustments
+        await this.recalculateCriticalPath(programme.id);
+        
+        console.log(`✅ Programme adjustments complete - ${adjustments.length} changes made`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Programme adjustment error:', error);
+    }
+  }
+
+  /**
+   * Identify required programme adjustments
+   */
+  private async identifyRequiredAdjustments(activities: any[], analysis: ProgrammeAnalysis): Promise<any[]> {
+    const adjustments = [];
+    
+    for (const activity of activities) {
+      // Check if activity is delayed
+      if (activity.finishDate && new Date(activity.finishDate) < new Date() && activity.percentComplete < 100) {
+        const daysDelayed = Math.ceil((new Date().getTime() - new Date(activity.finishDate).getTime()) / (1000 * 60 * 60 * 24));
+        
+        adjustments.push({
+          type: 'reschedule',
+          activityId: activity.id,
+          currentFinishDate: activity.finishDate,
+          newFinishDate: new Date(Date.now() + (activity.duration || 5) * 24 * 60 * 60 * 1000),
+          impactDays: daysDelayed,
+          reason: `Activity delayed by ${daysDelayed} days - auto-rescheduling`
+        });
+      }
+      
+      // Check if critical activity needs acceleration
+      if (activity.isCritical && activity.percentComplete < 50) {
+        const remainingDuration = Math.ceil((activity.duration || 0) * (1 - (activity.percentComplete || 0) / 100));
+        
+        if (remainingDuration > 10) { // Accelerate if more than 10 days remaining
+          const acceleratedDuration = Math.ceil(remainingDuration * 0.8); // 20% acceleration
+          
+          adjustments.push({
+            type: 'accelerate',
+            activityId: activity.id,
+            originalDuration: remainingDuration,
+            newDuration: acceleratedDuration,
+            impactDays: remainingDuration - acceleratedDuration,
+            reason: 'Critical path optimization - accelerating key activity'
+          });
+        }
+      }
+    }
+    
+    return adjustments;
+  }
+
+  /**
+   * Apply programme adjustment to database
+   */
+  private async applyProgrammeAdjustment(adjustment: any): Promise<void> {
+    try {
+      if (adjustment.type === 'reschedule') {
+        await db.update(programmeActivities)
+          .set({
+            finishDate: adjustment.newFinishDate,
+            updatedAt: new Date()
+          })
+          .where(eq(programmeActivities.id, adjustment.activityId));
+      }
+      
+      if (adjustment.type === 'accelerate') {
+        await db.update(programmeActivities)
+          .set({
+            duration: adjustment.newDuration,
+            finishDate: new Date(Date.now() + adjustment.newDuration * 24 * 60 * 60 * 1000),
+            updatedAt: new Date()
+          })
+          .where(eq(programmeActivities.id, adjustment.activityId));
+      }
+      
+    } catch (error) {
+      console.error('Failed to apply programme adjustment:', error);
+    }
+  }
+
+  /**
+   * Create early warning for significant programme changes
+   */
+  private async createDelayEarlyWarning(projectId: number, adjustment: any): Promise<void> {
+    try {
+      await db.insert(earlyWarnings).values({
+        projectId,
+        title: `Programme Adjustment: ${adjustment.type}`,
+        description: `${adjustment.reason}. Impact: ${adjustment.impactDays} days.`,
+        severity: adjustment.impactDays > 14 ? 'high' : 'medium',
+        category: 'programme_delay',
+        raisedBy: 1, // System user
+        status: 'open',
+        raisedAt: new Date(),
+        mitigationPlan: `Automatic programme adjustment applied. Monitor progress closely.`
+      });
+      
+    } catch (error) {
+      console.error('Failed to create delay early warning:', error);
+    }
+  }
+
+  /**
+   * Recalculate critical path after adjustments
+   */
+  private async recalculateCriticalPath(programmeId: number): Promise<void> {
+    try {
+      const activities = await db.select()
+        .from(programmeActivities)
+        .where(eq(programmeActivities.programmeId, programmeId));
+      
+      // Simple critical path recalculation (in real system would use proper CPM algorithm)
+      const sortedActivities = activities.sort((a, b) => 
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
+      
+      let currentCriticalPath = true;
+      for (const activity of sortedActivities) {
+        const isOnCriticalPath = currentCriticalPath && (activity.duration || 0) > 3;
+        
+        await db.update(programmeActivities)
+          .set({ isCritical: isOnCriticalPath })
+          .where(eq(programmeActivities.id, activity.id));
+      }
+      
+    } catch (error) {
+      console.error('Failed to recalculate critical path:', error);
     }
   }
 

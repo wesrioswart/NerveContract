@@ -73,6 +73,9 @@ export class ContractControlAgent {
         
         // Step 5: Generate compliance reports
         await this.generateComplianceReport(project.id);
+        
+        // Step 6: Make intelligent compliance adjustments
+        await this.makeIntelligentComplianceAdjustments(project.id);
       }
       
       console.log('✅ Contract Control Agent: Compliance monitoring complete');
@@ -142,6 +145,180 @@ export class ContractControlAgent {
     } catch (error) {
       console.error('❌ Early warning compliance error:', error);
     }
+  }
+
+  /**
+   * Make intelligent compliance adjustments
+   */
+  private async makeIntelligentComplianceAdjustments(projectId: number): Promise<void> {
+    try {
+      console.log(`📋 Making intelligent compliance adjustments for project ${projectId}`);
+      
+      // Check for overdue compensation events
+      const overdueEvents = await db.select()
+        .from(compensationEvents)
+        .where(and(
+          eq(compensationEvents.projectId, projectId),
+          eq(compensationEvents.status, 'submitted')
+        ));
+      
+      for (const event of overdueEvents) {
+        const daysOverdue = this.calculateDaysOverdue(event.submittedAt);
+        
+        if (daysOverdue > 7) { // NEC4 8-week deadline approaching
+          await this.escalateCompensationEvent(event, daysOverdue);
+        }
+      }
+      
+      // Check for missing early warnings
+      const recentCompEvents = await db.select()
+        .from(compensationEvents)
+        .where(and(
+          eq(compensationEvents.projectId, projectId),
+          gte(compensationEvents.submittedAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
+        ));
+      
+      for (const compEvent of recentCompEvents) {
+        await this.checkRequiredEarlyWarning(projectId, compEvent);
+      }
+      
+      // Auto-extend deadlines where appropriate
+      await this.autoExtendDeadlinesIfJustified(projectId);
+      
+      console.log(`✅ Compliance adjustments complete`);
+      
+    } catch (error) {
+      console.error('❌ Compliance adjustment error:', error);
+    }
+  }
+
+  /**
+   * Escalate overdue compensation event
+   */
+  private async escalateCompensationEvent(event: any, daysOverdue: number): Promise<void> {
+    try {
+      // Update event status to escalated
+      await db.update(compensationEvents)
+        .set({
+          status: 'escalated',
+          notes: `Auto-escalated by Contract Control Agent: ${daysOverdue} days overdue. NEC4 deadline approaching.`
+        })
+        .where(eq(compensationEvents.id, event.id));
+      
+      // Create urgent early warning about deadline risk
+      await db.insert(earlyWarnings).values({
+        projectId: event.projectId,
+        title: `URGENT: Compensation Event Deadline Risk`,
+        description: `Compensation Event "${event.title}" is ${daysOverdue} days overdue. NEC4 8-week deadline approaching. Immediate action required.`,
+        severity: 'critical',
+        category: 'contract_deadline',
+        raisedBy: 1, // System user
+        status: 'open',
+        raisedAt: new Date(),
+        mitigationPlan: `Immediate review and response required to avoid NEC4 deadline breach.`
+      });
+      
+      console.log(`🚨 Escalated compensation event ${event.id} - ${daysOverdue} days overdue`);
+      
+    } catch (error) {
+      console.error('Failed to escalate compensation event:', error);
+    }
+  }
+
+  /**
+   * Check if compensation event should have had prior early warning
+   */
+  private async checkRequiredEarlyWarning(projectId: number, compEvent: any): Promise<void> {
+    try {
+      // Check if there was a related early warning in the past 4 weeks
+      const relatedWarnings = await db.select()
+        .from(earlyWarnings)
+        .where(and(
+          eq(earlyWarnings.projectId, projectId),
+          gte(earlyWarnings.raisedAt, new Date(Date.now() - 28 * 24 * 60 * 60 * 1000))
+        ));
+      
+      const hasRelatedWarning = relatedWarnings.some(warning => 
+        warning.description.toLowerCase().includes(compEvent.title.toLowerCase().split(' ')[0])
+      );
+      
+      if (!hasRelatedWarning && compEvent.estimatedValue > 10000) {
+        // Create retroactive early warning notice
+        await db.insert(earlyWarnings).values({
+          projectId,
+          title: `Retrospective Early Warning: ${compEvent.title}`,
+          description: `Contract Control Agent identified that Compensation Event "${compEvent.title}" (£${compEvent.estimatedValue?.toLocaleString()}) should have been preceded by an Early Warning under NEC4 Clause 16.1.`,
+          severity: 'medium',
+          category: 'contract_compliance',
+          raisedBy: 1,
+          status: 'open',
+          raisedAt: new Date(),
+          mitigationPlan: `Review early warning procedures. Ensure future similar events are identified earlier.`
+        });
+        
+        console.log(`📝 Created retrospective early warning for compensation event ${compEvent.id}`);
+      }
+      
+    } catch (error) {
+      console.error('Failed to check required early warning:', error);
+    }
+  }
+
+  /**
+   * Auto-extend deadlines where justified
+   */
+  private async autoExtendDeadlinesIfJustified(projectId: number): Promise<void> {
+    try {
+      const activeEvents = await db.select()
+        .from(compensationEvents)
+        .where(and(
+          eq(compensationEvents.projectId, projectId),
+          or(eq(compensationEvents.status, 'submitted'), eq(compensationEvents.status, 'under_review'))
+        ));
+      
+      for (const event of activeEvents) {
+        const complexity = this.assessEventComplexity(event);
+        
+        if (complexity > 0.8 && event.estimatedValue > 100000) { // Complex, high-value events
+          const newDeadline = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // Extend 2 weeks
+          
+          await db.update(compensationEvents)
+            .set({
+              responseDeadline: newDeadline,
+              notes: `Deadline extended by Contract Control Agent due to complexity (score: ${complexity.toFixed(2)}) and value (£${event.estimatedValue?.toLocaleString()})`
+            })
+            .where(eq(compensationEvents.id, event.id));
+          
+          console.log(`⏰ Auto-extended deadline for complex event ${event.id}`);
+        }
+      }
+      
+    } catch (error) {
+      console.error('Failed to auto-extend deadlines:', error);
+    }
+  }
+
+  /**
+   * Calculate days overdue
+   */
+  private calculateDaysOverdue(submittedDate: Date): number {
+    const daysDiff = Math.floor((new Date().getTime() - new Date(submittedDate).getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, daysDiff - 7); // Allow 7 days for initial review
+  }
+
+  /**
+   * Assess event complexity (simple scoring algorithm)
+   */
+  private assessEventComplexity(event: any): number {
+    let complexity = 0.3; // Base complexity
+    
+    if (event.estimatedValue > 50000) complexity += 0.2;
+    if (event.estimatedValue > 100000) complexity += 0.2;
+    if (event.description?.length > 200) complexity += 0.1;
+    if (event.clauseReference?.includes('60.1(19)')) complexity += 0.3; // Change in law/regulation
+    if (event.title?.toLowerCase().includes('design') || event.title?.toLowerCase().includes('variation')) complexity += 0.2;
+    
+    return Math.min(1.0, complexity);
   }
 
   /**

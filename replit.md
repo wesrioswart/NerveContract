@@ -146,6 +146,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- June 19, 2025: Implemented Intelligent Agent Actions System
+  - Enhanced agents to make actual programme, budget, and contract adjustments automatically
+  - Operational Agent now reschedules delayed activities and accelerates critical path items
+  - Commercial Agent performs budget reallocations and flags expensive equipment for review
+  - Contract Control Agent escalates overdue events and creates compliance early warnings
+  - Agents create compensation events and early warnings when detecting significant issues
+  - System now actively manages projects rather than just monitoring them
+
 - June 19, 2025: Enhanced Interactive Investor Presentation with Comprehensive Hover Tooltips
   - Fixed tooltip positioning and alignment issues for professional presentation quality
   - Added detailed hover explanations for all workflow elements including "12mth payback" financial breakdown

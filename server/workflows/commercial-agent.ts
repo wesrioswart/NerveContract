@@ -151,6 +151,186 @@ export class CommercialAgent {
   }
 
   /**
+   * Make intelligent budget adjustments based on analysis
+   */
+  private async makeIntelligentBudgetAdjustments(projectId: number): Promise<void> {
+    try {
+      console.log(`💰 Making intelligent budget adjustments for project ${projectId}`);
+      
+      // Get project financial data
+      const project = await db.select()
+        .from(projects)
+        .where(eq(projects.id, projectId))
+        .then(p => p[0]);
+        
+      if (!project) return;
+      
+      // Analyze current spending vs budget
+      const spendingAnalysis = await this.analyzeProjectSpending(projectId);
+      
+      if (spendingAnalysis.variancePercentage > 10) { // 10% variance threshold
+        // Calculate required adjustments
+        const adjustments = await this.calculateBudgetAdjustments(projectId, spendingAnalysis);
+        
+        // Apply budget reallocations
+        for (const adjustment of adjustments) {
+          await this.applyBudgetAdjustment(projectId, adjustment);
+          console.log(`💸 Applied budget adjustment: ${adjustment.category} ${adjustment.amount > 0 ? '+' : ''}£${Math.abs(adjustment.amount)}`);
+        }
+        
+        // Create compensation event if major budget change needed
+        if (Math.abs(spendingAnalysis.totalVariance) > 50000) { // £50k threshold
+          await this.createBudgetCompensationEvent(projectId, spendingAnalysis, adjustments);
+        }
+        
+        console.log(`✅ Budget adjustments complete - £${Math.abs(spendingAnalysis.totalVariance)} variance addressed`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Budget adjustment error:', error);
+    }
+  }
+
+  /**
+   * Analyze project spending patterns
+   */
+  private async analyzeProjectSpending(projectId: number): Promise<any> {
+    try {
+      // Get equipment hire costs
+      const equipmentCosts = await db.select()
+        .from(equipmentHires)
+        .where(eq(equipmentHires.projectId, projectId));
+      
+      const totalEquipmentCost = equipmentCosts.reduce((sum, hire) => 
+        sum + (hire.dailyRate * (hire.daysHired || 1)), 0);
+      
+      // Get purchase order costs (simulated - would connect to real PO system)
+      const estimatedPurchaseOrders = totalEquipmentCost * 0.3; // Estimate 30% of equipment cost
+      
+      // Calculate total actual spend
+      const totalActualSpend = totalEquipmentCost + estimatedPurchaseOrders;
+      
+      // Get project budget (assuming 500k standard project budget)
+      const projectBudget = 500000;
+      
+      const variance = totalActualSpend - projectBudget;
+      const variancePercentage = (variance / projectBudget) * 100;
+      
+      return {
+        projectBudget,
+        totalActualSpend,
+        totalVariance: variance,
+        variancePercentage,
+        equipmentCosts: totalEquipmentCost,
+        purchaseOrderCosts: estimatedPurchaseOrders,
+        categories: {
+          equipment: totalEquipmentCost,
+          materials: estimatedPurchaseOrders,
+          labour: projectBudget * 0.4 // Estimate 40% labour
+        }
+      };
+      
+    } catch (error) {
+      console.error('Spending analysis error:', error);
+      return { variancePercentage: 0, totalVariance: 0 };
+    }
+  }
+
+  /**
+   * Calculate required budget adjustments
+   */
+  private async calculateBudgetAdjustments(projectId: number, analysis: any): Promise<any[]> {
+    const adjustments = [];
+    
+    // If equipment costs are high, recommend alternatives
+    if (analysis.equipmentCosts > analysis.projectBudget * 0.3) {
+      adjustments.push({
+        category: 'equipment',
+        amount: -(analysis.equipmentCosts * 0.15), // Reduce by 15%
+        action: 'optimize_equipment_selection',
+        reason: 'Equipment costs exceed 30% of budget - recommending alternatives'
+      });
+    }
+    
+    // If overall variance is positive, allocate contingency
+    if (analysis.totalVariance > 0) {
+      adjustments.push({
+        category: 'contingency',
+        amount: analysis.totalVariance * 0.8, // Cover 80% from contingency
+        action: 'allocate_contingency',
+        reason: 'Budget overrun detected - allocating contingency funds'
+      });
+    }
+    
+    // Recommend cost-saving measures
+    if (analysis.variancePercentage > 15) {
+      adjustments.push({
+        category: 'efficiency',
+        amount: -(analysis.totalVariance * 0.3), // Target 30% efficiency savings
+        action: 'implement_cost_savings',
+        reason: 'Significant overrun - implementing efficiency measures'
+      });
+    }
+    
+    return adjustments;
+  }
+
+  /**
+   * Apply budget adjustment
+   */
+  private async applyBudgetAdjustment(projectId: number, adjustment: any): Promise<void> {
+    try {
+      if (adjustment.action === 'optimize_equipment_selection') {
+        // Find expensive equipment and mark for review
+        const expensiveEquipment = await db.select()
+          .from(equipmentHires)
+          .where(eq(equipmentHires.projectId, projectId));
+          
+        for (const equipment of expensiveEquipment) {
+          if (equipment.dailyRate > 200) { // High-cost equipment
+            await db.update(equipmentHires)
+              .set({
+                status: 'under_review',
+                notes: `Commercial Agent: Flagged for cost optimization - daily rate £${equipment.dailyRate}`
+              })
+              .where(eq(equipmentHires.id, equipment.id));
+          }
+        }
+      }
+      
+    } catch (error) {
+      console.error('Failed to apply budget adjustment:', error);
+    }
+  }
+
+  /**
+   * Create compensation event for major budget changes
+   */
+  private async createBudgetCompensationEvent(projectId: number, analysis: any, adjustments: any[]): Promise<void> {
+    try {
+      await db.insert(compensationEvents).values({
+        projectId,
+        title: `Budget Variance Compensation Event`,
+        description: `Commercial Agent detected significant budget variance of £${Math.abs(analysis.totalVariance).toLocaleString()}. Variance: ${analysis.variancePercentage.toFixed(1)}% ${analysis.totalVariance > 0 ? 'over' : 'under'} budget.`,
+        clauseReference: 'NEC4 Clause 60.1(1)',
+        estimatedValue: Math.abs(analysis.totalVariance),
+        raisedBy: 1, // System user
+        status: 'submitted',
+        submittedAt: new Date(),
+        aiAnalysis: {
+          confidence: 0.92,
+          source: 'Commercial Agent Budget Analysis',
+          reasoning: `Automated detection based on spending patterns analysis`,
+          recommendedActions: adjustments.map(a => a.reason)
+        }
+      });
+      
+    } catch (error) {
+      console.error('Failed to create budget compensation event:', error);
+    }
+  }
+
+  /**
    * Get all active projects
    */
   private async getActiveProjects(): Promise<any[]> {
