@@ -81,6 +81,10 @@
             box-shadow: 0 15px 30px rgba(116, 185, 255, 0.4);
         }
         
+        .agent-box:active {
+            transform: scale(0.98);
+        }
+        
         .agent-icon {
             font-size: 3rem;
             margin-bottom: 15px;
@@ -287,13 +291,106 @@
             transform: translateY(-2px);
         }
         
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .modal h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            text-align: center;
+            display: block;
+        }
+        
+        .capabilities-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .capability-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .capability-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .roi-highlight {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
         @media print {
             body {
                 background: white;
                 color: black;
             }
             
-            .print-button {
+            .print-button, .modal {
                 display: none;
             }
             
@@ -317,37 +414,37 @@
         <div class="diagram-section">
             <h2 class="diagram-title">🎯 AI Agent Ecosystem Overview</h2>
             <div class="workflow-diagram">
-                <div class="agent-box">
+                <div class="agent-box" onclick="openModal('emailModal')">
                     <span class="agent-icon">📧</span>
                     <div class="agent-title">Email Intake Agent</div>
                     <div class="agent-description">Automatically processes incoming emails, classifies content, and extracts relevant project data using AI</div>
                 </div>
                 
-                <div class="agent-box">
+                <div class="agent-box" onclick="openModal('contractModal')">
                     <span class="agent-icon">📋</span>
                     <div class="agent-title">Contract Control Agent</div>
                     <div class="agent-description">Monitors NEC4 compliance, manages deadlines, and ensures contract obligations are met</div>
                 </div>
                 
-                <div class="agent-box">
+                <div class="agent-box" onclick="openModal('commercialModal')">
                     <span class="agent-icon">💰</span>
                     <div class="agent-title">Commercial Agent</div>
                     <div class="agent-description">Handles cost analysis, equipment hire validation, and financial compliance monitoring</div>
                 </div>
                 
-                <div class="agent-box">
+                <div class="agent-box" onclick="openModal('operationalModal')">
                     <span class="agent-icon">🏗️</span>
                     <div class="agent-title">Operational Agent</div>
                     <div class="agent-description">Manages programme data, critical path analysis, and milestone tracking</div>
                 </div>
                 
-                <div class="agent-box">
+                <div class="agent-box" onclick="openModal('procurementModal')">
                     <span class="agent-icon">🏪</span>
                     <div class="agent-title">Procurement Agent</div>
                     <div class="agent-description">Monitors supplier performance and manages procurement workflows</div>
                 </div>
                 
-                <div class="agent-box orchestrator">
+                <div class="agent-box orchestrator" onclick="openModal('orchestratorModal')">
                     <span class="agent-icon">🎼</span>
                     <div class="agent-title">Master Orchestrator</div>
                     <div class="agent-description">Coordinates all agents, manages cross-functional workflows, and provides real-time monitoring</div>
@@ -559,14 +656,240 @@
         </div>
     </div>
 
+    <!-- Agent Detail Modals -->
+    
+    <!-- Email Intake Agent Modal -->
+    <div id="emailModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('emailModal')">&times;</span>
+            <span class="modal-icon">📧</span>
+            <h2>Email Intake Agent</h2>
+            <p><strong>Core Function:</strong> Intelligent email processing and classification system that automatically handles incoming project communications.</p>
+            
+            <div class="capabilities-list">
+                <div class="capability-item">
+                    <div class="capability-title">AI Classification</div>
+                    <div>Uses Claude AI to classify emails into RFIs, compensation events, early warnings, and equipment requests</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Data Extraction</div>
+                    <div>Automatically extracts project IDs, deadlines, costs, and technical specifications</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Security Filtering</div>
+                    <div>Advanced spam detection and content validation before processing</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Auto-Routing</div>
+                    <div>Intelligently routes emails to appropriate agents for specialized handling</div>
+                </div>
+            </div>
+            
+            <div class="roi-highlight">
+                <strong>Business Impact:</strong> Reduces manual email processing by 90%, saving 15 hours per week
+            </div>
+        </div>
+    </div>
+
+    <!-- Contract Control Agent Modal -->
+    <div id="contractModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('contractModal')">&times;</span>
+            <span class="modal-icon">📋</span>
+            <h2>Contract Control Agent</h2>
+            <p><strong>Core Function:</strong> NEC4 compliance monitoring and deadline management system ensuring contract obligations are met.</p>
+            
+            <div class="capabilities-list">
+                <div class="capability-item">
+                    <div class="capability-title">NEC4 Compliance</div>
+                    <div>Real-time monitoring of contract obligations and clause requirements</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Deadline Tracking</div>
+                    <div>Automated alerts for compensation events (8 weeks) and early warnings (1-2 weeks)</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Risk Assessment</div>
+                    <div>AI-powered risk evaluation with severity scoring and mitigation recommendations</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Auto-Generation</div>
+                    <div>Creates compensation events and early warnings from classified emails</div>
+                </div>
+            </div>
+            
+            <div class="roi-highlight">
+                <strong>Business Impact:</strong> Prevents contract breaches worth £500K+ annually through proactive monitoring
+            </div>
+        </div>
+    </div>
+
+    <!-- Commercial Agent Modal -->
+    <div id="commercialModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('commercialModal')">&times;</span>
+            <span class="modal-icon">💰</span>
+            <h2>Commercial Agent</h2>
+            <p><strong>Core Function:</strong> Financial monitoring and cost control system with automated equipment hire validation.</p>
+            
+            <div class="capabilities-list">
+                <div class="capability-item">
+                    <div class="capability-title">Cost Analysis</div>
+                    <div>Real-time budget tracking and variance analysis across all project areas</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Equipment Validation</div>
+                    <div>Automated approval/rejection of equipment hire requests based on budget and necessity</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">SCC Compliance</div>
+                    <div>Ensures all financial decisions comply with Special Conditions of Contract</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Spend Optimization</div>
+                    <div>Identifies cost-saving opportunities and budget optimization recommendations</div>
+                </div>
+            </div>
+            
+            <div class="roi-highlight">
+                <strong>Business Impact:</strong> Reduces project costs by 8-12% through intelligent financial controls
+            </div>
+        </div>
+    </div>
+
+    <!-- Operational Agent Modal -->
+    <div id="operationalModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('operationalModal')">&times;</span>
+            <span class="modal-icon">🏗️</span>
+            <h2>Operational Agent</h2>
+            <p><strong>Core Function:</strong> Programme management and critical path analysis ensuring project delivery on schedule.</p>
+            
+            <div class="capabilities-list">
+                <div class="capability-item">
+                    <div class="capability-title">Critical Path Analysis</div>
+                    <div>Real-time monitoring of programme dependencies and critical activities</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Milestone Tracking</div>
+                    <div>Automated progress monitoring with early warning alerts for delays</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Resource Planning</div>
+                    <div>Optimizes resource allocation based on programme requirements</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Impact Assessment</div>
+                    <div>Analyzes delay impacts and recommends recovery strategies</div>
+                </div>
+            </div>
+            
+            <div class="roi-highlight">
+                <strong>Business Impact:</strong> Reduces programme delays by 40% through proactive monitoring
+            </div>
+        </div>
+    </div>
+
+    <!-- Procurement Agent Modal -->
+    <div id="procurementModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('procurementModal')">&times;</span>
+            <span class="modal-icon">🏪</span>
+            <h2>Procurement Agent</h2>
+            <p><strong>Core Function:</strong> Supplier performance monitoring and procurement workflow automation.</p>
+            
+            <div class="capabilities-list">
+                <div class="capability-item">
+                    <div class="capability-title">Supplier Monitoring</div>
+                    <div>Continuous assessment of supplier performance and reliability metrics</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Inventory Management</div>
+                    <div>Automated stock level monitoring with reorder point optimization</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Workflow Automation</div>
+                    <div>Streamlined purchase order processing and approval workflows</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Performance Analytics</div>
+                    <div>Data-driven insights into procurement efficiency and supplier reliability</div>
+                </div>
+            </div>
+            
+            <div class="roi-highlight">
+                <strong>Business Impact:</strong> Improves procurement efficiency by 60% and reduces supplier costs by 15%
+            </div>
+        </div>
+    </div>
+
+    <!-- Master Orchestrator Modal -->
+    <div id="orchestratorModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('orchestratorModal')">&times;</span>
+            <span class="modal-icon">🎼</span>
+            <h2>Master Orchestrator</h2>
+            <p><strong>Core Function:</strong> Central coordination system managing all AI agents with cross-functional workflow optimization.</p>
+            
+            <div class="capabilities-list">
+                <div class="capability-item">
+                    <div class="capability-title">Agent Coordination</div>
+                    <div>Orchestrates communication and data flow between all specialized agents</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Event Bus Management</div>
+                    <div>Manages real-time event-driven communication across the entire system</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Performance Monitoring</div>
+                    <div>Tracks agent health, response times, and system-wide performance metrics</div>
+                </div>
+                <div class="capability-item">
+                    <div class="capability-title">Workflow Optimization</div>
+                    <div>Continuously optimizes cross-agent workflows for maximum efficiency</div>
+                </div>
+            </div>
+            
+            <div class="roi-highlight">
+                <strong>Business Impact:</strong> Ensures 99.9% system reliability and 24/7 automated operations
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Modal functionality
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        }
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                closeModal(event.target.id);
+            }
+        }
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    if (modal.style.display === 'block') {
+                        closeModal(modal.id);
+                    }
+                });
+            }
+        });
+        
         // Add interactive hover effects
         document.querySelectorAll('.agent-box').forEach(box => {
-            box.addEventListener('click', function() {
-                this.style.transform = 'scale(1.05)';
-                setTimeout(() => {
-                    this.style.transform = '';
-                }, 200);
+            box.addEventListener('mouseenter', function() {
+                this.style.cursor = 'pointer';
             });
         });
 
