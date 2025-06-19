@@ -15,6 +15,7 @@ import Reports from "@/pages/reports";
 import Templates from "@/pages/templates";
 import EmailProcessor from "@/pages/email-processor";
 import WorkflowDashboard from "@/pages/workflow-dashboard";
+import InvestorDiagrams from "@/pages/investor-diagrams";
 import Procurement from "@/pages/procurement";
 import Suppliers from "@/pages/suppliers";
 import Inventory from "@/pages/inventory";
