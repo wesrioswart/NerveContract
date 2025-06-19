@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Bot, Clock, CheckCircle, Activity, DollarSign, Truck } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -114,24 +115,64 @@ export default function AgentAlerts({ alerts, projectId }: AgentAlertsProps) {
               </Badge>
             )}
           </CardTitle>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => triggerDemoMutation.mutate('archaeological-delay')}
-              disabled={triggerDemoMutation.isPending}
-            >
-              Demo: Archaeological Delay
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => triggerDemoMutation.mutate('equipment-cost-validation')}
-              disabled={triggerDemoMutation.isPending}
-            >
-              Demo: Equipment Cost
-            </Button>
-          </div>
+          <TooltipProvider>
+            <div className="flex gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => triggerDemoMutation.mutate('archaeological-delay')}
+                    disabled={triggerDemoMutation.isPending}
+                  >
+                    Demo: Archaeological Delay
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm p-4">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">Archaeological Delay Scenario</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Simulates CE-040: Archaeological findings during foundation works causing critical path delay.
+                    </p>
+                    <div className="text-xs space-y-1">
+                      <div><strong>Trigger:</strong> Foundation Works - Phase 2 delayed by 21 days</div>
+                      <div><strong>Agent Response:</strong> Operational Agent reschedules activities, creates early warning</div>
+                      <div><strong>Impact:</strong> Programme adjustment from Dec 20th to Jan 10th completion</div>
+                      <div><strong>NEC4 Clause:</strong> Compensation Event under clause 60.1(2)</div>
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => triggerDemoMutation.mutate('equipment-cost-validation')}
+                    disabled={triggerDemoMutation.isPending}
+                  >
+                    Demo: Equipment Cost
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm p-4">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">Equipment Cost Validation</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Demonstrates Commercial Agent validating equipment hire against SCC Item 2 compliance.
+                    </p>
+                    <div className="text-xs space-y-1">
+                      <div><strong>Equipment:</strong> Concrete Pump - 42m (£850/day)</div>
+                      <div><strong>Issue:</strong> Equipment used outside Working Areas</div>
+                      <div><strong>Agent Response:</strong> Flags non-compliance, creates high severity alert</div>
+                      <div><strong>NEC4 Reference:</strong> Schedule of Cost Components Item 2</div>
+                      <div><strong>Risk:</strong> £1,700 potential disallowed cost</div>
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
         </div>
         <p className="text-sm text-muted-foreground">
           Real-time alerts from specialist AI agents monitoring contract performance
