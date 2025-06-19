@@ -151,9 +151,9 @@ Preferred communication style: Simple, everyday language.
   - Added detailed hover explanations for all workflow elements including "12mth payback" financial breakdown
   - Created comprehensive tooltip system covering: email processing metrics (500+ daily), AI accuracy rates (96-99%), cost savings breakdowns (£2.5M annually)
   - Enhanced business value tooltips with specific ROI calculations and implementation phase details
-  - Improved responsive design with proper tooltip positioning for desktop and mobile viewing
-  - Added detailed workflow examples with performance metrics (89% auto-approval, 4min analysis times)
-  - Professional investor-ready presentation accessible at /investor-diagrams route
+  - Simplified Technical Architecture tooltips to eliminate overlapping with individual component hover details
+  - Added clean, focused tooltips for each architecture component (React Dashboard, AI Agents, APIs, Database)
+  - Professional investor-ready presentation accessible at /investor-diagrams route with non-overlapping interface
 
 - June 19, 2025: Implemented Comprehensive Agent Workflow System
   - Created five specialized AI agents: Email Intake, Contract Control, Commercial, Operational, and Procurement
