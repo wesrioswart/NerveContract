@@ -101,18 +101,15 @@ function AppContent() {
           <Sidebar 
             user={user} 
             onLogout={logout} 
-            collapsed={sidebarCollapsed}
+            collapsed={false}
             onToggle={toggleSidebar}
           />
           
-          <div className={cn(
-            "flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
-            sidebarCollapsed ? "ml-16" : "ml-64"
-          )}>
+          <div className="flex-1 flex flex-col overflow-hidden ml-64">
             <Header 
               user={user} 
               onToggleSidebar={toggleSidebar}
-              sidebarCollapsed={sidebarCollapsed}
+              sidebarCollapsed={false}
             />
             
             <main className="flex-1 overflow-y-auto p-6">

@@ -304,10 +304,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
 
   return (
     <div 
-      className={cn(
-        "sidebar bg-gray-50 shadow-lg h-screen fixed transition-all duration-300 ease-in-out z-50 flex flex-col",
-        collapsed ? "w-16" : "w-64"
-      )}
+      className="sidebar bg-gray-50 shadow-lg h-screen fixed w-64 transition-all duration-300 ease-in-out z-50 flex flex-col left-0 top-0"
     >
       {/* User Profile Section */}
       <div className={cn(
