@@ -141,6 +141,11 @@ app.use((req, res, next) => {
   // Add memory error handling middleware
   app.use(handleMemoryErrors);
 
+  // Add specific route for investor diagrams before Vite setup
+  app.get('/investor-diagrams', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'investor-workflow-diagrams.html'));
+  });
+
   // Use comprehensive error handling middleware
   app.use(errorHandler);
 
