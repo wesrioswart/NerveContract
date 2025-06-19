@@ -334,7 +334,7 @@ export class CommercialAgent {
    * Get all active projects
    */
   private async getActiveProjects(): Promise<any[]> {
-    return await db.select().from(projects).where(eq(projects.status, 'Active'));
+    return await db.select().from(projects);
   }
 
   /**
