@@ -13,7 +13,7 @@ import {
   earlyWarnings,
   compensationEvents
 } from '../../shared/schema';
-import { eq, and, gte, lte, desc, isNull, or } from 'drizzle-orm';
+import { eq, and, gte, lte, desc, isNull, or, sql } from 'drizzle-orm';
 import Anthropic from '@anthropic-ai/sdk';
 
 interface ProgrammeAnalysis {
@@ -296,13 +296,12 @@ export class OperationalAgent {
   private async createDelayEarlyWarning(projectId: number, adjustment: any): Promise<void> {
     try {
       await db.insert(earlyWarnings).values({
-        projectId,
-        title: `Programme Adjustment: ${adjustment.type}`,
-        description: `${adjustment.reason}. Impact: ${adjustment.impactDays} days.`,
-        severity: adjustment.impactDays > 14 ? 'high' : 'medium',
-        category: 'programme_delay',
+        projectId: projectId,
+        reference: `EW-${String(Date.now()).slice(-6)}`,
+        description: `Programme Adjustment: ${adjustment.type}. ${adjustment.reason}. Impact: ${adjustment.impactDays} days.`,
+        ownerId: 1,
         raisedBy: 1, // System user
-        status: 'open',
+        status: 'Open',
         raisedAt: new Date(),
         mitigationPlan: `Automatic programme adjustment applied. Monitor progress closely.`
       });
@@ -817,7 +816,7 @@ Respond with JSON:
     };
   }
 
-  private async recalculateCriticalPath(projectId: number): Promise<void> {
+  private async recalculateCriticalPathDB(projectId: number): Promise<void> {
     console.log(`🔄 Recalculating critical path for project ${projectId}`);
   }
 
