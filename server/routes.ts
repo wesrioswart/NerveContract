@@ -2777,7 +2777,7 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   });
 
   // AI Report Generation routes
-  app.post("/api/projects/:projectId/generate-report", requireAuth, async (req: Request, res: Response) => {
+  app.post("/api/projects/:projectId/generate-report", async (req: Request, res: Response) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const { periodType, startDate, endDate } = req.body;
@@ -2811,7 +2811,7 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
-  app.get("/api/projects/:projectId/report-summary", requireAuth, async (req: Request, res: Response) => {
+  app.get("/api/projects/:projectId/report-summary", async (req: Request, res: Response) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const { periodType, startDate, endDate } = req.query;

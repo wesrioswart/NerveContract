@@ -536,7 +536,7 @@ export class OperationalAgent {
         .where(
           and(
             eq(earlyWarnings.projectId, projectId),
-            eq(earlyWarnings.category, 'programme')
+            sql`${earlyWarnings.description} LIKE '%programme%' OR ${earlyWarnings.description} LIKE '%schedule%' OR ${earlyWarnings.description} LIKE '%delay%'`
           )
         );
       
