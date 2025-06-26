@@ -93,7 +93,13 @@ export class SimpleReportGenerator {
       `);
       console.log('CE Data:', ceData.rows?.length || 0, 'rows');
 
-      // This was the problematic Drizzle query - now removed
+      // Get early warnings using raw SQL
+      const ewData = await db.execute(sql`
+        SELECT id, status 
+        FROM early_warnings 
+        WHERE project_id = ${projectId}
+      `);
+      console.log('EW Data:', ewData.rows?.length || 0, 'rows');
 
       // Get RFIs using raw SQL
       let rfiData: any[] = [];
@@ -122,6 +128,7 @@ export class SimpleReportGenerator {
       // Process raw SQL results correctly
       const ceRows = ceData.rows || [];
       const ewRows = ewData.rows || [];
+      console.log('Processing CE rows:', ceRows.length, 'EW rows:', ewRows.length);
       
       return {
       compensationEvents: {
