@@ -86,7 +86,7 @@ export class SimpleReportGenerator {
 
     const ewMetrics = {
       total: ewData.length,
-      openItems: ewData.filter(ew => ew.status === 'open').slice(0, 5)
+      openItems: ewData.filter(ew => ew.status === 'Open').slice(0, 5)
     };
 
     // RFI metrics

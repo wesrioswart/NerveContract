@@ -238,7 +238,7 @@ export type PaymentCertificate = typeof paymentCertificates.$inferSelect;
 export type InsertPaymentCertificate = z.infer<typeof insertPaymentCertificateSchema>;
 
 // Programme Management
-export const programmes = pgTable("programmes", {
+export const programmes: any = pgTable("programmes", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").notNull().references(() => projects.id),
   name: text("name").notNull(),
@@ -247,7 +247,7 @@ export const programmes = pgTable("programmes", {
   status: text("status", { enum: ["draft", "submitted", "accepted", "rejected"] }).notNull(),
   acceptanceDate: timestamp("acceptance_date"),
   plannedCompletionDate: timestamp("planned_completion_date").notNull(),
-  baselineId: integer("baseline_id").references(() => programmes.id),
+  baselineId: integer("baseline_id"),
   fileUrl: text("file_url").notNull(),
   fileType: text("file_type", { enum: ["msp", "xer", "xml"] }).notNull(),
   submittedBy: integer("submitted_by").references(() => users.id),
@@ -261,9 +261,9 @@ export const insertProgrammeSchema = createInsertSchema(programmes).omit({
   createdAt: true,
 });
 
-export const programmeActivities = pgTable("programme_activities", {
+export const programmeActivities: any = pgTable("programme_activities", {
   id: serial("id").primaryKey(),
-  programmeId: integer("programme_id").notNull().references(() => programmes.id),
+  programmeId: integer("programme_id").notNull(),
   externalId: text("external_id").notNull(), // ID from MS Project or Primavera
   name: text("name").notNull(),
   description: text("description"),

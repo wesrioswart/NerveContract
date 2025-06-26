@@ -318,7 +318,7 @@ export class OperationalAgent {
     try {
       const activities = await db.select()
         .from(programmeActivities)
-        .where(eq(programmeActivities.programmeId, programmeId));
+        .where(eq(programmeActivities.programmeId, projectId));
       
       // Simple critical path recalculation (in real system would use proper CPM algorithm)
       const sortedActivities = activities.sort((a, b) => 
