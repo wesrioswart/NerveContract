@@ -1,7 +1,15 @@
 import { db } from '../db';
-import { projects, compensationEvents, earlyWarnings, rfis } from '../../shared/schema';
+import { projects, compensationEvents, earlyWarnings, rfis, users } from '../../shared/schema';
 import { eq, and, gte, lte, desc, count, sql } from 'drizzle-orm';
 import OpenAI from 'openai';
+
+interface ReportAuthor {
+  id: number;
+  name: string;
+  email: string;
+  position?: string;
+  department?: string;
+}
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -213,9 +221,36 @@ The project continues with standard contract administration activities. Regular 
 
   async generateReportSummary(projectId: number, period: ReportPeriod, authorId?: number): Promise<any> {
     const metrics = await this.collectBasicMetrics(projectId, period);
+    const projectData = await this.getProjectDetails(projectId);
+    
+    // Get author details if provided
+    let authorDetails: ReportAuthor | null = null;
+    if (authorId) {
+      authorDetails = await this.getAuthorDetails(authorId);
+    }
     
     return {
-      period: `${period.startDate.toLocaleDateString()} - ${period.endDate.toLocaleDateString()}`,
+      period: `${period.type} report for ${period.startDate.toLocaleDateString()} - ${period.endDate.toLocaleDateString()}`,
+      type: period.type,
+      summary: {
+        totalCompensationEvents: metrics.compensationEvents.total,
+        totalEarlyWarnings: metrics.earlyWarnings.total,
+        totalRFIs: metrics.rfis.total,
+        projectStatus: 'On Track',
+        keyHighlights: [
+          `${metrics.compensationEvents.total} compensation events processed`,
+          `${metrics.earlyWarnings.total} early warnings raised`,
+          `${metrics.rfis.total} RFIs submitted`
+        ]
+      },
+      generatedAt: new Date().toISOString(),
+      submittedBy: authorDetails ? {
+        name: authorDetails.name,
+        position: authorDetails.position || 'Project Team Member',
+        department: authorDetails.department || 'Project Management',
+        email: authorDetails.email,
+        submissionDate: new Date().toISOString()
+      } : null
       type: period.type,
       summary: {
         totalEvents: metrics.compensationEvents.total + metrics.earlyWarnings.total,

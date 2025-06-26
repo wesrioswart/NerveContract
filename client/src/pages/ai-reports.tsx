@@ -28,15 +28,20 @@ interface ReportSummary {
   period: string;
   type: 'weekly' | 'monthly';
   summary: {
-    totalEvents: number;
-    totalValue: number;
-    riskLevel: 'low' | 'medium' | 'high';
-    completionStatus: number;
+    totalCompensationEvents: number;
+    totalEarlyWarnings: number;
+    totalRFIs: number;
+    projectStatus: string;
+    keyHighlights: string[];
   };
-  metrics: {
-    compensationEvents: any;
-    earlyWarnings: any;
-    rfis: any;
+  analysis?: string;
+  generatedAt: string;
+  submittedBy?: {
+    name: string;
+    position: string;
+    department: string;
+    email: string;
+    submissionDate: string;
   };
 }
 
