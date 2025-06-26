@@ -37,8 +37,8 @@ interface ReportAuthor {
   id: number;
   name: string;
   email: string;
-  position?: string;
-  department?: string;
+  position?: string | null;
+  department?: string | null;
 }
 
 export interface ReportSummary {
@@ -207,7 +207,7 @@ export class SimpleReportGenerator {
           totalCompensationEvents: metrics.compensationEvents.total,
           totalEarlyWarnings: metrics.earlyWarnings.total,
           totalRFIs: metrics.rfis.total,
-          projectStatus: project?.status || 'Active',
+          projectStatus: 'Active',
           keyHighlights: [
             `${metrics.compensationEvents.total} compensation events processed`,
             `${metrics.earlyWarnings.total} early warnings raised`,

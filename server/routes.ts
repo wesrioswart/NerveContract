@@ -2786,15 +2786,16 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
         return res.status(400).json({ message: "Missing required parameters: periodType, startDate, endDate" });
       }
 
-      const { simpleReportGenerator } = await import('./utils/simple-report-generator');
+      const { SimpleReportGenerator } = await import('./utils/simple-report-generator');
+      const generator = new SimpleReportGenerator();
       
-      const period = {
-        type: periodType,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate)
-      };
-
-      const report = await simpleReportGenerator.generateProjectReport(projectId, period);
+      const report = await generator.generateReport(
+        projectId, 
+        periodType as 'weekly' | 'monthly',
+        new Date(startDate),
+        new Date(endDate),
+        req.user?.id
+      );
       
       res.json({
         success: true,
@@ -2820,20 +2821,20 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
         return res.status(400).json({ message: "Missing required query parameters" });
       }
 
-      const { simpleReportGenerator } = await import('./utils/simple-report-generator');
+      const { SimpleReportGenerator } = await import('./utils/simple-report-generator');
+      const generator = new SimpleReportGenerator();
       
-      const period = {
-        type: periodType as 'weekly' | 'monthly',
-        startDate: new Date(startDate as string),
-        endDate: new Date(endDate as string)
-      };
-
       // Get user ID from session if available
       const authorId = req.user?.id;
 
       try {
-        const generator = new SimpleReportGenerator();
-    const summary = await generator.generateReportSummary(projectId, period, authorId);
+        const summary = await generator.generateReportSummary(
+          projectId, 
+          periodType as 'weekly' | 'monthly',
+          new Date(startDate as string),
+          new Date(endDate as string),
+          authorId
+        );
         
         res.json({
           success: true,
