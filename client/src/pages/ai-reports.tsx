@@ -98,14 +98,23 @@ export default function AIReports() {
     mutationFn: async (params: { periodType: 'weekly' | 'monthly', startDate: Date, endDate: Date }) => {
       if (!currentProject) throw new Error('No project selected');
       
-      return apiRequest(`/api/projects/${currentProject.id}/generate-report`, {
+      const response = await fetch(`/api/projects/${currentProject.id}/generate-report`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           periodType: params.periodType,
           startDate: params.startDate.toISOString(),
           endDate: params.endDate.toISOString()
         })
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate report');
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
       setGeneratedReport(data.data);
