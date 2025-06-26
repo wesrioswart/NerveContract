@@ -131,27 +131,27 @@ export class SimpleReportGenerator {
     return {
       compensationEvents: {
         total: ceData.length,
-        totalValue: ceData.reduce((sum, ce) => sum + (ce.estimatedValue || 0), 0),
-        byStatus: ceData.reduce((acc, ce) => {
+        totalValue: ceData.reduce((sum: number, ce: any) => sum + (ce.estimatedValue || 0), 0),
+        byStatus: ceData.reduce((acc: Record<string, number>, ce: any) => {
           acc[ce.status] = (acc[ce.status] || 0) + 1;
           return acc;
         }, {} as Record<string, number>)
       },
       earlyWarnings: {
         total: ewData.length,
-        byStatus: ewData.reduce((acc, ew) => {
+        byStatus: ewData.reduce((acc: Record<string, number>, ew: any) => {
           acc[ew.status] = (acc[ew.status] || 0) + 1;
           return acc;
         }, {} as Record<string, number>)
       },
       rfis: {
         total: rfiData.length,
-        byStatus: rfiData.reduce((acc, rfi) => {
+        byStatus: rfiData.reduce((acc: Record<string, number>, rfi: any) => {
           acc[rfi.status] = (acc[rfi.status] || 0) + 1;
           return acc;
         }, {} as Record<string, number>)
       },
-      programmes: progData.map(p => ({
+      programmes: progData.map((p: any) => ({
         id: p.id,
         name: p.name,
         progress: p.totalActivities > 0 
