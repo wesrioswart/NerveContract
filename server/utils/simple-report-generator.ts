@@ -84,11 +84,6 @@ export class SimpleReportGenerator {
     startDate: Date,
     endDate: Date
   ): Promise<SimpleProjectMetrics> {
-    const dateCondition = and(
-      gte(sql`DATE(${compensationEvents.raisedAt})`, startDate.toISOString().split('T')[0]),
-      lte(sql`DATE(${compensationEvents.raisedAt})`, endDate.toISOString().split('T')[0])
-    );
-
     // Get compensation events
     const ceData = await db
       .select({
@@ -97,7 +92,11 @@ export class SimpleReportGenerator {
         estimatedValue: compensationEvents.estimatedValue
       })
       .from(compensationEvents)
-      .where(and(eq(compensationEvents.projectId, projectId), dateCondition));
+      .where(and(
+        eq(compensationEvents.projectId, projectId),
+        gte(compensationEvents.raisedAt, startDate),
+        lte(compensationEvents.raisedAt, endDate)
+      ));
 
     // Get early warnings
     const ewData = await db
@@ -117,7 +116,11 @@ export class SimpleReportGenerator {
           status: rfis.status
         })
         .from(rfis)
-        .where(and(eq(rfis.projectId, projectId), gte(rfis.submissionDate, startDate), lte(rfis.submissionDate, endDate)));
+        .where(and(
+          eq(rfis.projectId, projectId),
+          sql`${rfis.submissionDate} >= ${startDate.toISOString().split('T')[0]}`,
+          sql`${rfis.submissionDate} <= ${endDate.toISOString().split('T')[0]}`
+        ));
     } catch (error) {
       console.log('RFI table not found, continuing without RFI data');
       rfiData = [];
