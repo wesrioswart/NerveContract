@@ -2832,7 +2832,8 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
       const authorId = req.user?.id;
 
       try {
-        const summary = await simpleReportGenerator.generateReportSummary(projectId, period, authorId);
+        const generator = new SimpleReportGenerator();
+    const summary = await generator.generateReportSummary(projectId, period, authorId);
         
         res.json({
           success: true,

@@ -1,4 +1,4 @@
-import { db } from '../db/index.js';
+import { db } from '../db.js';
 import { 
   compensationEvents, 
   earlyWarnings, 
@@ -269,3 +269,5 @@ ${summary.submittedBy ? `\n---\n**Report submitted by:** ${summary.submittedBy.n
     };
   }
 }
+
+export const simpleReportGenerator = new SimpleReportGenerator();
