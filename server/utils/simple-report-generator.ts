@@ -133,7 +133,7 @@ export class SimpleReportGenerator {
     try {
       const author = await db.select({
         id: users.id,
-        name: users.name,
+        name: users.fullName,
         email: users.email,
         position: users.position,
         department: users.department
@@ -251,6 +251,8 @@ The project continues with standard contract administration activities. Regular 
         email: authorDetails.email,
         submissionDate: new Date().toISOString()
       } : null
+    };
+  }
       type: period.type,
       summary: {
         totalEvents: metrics.compensationEvents.total + metrics.earlyWarnings.total,

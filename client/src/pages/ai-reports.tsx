@@ -333,23 +333,31 @@ export default function AIReports() {
                       <span className="text-sm text-gray-600">{reportSummary.period}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Total Events</span>
-                      <Badge variant="outline">{reportSummary.summary.totalEvents}</Badge>
+                      <span className="text-sm font-medium">Compensation Events</span>
+                      <Badge variant="outline">{reportSummary.summary.totalCompensationEvents}</Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Total Value</span>
-                      <span className="text-sm font-medium">£{(reportSummary.summary.totalValue || 0).toLocaleString()}</span>
+                      <span className="text-sm font-medium">Early Warnings</span>
+                      <Badge variant="outline">{reportSummary.summary.totalEarlyWarnings}</Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Risk Level</span>
-                      <Badge variant={getRiskBadgeVariant(reportSummary.summary.riskLevel)}>
-                        {reportSummary.summary.riskLevel.toUpperCase()}
-                      </Badge>
+                      <span className="text-sm font-medium">RFIs</span>
+                      <Badge variant="outline">{reportSummary.summary.totalRFIs}</Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Completion</span>
-                      <span className="text-sm text-gray-600">{reportSummary.summary.completionStatus || 0}%</span>
+                      <span className="text-sm font-medium">Project Status</span>
+                      <span className="text-sm text-gray-600">{reportSummary.summary.projectStatus}</span>
                     </div>
+                    {reportSummary.submittedBy && (
+                      <div className="pt-2 border-t">
+                        <p className="text-xs text-blue-600 font-medium">
+                          Submitted by {reportSummary.submittedBy.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {reportSummary.submittedBy.position}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
