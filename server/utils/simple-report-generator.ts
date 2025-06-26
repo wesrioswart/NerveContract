@@ -106,7 +106,7 @@ export class SimpleReportGenerator {
         status: earlyWarnings.status
       })
       .from(earlyWarnings)
-      .where(and(eq(earlyWarnings.projectId, projectId), dateCondition));
+      .where(and(eq(earlyWarnings.projectId, projectId), gte(earlyWarnings.raisedAt, startDate), lte(earlyWarnings.raisedAt, endDate)));
 
     // Get RFIs - using correct table name
     let rfiData: any[] = [];
@@ -117,7 +117,7 @@ export class SimpleReportGenerator {
           status: rfis.status
         })
         .from(rfis)
-        .where(and(eq(rfis.projectId, projectId), dateCondition));
+        .where(and(eq(rfis.projectId, projectId), gte(rfis.submissionDate, startDate), lte(rfis.submissionDate, endDate)));
     } catch (error) {
       console.log('RFI table not found, continuing without RFI data');
       rfiData = [];
