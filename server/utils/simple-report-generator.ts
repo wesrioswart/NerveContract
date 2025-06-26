@@ -1,7 +1,37 @@
-import { db } from '../db';
-import { projects, compensationEvents, earlyWarnings, rfis, users } from '../../shared/schema';
-import { eq, and, gte, lte, desc, count, sql } from 'drizzle-orm';
-import OpenAI from 'openai';
+import { db } from '../db/index.js';
+import { 
+  compensationEvents, 
+  earlyWarnings, 
+  rfis, 
+  projects, 
+  users,
+  programmes,
+  programmeActivities
+} from '../../shared/schema.js';
+import { eq, and, gte, lte, sql } from 'drizzle-orm';
+
+interface SimpleProjectMetrics {
+  compensationEvents: {
+    total: number;
+    totalValue: number;
+    byStatus: Record<string, number>;
+  };
+  earlyWarnings: {
+    total: number;
+    byStatus: Record<string, number>;
+  };
+  rfis: {
+    total: number;
+    byStatus: Record<string, number>;
+  };
+  programmes: Array<{
+    id: number;
+    name: string;
+    progress: number;
+    totalActivities: number;
+    completedActivities: number;
+  }>;
+}
 
 interface ReportAuthor {
   id: number;
@@ -11,120 +41,129 @@ interface ReportAuthor {
   department?: string;
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-export interface ReportPeriod {
-  startDate: Date;
-  endDate: Date;
+export interface ReportSummary {
+  period: string;
   type: 'weekly' | 'monthly';
-}
-
-export interface SimpleProjectMetrics {
-  compensationEvents: {
-    total: number;
-    value: number;
-    recentEvents: any[];
+  summary: {
+    totalCompensationEvents: number;
+    totalEarlyWarnings: number;
+    totalRFIs: number;
+    projectStatus: string;
+    keyHighlights: string[];
   };
-  earlyWarnings: {
-    total: number;
-    openItems: any[];
-  };
-  rfis: {
-    total: number;
-    pendingItems: any[];
+  analysis?: string;
+  generatedAt: string;
+  submittedBy?: {
+    name: string;
+    position: string;
+    department: string;
+    email: string;
+    submissionDate: string;
   };
 }
 
 export class SimpleReportGenerator {
-  async generateProjectReport(projectId: number, period: ReportPeriod): Promise<string> {
-    try {
-      // Collect basic project metrics
-      const metrics = await this.collectBasicMetrics(projectId, period);
-      const projectData = await this.getProjectDetails(projectId);
-      
-      // Generate AI-powered analysis
-      const reportContent = await this.generateAIAnalysis(projectData, metrics, period);
-      
-      return reportContent;
-    } catch (error) {
-      console.error('Error generating project report:', error);
-      throw new Error('Failed to generate project report');
-    }
+  private formatDate(date: Date): string {
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   }
 
-  private async collectBasicMetrics(projectId: number, period: ReportPeriod): Promise<SimpleProjectMetrics> {
-    const { startDate, endDate } = period;
+  private calculateRiskLevel(metrics: SimpleProjectMetrics): 'LOW' | 'MEDIUM' | 'HIGH' {
+    const totalIssues = metrics.compensationEvents.total + metrics.earlyWarnings.total;
+    
+    if (totalIssues >= 10) return 'HIGH';
+    if (totalIssues >= 5) return 'MEDIUM';
+    return 'LOW';
+  }
 
-    // Compensation Events metrics
-    const ceData = await db.select({
-      id: compensationEvents.id,
-      title: compensationEvents.title,
-      estimatedValue: compensationEvents.estimatedValue,
-      status: compensationEvents.status,
-      raisedAt: compensationEvents.raisedAt,
-    }).from(compensationEvents)
-      .where(and(
-        eq(compensationEvents.projectId, projectId),
-        gte(compensationEvents.raisedAt, startDate),
-        lte(compensationEvents.raisedAt, endDate)
-      ))
-      .orderBy(desc(compensationEvents.raisedAt));
+  private async getProjectMetrics(
+    projectId: number,
+    startDate: Date,
+    endDate: Date
+  ): Promise<SimpleProjectMetrics> {
+    const dateCondition = and(
+      gte(sql`DATE(${compensationEvents.raisedAt})`, startDate.toISOString().split('T')[0]),
+      lte(sql`DATE(${compensationEvents.raisedAt})`, endDate.toISOString().split('T')[0])
+    );
 
-    const ceMetrics = {
-      total: ceData.length,
-      value: ceData.reduce((sum, ce) => sum + (ce.estimatedValue || 0), 0),
-      recentEvents: ceData.slice(0, 5)
-    };
+    // Get compensation events
+    const ceData = await db
+      .select({
+        id: compensationEvents.id,
+        status: compensationEvents.status,
+        estimatedValue: compensationEvents.estimatedValue
+      })
+      .from(compensationEvents)
+      .where(and(eq(compensationEvents.projectId, projectId), dateCondition));
 
-    // Early Warnings metrics
-    const ewData = await db.select({
-      id: earlyWarnings.id,
-      description: earlyWarnings.description,
-      status: earlyWarnings.status,
-      raisedAt: earlyWarnings.raisedAt,
-    }).from(earlyWarnings)
-      .where(and(
-        eq(earlyWarnings.projectId, projectId),
-        gte(earlyWarnings.raisedAt, startDate),
-        lte(earlyWarnings.raisedAt, endDate)
-      ))
-      .orderBy(desc(earlyWarnings.raisedAt));
+    // Get early warnings
+    const ewData = await db
+      .select({
+        id: earlyWarnings.id,
+        status: earlyWarnings.status
+      })
+      .from(earlyWarnings)
+      .where(and(eq(earlyWarnings.projectId, projectId), dateCondition));
 
-    const ewMetrics = {
-      total: ewData.length,
-      openItems: ewData.filter(ew => ew.status === 'Open').slice(0, 5)
-    };
+    // Get RFIs
+    const rfiData = await db
+      .select({
+        id: rfis.id,
+        status: rfis.status
+      })
+      .from(rfis)
+      .where(and(eq(rfis.projectId, projectId), dateCondition));
 
-    // RFI metrics
-    const rfiData = await db.select({
-      id: rfis.id,
-      reference: rfis.reference,
-      title: rfis.title,
-      status: rfis.status,
-      submissionDate: rfis.submissionDate,
-    }).from(rfis)
-      .where(and(
-        eq(rfis.projectId, projectId),
-        sql`${rfis.submissionDate} >= ${startDate.toISOString()}`,
-        sql`${rfis.submissionDate} <= ${endDate.toISOString()}`
-      ))
-      .orderBy(desc(rfis.submissionDate));
-
-    const rfiMetrics = {
-      total: rfiData.length,
-      pendingItems: rfiData.filter(rfi => rfi.status === 'pending').slice(0, 5)
-    };
+    // Get programmes
+    const progData = await db
+      .select({
+        id: programmes.id,
+        name: programmes.name,
+        totalActivities: programmes.totalActivities,
+        completedActivities: programmes.completedActivities
+      })
+      .from(programmes)
+      .where(eq(programmes.projectId, projectId));
 
     return {
-      compensationEvents: ceMetrics,
-      earlyWarnings: ewMetrics,
-      rfis: rfiMetrics
+      compensationEvents: {
+        total: ceData.length,
+        totalValue: ceData.reduce((sum, ce) => sum + (ce.estimatedValue || 0), 0),
+        byStatus: ceData.reduce((acc, ce) => {
+          acc[ce.status] = (acc[ce.status] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      },
+      earlyWarnings: {
+        total: ewData.length,
+        byStatus: ewData.reduce((acc, ew) => {
+          acc[ew.status] = (acc[ew.status] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      },
+      rfis: {
+        total: rfiData.length,
+        byStatus: rfiData.reduce((acc, rfi) => {
+          acc[rfi.status] = (acc[rfi.status] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      },
+      programmes: progData.map(p => ({
+        id: p.id,
+        name: p.name,
+        progress: p.totalActivities > 0 
+          ? Math.round((p.completedActivities / p.totalActivities) * 100)
+          : 0,
+        totalActivities: p.totalActivities,
+        completedActivities: p.completedActivities
+      }))
     };
   }
 
-  private async getProjectDetails(projectId: number) {
+  private async getProject(projectId: number) {
     const project = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1);
     return project[0];
   }
@@ -146,131 +185,87 @@ export class SimpleReportGenerator {
     }
   }
 
-  private async generateAIAnalysis(projectData: any, metrics: SimpleProjectMetrics, period: ReportPeriod): Promise<string> {
-    const periodText = period.type === 'weekly' ? 'Weekly' : 'Monthly';
-    const dateRange = `${period.startDate.toLocaleDateString()} to ${period.endDate.toLocaleDateString()}`;
-
-    const prompt = `Generate a comprehensive ${period.type} project report for "${projectData.name}" covering ${dateRange}.
-
-Project Context:
-- Contract Type: ${projectData.contractType || 'NEC4'}
-- Contract Value: £${projectData.contractValue?.toLocaleString() || 'Not specified'}
-
-Period Metrics:
-COMPENSATION EVENTS:
-- Total: ${metrics.compensationEvents.total}
-- Value: £${metrics.compensationEvents.value.toLocaleString()}
-
-EARLY WARNINGS:
-- Total: ${metrics.earlyWarnings.total}
-- Open Items: ${metrics.earlyWarnings.openItems.length}
-
-RFIs:
-- Total: ${metrics.rfis.total}
-- Pending: ${metrics.rfis.pendingItems.length}
-
-Generate a professional, executive-level report with:
-1. Executive Summary (key insights and overall health)
-2. Risk Assessment (current risks and mitigation recommendations)
-3. Performance Analysis (trends, achievements, concerns)
-4. Recommendations (specific actions for next period)
-
-Use NEC4 terminology appropriately and focus on actionable insights for project management decisions.`;
-
+  async generateReportSummary(
+    projectId: number, 
+    periodType: 'weekly' | 'monthly',
+    startDate: Date,
+    endDate: Date,
+    authorId?: number
+  ): Promise<ReportSummary> {
     try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert NEC4 contract management consultant generating professional project reports. Provide clear, actionable insights with appropriate technical detail for project managers and stakeholders."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        max_tokens: 2000,
-        temperature: 0.7
-      });
+      const [metrics, project] = await Promise.all([
+        this.getProjectMetrics(projectId, startDate, endDate),
+        this.getProject(projectId)
+      ]);
 
-      return response.choices[0].message.content || 'Unable to generate report content';
+      const authorDetails = authorId ? await this.getAuthorDetails(authorId) : null;
+
+      return {
+        period: `${this.formatDate(startDate)} - ${this.formatDate(endDate)}`,
+        type: periodType,
+        summary: {
+          totalCompensationEvents: metrics.compensationEvents.total,
+          totalEarlyWarnings: metrics.earlyWarnings.total,
+          totalRFIs: metrics.rfis.total,
+          projectStatus: project?.status || 'Active',
+          keyHighlights: [
+            `${metrics.compensationEvents.total} compensation events processed`,
+            `${metrics.earlyWarnings.total} early warnings raised`,
+            `${metrics.rfis.total} RFIs submitted`
+          ]
+        },
+        generatedAt: new Date().toISOString(),
+        submittedBy: authorDetails ? {
+          name: authorDetails.name,
+          position: authorDetails.position || 'Project Team Member',
+          department: authorDetails.department || 'Project Management',
+          email: authorDetails.email,
+          submissionDate: new Date().toISOString()
+        } : undefined
+      };
     } catch (error) {
-      console.error('Error generating AI analysis:', error);
-      return `# ${periodText} Project Report
+      console.error('Error generating report summary:', error);
+      throw error;
+    }
+  }
+
+  async generateReport(
+    projectId: number,
+    periodType: 'weekly' | 'monthly',
+    startDate: Date,
+    endDate: Date,
+    authorId?: number
+  ): Promise<{ report: string; period: string; type: 'weekly' | 'monthly'; generatedAt: string; }> {
+    const summary = await this.generateReportSummary(projectId, periodType, startDate, endDate, authorId);
+    
+    const report = `
+# ${periodType.charAt(0).toUpperCase() + periodType.slice(1)} Project Report
+**Period:** ${summary.period}
+**Generated:** ${new Date().toLocaleDateString('en-GB')}
 
 ## Executive Summary
-${projectData.name} project status for ${dateRange}.
+This ${periodType} report covers project activity from ${this.formatDate(startDate)} to ${this.formatDate(endDate)}.
 
-## Key Metrics
-- Compensation Events: ${metrics.compensationEvents.total} (£${metrics.compensationEvents.value.toLocaleString()})
-- Early Warnings: ${metrics.earlyWarnings.total} (${metrics.earlyWarnings.openItems.length} open)
-- RFIs: ${metrics.rfis.total} (${metrics.rfis.pendingItems.length} pending)
+### Key Metrics
+- **Compensation Events:** ${summary.summary.totalCompensationEvents}
+- **Early Warnings:** ${summary.summary.totalEarlyWarnings}
+- **RFIs:** ${summary.summary.totalRFIs}
+- **Project Status:** ${summary.summary.projectStatus}
 
-## Status
-The project continues with standard contract administration activities. Regular monitoring and management of events, warnings, and information requests is ongoing.
+### Key Highlights
+${summary.summary.keyHighlights.map(highlight => `- ${highlight}`).join('\n')}
 
-## Recommendations
-- Continue monitoring open early warnings
-- Address pending RFIs promptly
-- Review compensation event valuations
+## Analysis
+The project shows ${summary.summary.totalCompensationEvents + summary.summary.totalEarlyWarnings < 5 ? 'normal' : 'elevated'} activity levels for this period.
 
-*Note: AI analysis unavailable - check API configuration*`;
-    }
-  }
+${summary.submittedBy ? `\n---\n**Report submitted by:** ${summary.submittedBy.name} (${summary.submittedBy.position})\n**Department:** ${summary.submittedBy.department}\n**Date:** ${new Date(summary.submittedBy.submissionDate).toLocaleDateString('en-GB')}` : ''}
+    `.trim();
 
-  async generateReportSummary(projectId: number, period: ReportPeriod, authorId?: number): Promise<any> {
-    const metrics = await this.collectBasicMetrics(projectId, period);
-    const projectData = await this.getProjectDetails(projectId);
-    
-    // Get author details if provided
-    let authorDetails: ReportAuthor | null = null;
-    if (authorId) {
-      authorDetails = await this.getAuthorDetails(authorId);
-    }
-    
     return {
-      period: `${period.type} report for ${period.startDate.toLocaleDateString()} - ${period.endDate.toLocaleDateString()}`,
-      type: period.type,
-      summary: {
-        totalCompensationEvents: metrics.compensationEvents.total,
-        totalEarlyWarnings: metrics.earlyWarnings.total,
-        totalRFIs: metrics.rfis.total,
-        projectStatus: 'On Track',
-        keyHighlights: [
-          `${metrics.compensationEvents.total} compensation events processed`,
-          `${metrics.earlyWarnings.total} early warnings raised`,
-          `${metrics.rfis.total} RFIs submitted`
-        ]
-      },
-      generatedAt: new Date().toISOString(),
-      submittedBy: authorDetails ? {
-        name: authorDetails.name,
-        position: authorDetails.position || 'Project Team Member',
-        department: authorDetails.department || 'Project Management',
-        email: authorDetails.email,
-        submissionDate: new Date().toISOString()
-      } : null
+      report,
+      period: summary.period,
+      type: periodType,
+      generatedAt: summary.generatedAt
     };
-  }
-      type: period.type,
-      summary: {
-        totalEvents: metrics.compensationEvents.total + metrics.earlyWarnings.total,
-        totalValue: metrics.compensationEvents.value,
-        riskLevel: this.calculateRiskLevel(metrics),
-        completionStatus: 75 // Simplified placeholder
-      },
-      metrics
-    };
-  }
-
-  private calculateRiskLevel(metrics: SimpleProjectMetrics): 'low' | 'medium' | 'high' {
-    const totalIssues = metrics.earlyWarnings.openItems.length + metrics.rfis.pendingItems.length;
-    
-    if (totalIssues >= 5) return 'high';
-    if (totalIssues >= 2) return 'medium';
-    return 'low';
   }
 }
-
-export const simpleReportGenerator = new SimpleReportGenerator();

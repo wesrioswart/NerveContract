@@ -143,6 +143,7 @@ The platform features a sophisticated multi-agent architecture with five special
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+UI preferences: Keep report preview format with Total Events, Total Value, Completion %, and Risk Level display.
 
 ## Recent Changes
 

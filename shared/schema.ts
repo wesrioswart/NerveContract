@@ -11,6 +11,8 @@ export const users = pgTable("users", {
   fullName: text("full_name").notNull(),
   role: text("role").notNull(),
   email: text("email").notNull(),
+  position: text("position"),
+  department: text("department"),
   avatarInitials: text("avatar_initials").notNull(),
 });
 

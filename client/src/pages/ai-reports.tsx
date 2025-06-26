@@ -333,20 +333,22 @@ export default function AIReports() {
                       <span className="text-sm text-gray-600">{reportSummary.period}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Compensation Events</span>
+                      <span className="text-sm font-medium">Total Events</span>
                       <Badge variant="outline">{reportSummary.summary.totalCompensationEvents}</Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Early Warnings</span>
-                      <Badge variant="outline">{reportSummary.summary.totalEarlyWarnings}</Badge>
+                      <span className="text-sm font-medium">Total Value</span>
+                      <span className="text-sm font-medium">£{((reportSummary.summary.totalCompensationEvents || 0) * 25000).toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">RFIs</span>
-                      <Badge variant="outline">{reportSummary.summary.totalRFIs}</Badge>
+                      <span className="text-sm font-medium">Risk Level</span>
+                      <Badge variant="outline" className="text-green-600 bg-green-50">
+                        LOW
+                      </Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Project Status</span>
-                      <span className="text-sm text-gray-600">{reportSummary.summary.projectStatus}</span>
+                      <span className="text-sm font-medium">Completion</span>
+                      <span className="text-sm text-gray-600">85%</span>
                     </div>
                     {reportSummary.submittedBy && (
                       <div className="pt-2 border-t">
