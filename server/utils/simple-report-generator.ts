@@ -2,7 +2,7 @@ import { db } from '../db.js';
 import { 
   compensationEvents, 
   earlyWarnings, 
-  RFI, 
+  rfis, 
   projects, 
   users,
   programmes,
@@ -113,11 +113,11 @@ export class SimpleReportGenerator {
     try {
       rfiData = await db
         .select({
-          id: RFI.id,
-          status: RFI.status
+          id: rfis.id,
+          status: rfis.status
         })
-        .from(RFI)
-        .where(and(eq(RFI.projectId, projectId), dateCondition));
+        .from(rfis)
+        .where(and(eq(rfis.projectId, projectId), dateCondition));
     } catch (error) {
       console.log('RFI table not found, continuing without RFI data');
       rfiData = [];
