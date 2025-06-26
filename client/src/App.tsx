@@ -133,7 +133,7 @@ function AppContent() {
                   <Route path="/email-processor" component={EmailProcessor} />
                   <Route path="/workflow-dashboard" component={WorkflowDashboard} />
                   <Route path="/investor-diagrams" component={InvestorDiagrams} />
-                  <Route path="/reports" component={lazy(() => import("@/pages/ai-reports"))} />
+                  <Route path="/ai-reports" component={lazy(() => import("@/pages/ai-reports"))} />
                   <Route path="/rfi-management" component={RfiManagement} />
                   <Route path="/resource-allocation" component={ResourceAllocation} />
                   <Route path="/settings" component={Settings} />
