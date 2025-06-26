@@ -25,7 +25,7 @@ import ResourceAllocation from "@/pages/resource-allocation";
 import Financial from "@/pages/financial";
 import Settings from "@/pages/settings";
 import Login from "@/pages/login";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { ProjectProvider } from "./contexts/project-context";
 import { UserProvider, useUser } from "./contexts/user-context";
@@ -133,7 +133,16 @@ function AppContent() {
                   <Route path="/email-processor" component={EmailProcessor} />
                   <Route path="/workflow-dashboard" component={WorkflowDashboard} />
                   <Route path="/investor-diagrams" component={InvestorDiagrams} />
-                  <Route path="/reports" component={AIReports} />
+                  <Route path="/reports">
+                    {() => {
+                      const AIReportsComponent = lazy(() => import("@/pages/ai-reports"));
+                      return (
+                        <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>}>
+                          <AIReportsComponent />
+                        </Suspense>
+                      );
+                    }}
+                  </Route>
                   <Route path="/rfi-management" component={RfiManagement} />
                   <Route path="/resource-allocation" component={ResourceAllocation} />
                   <Route path="/settings" component={Settings} />
