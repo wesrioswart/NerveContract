@@ -315,7 +315,7 @@ export class OperationalAgent {
   /**
    * Recalculate critical path after adjustments
    */
-  private async recalculateCriticalPath(programmeId: number): Promise<void> {
+  private async recalculateCriticalPath(projectId: number): Promise<void> {
     try {
       const activities = await db.select()
         .from(programmeActivities)
