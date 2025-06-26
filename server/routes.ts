@@ -2776,6 +2776,70 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
+  // AI Report Generation routes
+  app.post("/api/projects/:projectId/generate-report", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { periodType, startDate, endDate } = req.body;
+      
+      if (!periodType || !startDate || !endDate) {
+        return res.status(400).json({ message: "Missing required parameters: periodType, startDate, endDate" });
+      }
+
+      const { simpleReportGenerator } = await import('./utils/simple-report-generator');
+      
+      const period = {
+        type: periodType,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate)
+      };
+
+      const report = await simpleReportGenerator.generateProjectReport(projectId, period);
+      
+      res.json({
+        success: true,
+        data: {
+          report,
+          period: `${period.startDate.toLocaleDateString()} - ${period.endDate.toLocaleDateString()}`,
+          type: period.type,
+          generatedAt: new Date()
+        }
+      });
+    } catch (error) {
+      console.error('Error generating report:', error);
+      res.status(500).json({ message: 'Failed to generate project report' });
+    }
+  });
+
+  app.get("/api/projects/:projectId/report-summary", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { periodType, startDate, endDate } = req.query;
+      
+      if (!periodType || !startDate || !endDate) {
+        return res.status(400).json({ message: "Missing required query parameters" });
+      }
+
+      const { simpleReportGenerator } = await import('./utils/simple-report-generator');
+      
+      const period = {
+        type: periodType as 'weekly' | 'monthly',
+        startDate: new Date(startDate as string),
+        endDate: new Date(endDate as string)
+      };
+
+      const summary = await simpleReportGenerator.generateReportSummary(projectId, period);
+      
+      res.json({
+        success: true,
+        data: summary
+      });
+    } catch (error) {
+      console.error('Error generating report summary:', error);
+      res.status(500).json({ message: 'Failed to generate report summary' });
+    }
+  });
+
   // Mount workflow routes
   app.use('/api/workflows', workflowRoutes);
 

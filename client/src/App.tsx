@@ -133,6 +133,7 @@ function AppContent() {
                   <Route path="/email-processor" component={EmailProcessor} />
                   <Route path="/workflow-dashboard" component={WorkflowDashboard} />
                   <Route path="/investor-diagrams" component={InvestorDiagrams} />
+                  <Route path="/reports" component={AIReports} />
                   <Route path="/rfi-management" component={RfiManagement} />
                   <Route path="/resource-allocation" component={ResourceAllocation} />
                   <Route path="/settings" component={Settings} />
