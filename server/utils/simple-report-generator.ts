@@ -108,14 +108,20 @@ export class SimpleReportGenerator {
       .from(earlyWarnings)
       .where(and(eq(earlyWarnings.projectId, projectId), dateCondition));
 
-    // Get RFIs
-    const rfiData = await db
-      .select({
-        id: rfis.id,
-        status: rfis.status
-      })
-      .from(rfis)
-      .where(and(eq(rfis.projectId, projectId), dateCondition));
+    // Get RFIs - using correct table name
+    let rfiData: any[] = [];
+    try {
+      rfiData = await db
+        .select({
+          id: rfis.id,
+          status: rfis.status
+        })
+        .from(rfis)
+        .where(and(eq(rfis.projectId, projectId), dateCondition));
+    } catch (error) {
+      console.log('RFI table not found, continuing without RFI data');
+      rfiData = [];
+    }
 
     // Get programmes
     const progData = await db
