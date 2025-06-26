@@ -114,29 +114,30 @@ export class SimpleReportGenerator {
       rfiData = [];
     }
 
-    // Get programmes
-    const progData = await db
-      .select({
-        id: programmes.id,
-        name: programmes.name,
-        totalActivities: programmes.totalActivities,
-        completedActivities: programmes.completedActivities
-      })
-      .from(programmes)
-      .where(eq(programmes.projectId, projectId));
+    // Get programmes using raw SQL
+    const progResult = await db.execute(sql`
+      SELECT id, name, total_activities, completed_activities
+      FROM programmes 
+      WHERE project_id = ${projectId}
+    `);
+    const progData = progResult.rows || [];
 
+    // Process raw SQL results correctly
+    const ceRows = ceData.rows || [];
+    const ewRows = ewData.rows || [];
+    
     return {
       compensationEvents: {
-        total: ceData.length,
-        totalValue: ceData.reduce((sum: number, ce: any) => sum + (ce.estimatedValue || 0), 0),
-        byStatus: ceData.reduce((acc: Record<string, number>, ce: any) => {
+        total: ceRows.length,
+        totalValue: ceRows.reduce((sum: number, ce: any) => sum + (ce.estimated_value || 0), 0),
+        byStatus: ceRows.reduce((acc: Record<string, number>, ce: any) => {
           acc[ce.status] = (acc[ce.status] || 0) + 1;
           return acc;
         }, {} as Record<string, number>)
       },
       earlyWarnings: {
-        total: ewData.length,
-        byStatus: ewData.reduce((acc: Record<string, number>, ew: any) => {
+        total: ewRows.length,
+        byStatus: ewRows.reduce((acc: Record<string, number>, ew: any) => {
           acc[ew.status] = (acc[ew.status] || 0) + 1;
           return acc;
         }, {} as Record<string, number>)
@@ -150,12 +151,12 @@ export class SimpleReportGenerator {
       },
       programmes: progData.map((p: any) => ({
         id: p.id,
-        name: p.name,
-        progress: p.totalActivities > 0 
-          ? Math.round((p.completedActivities / p.totalActivities) * 100)
+        name: p.name || 'Unnamed Programme',
+        progress: p.total_activities > 0 
+          ? Math.round((p.completed_activities / p.total_activities) * 100)
           : 0,
-        totalActivities: p.totalActivities,
-        completedActivities: p.completedActivities
+        totalActivities: p.total_activities || 0,
+        completedActivities: p.completed_activities || 0
       }))
     };
   }
