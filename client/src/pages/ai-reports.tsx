@@ -154,7 +154,9 @@ export default function AIReports() {
       const result = await response.json();
       return result.data as ReportSummary;
     },
-    enabled: !!currentProject && selectedPreset !== 'custom'
+    enabled: !!currentProject && selectedPreset !== 'custom',
+    retry: 1,
+    staleTime: 30000
   });
 
   const handleGenerateReport = () => {
@@ -331,7 +333,7 @@ export default function AIReports() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Total Value</span>
-                      <span className="text-sm font-medium">£{reportSummary.summary.totalValue.toLocaleString()}</span>
+                      <span className="text-sm font-medium">£{(reportSummary.summary.totalValue || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Risk Level</span>
@@ -341,7 +343,7 @@ export default function AIReports() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Completion</span>
-                      <span className="text-sm text-gray-600">{reportSummary.summary.completionStatus}%</span>
+                      <span className="text-sm text-gray-600">{reportSummary.summary.completionStatus || 0}%</span>
                     </div>
                   </div>
                 ) : (
