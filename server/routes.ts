@@ -2799,12 +2799,7 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
       
       res.json({
         success: true,
-        data: {
-          report,
-          period: `${period.startDate.toLocaleDateString()} - ${period.endDate.toLocaleDateString()}`,
-          type: period.type,
-          generatedAt: new Date()
-        }
+        data: report
       });
     } catch (error) {
       console.error('Error generating report:', error);
