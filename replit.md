@@ -146,6 +146,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- June 26, 2025: Enhanced AI Reports with User Attribution System
+  - Added user attribution tracking for report submissions including name, position, department, and email
+  - Enhanced database schema with position and department fields for users
+  - Implemented comprehensive author details display in AI Reports interface
+  - Reports now show submitted by information with professional formatting and timestamps
+  - Improved report credibility and accountability with full user attribution tracking
+
 - June 19, 2025: Implemented Intelligent Agent Actions System
   - Enhanced agents to make actual programme, budget, and contract adjustments automatically
   - Operational Agent now reschedules delayed activities and accelerates critical path items

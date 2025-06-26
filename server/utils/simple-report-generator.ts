@@ -121,6 +121,23 @@ export class SimpleReportGenerator {
     return project[0];
   }
 
+  private async getAuthorDetails(authorId: number): Promise<ReportAuthor | null> {
+    try {
+      const author = await db.select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        position: users.position,
+        department: users.department
+      }).from(users).where(eq(users.id, authorId)).limit(1);
+      
+      return author[0] || null;
+    } catch (error) {
+      console.error('Error fetching author details:', error);
+      return null;
+    }
+  }
+
   private async generateAIAnalysis(projectData: any, metrics: SimpleProjectMetrics, period: ReportPeriod): Promise<string> {
     const periodText = period.type === 'weekly' ? 'Weekly' : 'Monthly';
     const dateRange = `${period.startDate.toLocaleDateString()} to ${period.endDate.toLocaleDateString()}`;
@@ -194,7 +211,7 @@ The project continues with standard contract administration activities. Regular 
     }
   }
 
-  async generateReportSummary(projectId: number, period: ReportPeriod): Promise<any> {
+  async generateReportSummary(projectId: number, period: ReportPeriod, authorId?: number): Promise<any> {
     const metrics = await this.collectBasicMetrics(projectId, period);
     
     return {

@@ -2828,8 +2828,11 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
         endDate: new Date(endDate as string)
       };
 
+      // Get user ID from session if available
+      const authorId = req.user?.id;
+
       try {
-        const summary = await simpleReportGenerator.generateReportSummary(projectId, period);
+        const summary = await simpleReportGenerator.generateReportSummary(projectId, period, authorId);
         
         res.json({
           success: true,
