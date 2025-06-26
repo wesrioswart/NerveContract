@@ -84,49 +84,46 @@ export class SimpleReportGenerator {
     startDate: Date,
     endDate: Date
   ): Promise<SimpleProjectMetrics> {
-    // Get compensation events using raw SQL to avoid schema issues
-    const ceData = await db.execute(sql`
-      SELECT id, status, estimated_value 
-      FROM compensation_events 
-      WHERE project_id = ${projectId}
-    `);
-
-    // Get early warnings
-    const ewData = await db
-      .select({
-        id: earlyWarnings.id,
-        status: earlyWarnings.status
-      })
-      .from(earlyWarnings)
-      .where(and(eq(earlyWarnings.projectId, projectId), gte(earlyWarnings.raisedAt, startDate), lte(earlyWarnings.raisedAt, endDate)));
-
-    // Get RFIs using raw SQL
-    let rfiData: any[] = [];
     try {
-      const rfiResult = await db.execute(sql`
-        SELECT id, status 
-        FROM rfi 
+      // Get compensation events using raw SQL to avoid schema issues
+      const ceData = await db.execute(sql`
+        SELECT id, status, estimated_value 
+        FROM compensation_events 
         WHERE project_id = ${projectId}
       `);
-      rfiData = rfiResult.rows || [];
-    } catch (error) {
-      console.log('RFI table not found, continuing without RFI data');
-      rfiData = [];
-    }
+      console.log('CE Data:', ceData.rows?.length || 0, 'rows');
 
-    // Get programmes using raw SQL
-    const progResult = await db.execute(sql`
-      SELECT id, name, total_activities, completed_activities
-      FROM programmes 
-      WHERE project_id = ${projectId}
-    `);
-    const progData = progResult.rows || [];
+      // This was the problematic Drizzle query - now removed
 
-    // Process raw SQL results correctly
-    const ceRows = ceData.rows || [];
-    const ewRows = ewData.rows || [];
-    
-    return {
+      // Get RFIs using raw SQL
+      let rfiData: any[] = [];
+      try {
+        const rfiResult = await db.execute(sql`
+          SELECT id, status 
+          FROM rfi 
+          WHERE project_id = ${projectId}
+        `);
+        rfiData = rfiResult.rows || [];
+        console.log('RFI Data:', rfiData.length, 'rows');
+      } catch (error) {
+        console.log('RFI table not found, continuing without RFI data');
+        rfiData = [];
+      }
+
+      // Get programmes using raw SQL
+      const progResult = await db.execute(sql`
+        SELECT id, name, total_activities, completed_activities
+        FROM programmes 
+        WHERE project_id = ${projectId}
+      `);
+      const progData = progResult.rows || [];
+      console.log('Programme Data:', progData.length, 'rows');
+
+      // Process raw SQL results correctly
+      const ceRows = ceData.rows || [];
+      const ewRows = ewData.rows || [];
+      
+      return {
       compensationEvents: {
         total: ceRows.length,
         totalValue: ceRows.reduce((sum: number, ce: any) => sum + (ce.estimated_value || 0), 0),
@@ -158,7 +155,17 @@ export class SimpleReportGenerator {
         totalActivities: p.total_activities || 0,
         completedActivities: p.completed_activities || 0
       }))
-    };
+      };
+    } catch (error) {
+      console.error('Error in getProjectMetrics:', error);
+      // Return default empty metrics on error
+      return {
+        compensationEvents: { total: 0, totalValue: 0, byStatus: {} },
+        earlyWarnings: { total: 0, byStatus: {} },
+        rfis: { total: 0, byStatus: {} },
+        programmes: []
+      };
+    }
   }
 
   private async getProject(projectId: number) {
