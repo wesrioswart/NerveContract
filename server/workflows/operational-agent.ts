@@ -369,7 +369,7 @@ export class OperationalAgent {
       // Get milestones
       const milestones = await db.select()
         .from(programmeMilestones)
-        .where(eq(programmeMilestones.programmeId, programme.id));
+        .where(eq(programmeMilestones.projectId, projectId));
       
       // Calculate metrics
       const totalActivities = activities.length;
@@ -503,7 +503,7 @@ export class OperationalAgent {
       
       const milestones = await db.select()
         .from(programmeMilestones)
-        .where(eq(programmeMilestones.programmeId, programme.id));
+        .where(eq(programmeMilestones.projectId, projectId));
       
       for (const milestone of milestones) {
         const status = await this.assessMilestoneStatus(milestone);
