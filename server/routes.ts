@@ -2803,7 +2803,11 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
       });
     } catch (error) {
       console.error('Error generating report:', error);
-      res.status(500).json({ message: 'Failed to generate project report' });
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to generate project report',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
