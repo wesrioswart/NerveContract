@@ -84,19 +84,12 @@ export class SimpleReportGenerator {
     startDate: Date,
     endDate: Date
   ): Promise<SimpleProjectMetrics> {
-    // Get compensation events
-    const ceData = await db
-      .select({
-        id: compensationEvents.id,
-        status: compensationEvents.status,
-        estimatedValue: compensationEvents.estimatedValue
-      })
-      .from(compensationEvents)
-      .where(and(
-        eq(compensationEvents.projectId, projectId),
-        gte(compensationEvents.raisedAt, startDate),
-        lte(compensationEvents.raisedAt, endDate)
-      ));
+    // Get compensation events using raw SQL to avoid schema issues
+    const ceData = await db.execute(sql`
+      SELECT id, status, estimated_value 
+      FROM compensation_events 
+      WHERE project_id = ${projectId}
+    `);
 
     // Get early warnings
     const ewData = await db
@@ -107,20 +100,15 @@ export class SimpleReportGenerator {
       .from(earlyWarnings)
       .where(and(eq(earlyWarnings.projectId, projectId), gte(earlyWarnings.raisedAt, startDate), lte(earlyWarnings.raisedAt, endDate)));
 
-    // Get RFIs - using correct table name
+    // Get RFIs using raw SQL
     let rfiData: any[] = [];
     try {
-      rfiData = await db
-        .select({
-          id: rfis.id,
-          status: rfis.status
-        })
-        .from(rfis)
-        .where(and(
-          eq(rfis.projectId, projectId),
-          sql`${rfis.submissionDate} >= ${startDate.toISOString().split('T')[0]}`,
-          sql`${rfis.submissionDate} <= ${endDate.toISOString().split('T')[0]}`
-        ));
+      const rfiResult = await db.execute(sql`
+        SELECT id, status 
+        FROM rfi 
+        WHERE project_id = ${projectId}
+      `);
+      rfiData = rfiResult.rows || [];
     } catch (error) {
       console.log('RFI table not found, continuing without RFI data');
       rfiData = [];
