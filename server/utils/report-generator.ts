@@ -179,7 +179,7 @@ export class AIReportGenerator {
     const procurementData = await db.select({
       id: purchaseOrders.id,
       reference: purchaseOrders.reference,
-      totalValue: purchaseOrders.value,
+      totalValue: purchaseOrders.totalValue,
       status: purchaseOrders.status,
       supplierId: purchaseOrders.supplierId,
       orderDate: purchaseOrders.createdAt,
@@ -189,7 +189,7 @@ export class AIReportGenerator {
         gte(purchaseOrders.createdAt, startDate),
         lte(purchaseOrders.createdAt, endDate)
       ))
-      .orderBy(desc(purchaseOrders.value));
+      .orderBy(desc(purchaseOrders.totalValue));
 
     const procurementMetrics = {
       totalValue: procurementData.reduce((sum, po) => sum + (po.totalValue || 0), 0),
