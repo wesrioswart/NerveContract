@@ -346,6 +346,12 @@ export default function Settings() {
                       <SelectItem value="NEC4 PSC">NEC4 Professional Service Contract</SelectItem>
                       <SelectItem value="NEC4 TSC">NEC4 Term Service Contract</SelectItem>
                       <SelectItem value="NEC4 SC">NEC4 Supply Contract</SelectItem>
+                      <SelectItem value="JCT Design and Build">JCT Design and Build Contract</SelectItem>
+                      <SelectItem value="JCT Standard Building Contract">JCT Standard Building Contract</SelectItem>
+                      <SelectItem value="JCT Intermediate Building Contract">JCT Intermediate Building Contract</SelectItem>
+                      <SelectItem value="FIDIC Red Book">FIDIC Red Book (Construction)</SelectItem>
+                      <SelectItem value="FIDIC Yellow Book">FIDIC Yellow Book (Plant & Design-Build)</SelectItem>
+                      <SelectItem value="FIDIC Silver Book">FIDIC Silver Book (EPC/Turnkey)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

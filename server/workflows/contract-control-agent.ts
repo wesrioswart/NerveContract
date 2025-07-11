@@ -14,6 +14,7 @@ import {
 } from '../../shared/schema';
 import { eq, and, gte, lte, isNull, or } from 'drizzle-orm';
 import Anthropic from '@anthropic-ai/sdk';
+import { ContractFrameworkFactory, ContractFramework } from '../contracts/contract-framework';
 
 interface ContractEvent {
   id: number;
@@ -42,6 +43,7 @@ interface ComplianceCheck {
 
 export class ContractControlAgent {
   private anthropic: any;
+  private contractFrameworks: Map<number, ContractFramework>;
   
   constructor() {
     if (process.env.ANTHROPIC_API_KEY) {
@@ -49,6 +51,7 @@ export class ContractControlAgent {
         apiKey: process.env.ANTHROPIC_API_KEY
       });
     }
+    this.contractFrameworks = new Map();
   }
 
   /**
@@ -92,22 +95,25 @@ export class ContractControlAgent {
     try {
       console.log(`📋 Contract Control Agent: Processing compensation event ${eventData.title}`);
       
-      // Step 1: Validate NEC4 compliance
-      const compliance = await this.validateNEC4Compliance(eventData, 'compensation_event');
+      // Step 1: Get contract framework for this project
+      const framework = await this.getContractFramework(eventData.projectId);
       
-      // Step 2: Set mandatory deadlines
-      const deadlines = this.calculateNEC4Deadlines(eventData, 'compensation_event');
+      // Step 2: Validate using appropriate contract framework
+      const compliance = await framework.validateCompensationEvent(eventData);
       
-      // Step 3: Check clause reference validity
-      const clauseValidation = await this.validateClauseReference(eventData.clauseReference);
+      // Step 3: Set mandatory deadlines based on contract type
+      const deadlines = await framework.calculateDeadlines(eventData, 'compensation_event');
       
-      // Step 4: Generate compliance alerts if needed
-      if (!compliance.isCompliant) {
+      // Step 4: Get appropriate clause reference
+      const clauseRef = framework.getClauseReference('compensation_event', eventData.condition || '');
+      
+      // Step 5: Generate compliance alerts if needed
+      if (compliance.violations.length > 0) {
         await this.generateComplianceAlert(eventData, compliance);
       }
       
-      // Step 5: Update event with compliance data
-      await this.updateEventCompliance(eventData.projectId, eventData, compliance, deadlines);
+      // Step 6: Update event with compliance data
+      await this.updateEventCompliance(eventData.projectId, eventData, compliance, deadlines, clauseRef);
       
       console.log(`✅ Compensation event compliance check complete`);
       
@@ -319,6 +325,35 @@ export class ContractControlAgent {
     if (event.title?.toLowerCase().includes('design') || event.title?.toLowerCase().includes('variation')) complexity += 0.2;
     
     return Math.min(1.0, complexity);
+  }
+
+  /**
+   * Get contract framework for a specific project
+   */
+  private async getContractFramework(projectId: number): Promise<ContractFramework> {
+    // Check if we already have a framework instance for this project
+    if (this.contractFrameworks.has(projectId)) {
+      return this.contractFrameworks.get(projectId)!;
+    }
+    
+    // Get project details to determine contract type
+    const project = await db.select()
+      .from(projects)
+      .where(eq(projects.id, projectId))
+      .then(results => results[0]);
+    
+    if (!project) {
+      throw new Error(`Project ${projectId} not found`);
+    }
+    
+    // Create appropriate framework based on contract type
+    const framework = ContractFrameworkFactory.createFramework(project.contractType || 'NEC4');
+    await framework.loadRules();
+    
+    // Cache the framework instance
+    this.contractFrameworks.set(projectId, framework);
+    
+    return framework;
   }
 
   /**

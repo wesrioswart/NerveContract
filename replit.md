@@ -147,6 +147,16 @@ UI preferences: Keep report preview format with Total Events, Total Value, Compl
 
 ## Recent Changes
 
+- July 11, 2025: Implemented Multi-Contract Framework Architecture
+  - Created abstract contract framework supporting NEC4, JCT, and FIDIC contracts
+  - Fixed critical database column issues (programme_id, total_value) causing agent failures
+  - Enhanced Contract Control Agent with framework-agnostic compliance validation
+  - Added contract-specific deadline calculations and clause references
+  - Extended settings UI to support JCT and FIDIC contract types
+  - Improved modularity for international contract standards expansion
+  - Validated system scalability beyond NEC4 niche market for investor presentation
+  - Contract agents now make intelligent, framework-appropriate decisions automatically
+
 - June 26, 2025: Fixed AI Reports Authentication and Functionality Issues
   - Resolved critical TypeScript compilation errors in report generator system
   - Fixed database import paths and export issues in SimpleReportGenerator class
