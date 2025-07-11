@@ -455,7 +455,16 @@ Respond with JSON:
         messages: [{ role: 'user', content: prompt }]
       });
 
-      const aiResult = JSON.parse(response.content[0].text);
+      let aiResult;
+      try {
+        const rawText = response.content[0].text;
+        // Clean up the response to ensure valid JSON
+        const cleanText = rawText.replace(/```json\n?|\n?```/g, '').trim();
+        aiResult = JSON.parse(cleanText);
+      } catch (parseError) {
+        console.log('JSON parsing failed, using fallback analysis');
+        return this.fallbackCostAnalysis(item, type);
+      }
       
       return {
         itemId: item.id,

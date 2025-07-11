@@ -177,11 +177,12 @@ export class ContractControlAgent {
       }
       
       // Check for missing early warnings
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
       const recentCompEvents = await db.select()
         .from(compensationEvents)
         .where(and(
           eq(compensationEvents.projectId, projectId),
-          gte(compensationEvents.submittedAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
+          gte(compensationEvents.submittedAt, sevenDaysAgo)
         ));
       
       for (const compEvent of recentCompEvents) {
