@@ -12,7 +12,7 @@ import {
   users,
   projectPeriods
 } from '../../shared/schema';
-import { eq, and, gte, lte, isNull, or } from 'drizzle-orm';
+import { eq, and, gte, lte, isNull, or, sql } from 'drizzle-orm';
 import Anthropic from '@anthropic-ai/sdk';
 import { ContractFrameworkFactory, ContractFramework } from '../contracts/contract-framework';
 
