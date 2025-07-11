@@ -25,6 +25,7 @@ import ResourceAllocation from "@/pages/resource-allocation";
 import Financial from "@/pages/financial";
 import Settings from "@/pages/settings";
 import Login from "@/pages/login";
+import GrokDemo from "@/pages/grok-demo";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { ProjectProvider } from "./contexts/project-context";
@@ -150,6 +151,7 @@ function AppContent() {
                   <Route path="/rfi-management" component={RfiManagement} />
                   <Route path="/resource-allocation" component={ResourceAllocation} />
                   <Route path="/settings" component={Settings} />
+                  <Route path="/grok-demo" component={GrokDemo} />
                   
                   {/* Project-specific routes */}
                   <Route path="/projects/:id/dashboard" component={Dashboard} />
