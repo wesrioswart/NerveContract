@@ -202,6 +202,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/workflow-dashboard", label: "Agent Workflows", icon: Zap, badge: "AI" },
     { path: "/investor-diagrams", label: "Investor Diagrams", icon: BarChart2, badge: "NEW" },
     { path: "/ai-reports", label: "AI Reports", icon: FileText, badge: "AI" },
+    { path: "/ai-router-demo", label: "Multi-Model AI Router", icon: Zap, badge: "DEMO" },
     { path: "/settings", label: "Settings", icon: Settings },
     { path: "/api/pdf/overview", label: "NEC4 Overview PDF", icon: FileText, badge: "PDF" },
   ];

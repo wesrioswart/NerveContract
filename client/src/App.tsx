@@ -26,6 +26,7 @@ import Financial from "@/pages/financial";
 import Settings from "@/pages/settings";
 import Login from "@/pages/login";
 import GrokDemo from "@/pages/grok-demo";
+import AIRouterDemo from "@/pages/ai-router-demo";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { ProjectProvider } from "./contexts/project-context";
@@ -152,6 +153,7 @@ function AppContent() {
                   <Route path="/resource-allocation" component={ResourceAllocation} />
                   <Route path="/settings" component={Settings} />
                   <Route path="/grok-demo" component={GrokDemo} />
+                  <Route path="/ai-router-demo" component={AIRouterDemo} />
                   
                   {/* Project-specific routes */}
                   <Route path="/projects/:id/dashboard" component={Dashboard} />

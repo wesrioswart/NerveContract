@@ -26,6 +26,7 @@ import { setupRfiRoutes } from "./routes/rfi-routes";
 import { notificationsRouter } from "./routes/notifications-routes";
 import workflowRoutes from "./workflows/workflow-api";
 import grokReviewRoutes from "./routes/grok-review";
+import aiRouterRoutes from "./routes/ai-router";
 import { requireAuth, requireProjectAccess, hasProjectAccess } from "./middleware/auth-middleware";
 import { populateForm, compareProgrammes } from "./controllers/ai-assistant-controller";
 import { exportProcurementReport, downloadReport } from "./controllers/export-controller";
@@ -2866,6 +2867,7 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   // Mount workflow routes
   app.use('/api/workflows', workflowRoutes);
   app.use('/api/grok', grokReviewRoutes);
+  app.use('/api/ai', aiRouterRoutes);
 
   // Serve investor diagrams as static content
   app.get('/investor-workflow-diagrams.html', (req, res) => {
