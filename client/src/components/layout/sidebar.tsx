@@ -203,6 +203,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/investor-diagrams", label: "Investor Diagrams", icon: BarChart2, badge: "NEW" },
     { path: "/ai-reports", label: "AI Reports", icon: FileText, badge: "AI" },
     { path: "/ai-router-demo", label: "Multi-Model AI Router", icon: Zap, badge: "DEMO" },
+    { path: "/grok-test-suite", label: "Grok Test Suite", icon: Zap, badge: "TEST" },
     { path: "/settings", label: "Settings", icon: Settings },
     { path: "/api/pdf/overview", label: "NEC4 Overview PDF", icon: FileText, badge: "PDF" },
   ];
