@@ -542,7 +542,9 @@ export default function DailySiteReportTemplate() {
     <Form {...form}>
       <form onSubmit={(e) => {
         e.preventDefault();
-        form.handleSubmit(handleSubmit)(e);
+        e.stopPropagation();
+        // Only submit if explicitly called by Submit button
+        return false;
       }} className="space-y-8">
         {/* AI Text Extraction Section */}
         <Card>
@@ -1780,27 +1782,30 @@ export default function DailySiteReportTemplate() {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Any other observations, comments or notes about today's activities..." 
-                      className="min-h-[150px]"
-                      onKeyDown={(e) => {
-                        // Prevent Enter from submitting the form
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          // Insert line break instead
-                          const start = e.currentTarget.selectionStart;
-                          const end = e.currentTarget.selectionEnd;
-                          const value = e.currentTarget.value;
-                          const newValue = value.substring(0, start) + '\n' + value.substring(end);
-                          field.onChange(newValue);
-                          // Set cursor position after line break
-                          setTimeout(() => {
-                            e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 1;
-                          }, 0);
-                        }
-                      }}
-                      {...field} 
-                    />
+                    <div onKeyDown={(e) => e.stopPropagation()} onKeyPress={(e) => e.stopPropagation()}>
+                      <Textarea 
+                        placeholder="Any other observations, comments or notes about today's activities..." 
+                        className="min-h-[150px]"
+                        onKeyDown={(e) => {
+                          e.stopPropagation();
+                          // Allow all keys including Enter for normal textarea behavior
+                        }}
+                        onKeyPress={(e) => {
+                          e.stopPropagation();
+                        }}
+                        onInput={(e) => {
+                          e.stopPropagation();
+                        }}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          field.onChange(e.target.value);
+                        }}
+                        value={field.value || ''}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -1860,7 +1865,8 @@ export default function DailySiteReportTemplate() {
             
             {view === 'form' && (
               <Button 
-                type="submit" 
+                type="button" 
+                onClick={form.handleSubmit(handleSubmit)}
                 disabled={isSubmitting}
               >
                 {isSubmitting && (
