@@ -30,7 +30,9 @@ import {
   DollarSign,
   AlertOctagon,
   HelpCircle,
-  Zap
+  Zap,
+  Menu,
+  X
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -307,7 +309,10 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
 
   return (
     <div 
-      className="sidebar bg-white border-r border-gray-200 shadow-lg h-screen fixed w-64 z-50 flex flex-col left-0 top-0"
+      className={cn(
+        "sidebar bg-white border-r border-gray-200 shadow-lg h-screen fixed z-50 flex flex-col left-0 top-0 transition-all duration-300",
+        collapsed ? "w-16" : "w-64"
+      )}
       style={{ display: 'block', visibility: 'visible' }}
     >
       {/* User Profile Section */}
