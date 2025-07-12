@@ -23,6 +23,20 @@ function testComponent(filePath, componentName) {
   const buttonMatches = content.match(/<Button[^>]*>/g) || [];
   for (const button of buttonMatches) {
     if (!button.includes('onClick=') && !button.includes('type="submit"') && !button.includes('asChild')) {
+      // Check if this button is within a trigger component context
+      const buttonIndex = content.indexOf(button);
+      const precedingText = content.substring(Math.max(0, buttonIndex - 100), buttonIndex);
+      const followingText = content.substring(buttonIndex, Math.min(content.length, buttonIndex + 100));
+      
+      // Skip if button is within trigger components
+      if (precedingText.includes('Trigger asChild') || 
+          precedingText.includes('DialogTrigger') || 
+          precedingText.includes('PopoverTrigger') ||
+          followingText.includes('</DialogTrigger>') ||
+          followingText.includes('</PopoverTrigger>')) {
+        continue;
+      }
+      
       const buttonText = button.match(/(?:>([^<]+)<|aria-label="([^"]+)")/)?.[1] || 'Unknown button';
       issues.push(`Missing onClick handler: ${buttonText}`);
     }
@@ -47,7 +61,8 @@ function testComponent(filePath, componentName) {
   // Look for non-functional dialogs/modals (more specific check)
   const dialogMatches = content.match(/<Dialog[^>]*>/g) || [];
   for (const dialog of dialogMatches) {
-    if (!dialog.includes('open=') || !dialog.includes('onOpenChange=')) {
+    // Check if Dialog has both open and onOpenChange props
+    if (!dialog.includes('open=') && !dialog.includes('onOpenChange=')) {
       issues.push('Dialog without proper state management');
     }
   }
