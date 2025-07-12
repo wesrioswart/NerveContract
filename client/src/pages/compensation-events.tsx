@@ -6,13 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/utils";
-import { Plus, Search, Filter, Download } from "lucide-react";
+import { Plus, Search, Filter, Download, Calendar, X } from "lucide-react";
+import { format } from "date-fns";
 
 export default function CompensationEvents() {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [dateFilter, setDateFilter] = useState("all");
+  const [valueFilter, setValueFilter] = useState("all");
+  const [clauseFilter, setClauseFilter] = useState("all");
   
   // For MVP, we'll assume project ID 1
   const projectId = 1;
@@ -37,6 +44,35 @@ export default function CompensationEvents() {
     .reduce((total: number, ce: any) => {
       return total + (ce.estimatedValue || 0);
     }, 0);
+
+  // Export functionality
+  const handleExport = () => {
+    const headers = ['Reference', 'Title', 'Status', 'Estimated Value', 'Actual Value', 'Raised Date', 'Deadline', 'Clause Reference'];
+    const csvData = compensationEvents.map((ce: any) => [
+      ce.reference || '',
+      ce.title || '',
+      ce.status || '',
+      ce.estimatedValue || 0,
+      ce.actualValue || 0,
+      ce.raisedAt ? format(new Date(ce.raisedAt), 'yyyy-MM-dd') : '',
+      ce.responseDeadline ? format(new Date(ce.responseDeadline), 'yyyy-MM-dd') : '',
+      ce.clauseReference || ''
+    ]);
+    
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `compensation-events-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
   
   return (
     <>
@@ -110,12 +146,89 @@ export default function CompensationEvents() {
             </Select>
           </div>
           
-          <Button variant="outline" className="w-full md:w-auto">
-            <Filter className="mr-2 h-4 w-4" />
-            More Filters
-          </Button>
+          <Dialog open={showMoreFilters} onOpenChange={setShowMoreFilters}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full md:w-auto">
+                <Filter className="mr-2 h-4 w-4" />
+                More Filters
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Advanced Filters</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="date-filter" className="text-right">
+                    Date Range
+                  </Label>
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select date range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Dates</SelectItem>
+                      <SelectItem value="last-7-days">Last 7 Days</SelectItem>
+                      <SelectItem value="last-30-days">Last 30 Days</SelectItem>
+                      <SelectItem value="last-90-days">Last 90 Days</SelectItem>
+                      <SelectItem value="overdue">Overdue</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="value-filter" className="text-right">
+                    Value Range
+                  </Label>
+                  <Select value={valueFilter} onValueChange={setValueFilter}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select value range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Values</SelectItem>
+                      <SelectItem value="under-10k">Under £10,000</SelectItem>
+                      <SelectItem value="10k-50k">£10,000 - £50,000</SelectItem>
+                      <SelectItem value="50k-100k">£50,000 - £100,000</SelectItem>
+                      <SelectItem value="over-100k">Over £100,000</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="clause-filter" className="text-right">
+                    NEC4 Clause
+                  </Label>
+                  <Select value={clauseFilter} onValueChange={setClauseFilter}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select clause type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Clauses</SelectItem>
+                      <SelectItem value="60.1(1)">60.1(1) - Instruction</SelectItem>
+                      <SelectItem value="60.1(2)">60.1(2) - Ground Conditions</SelectItem>
+                      <SelectItem value="60.1(12)">60.1(12) - Physical Conditions</SelectItem>
+                      <SelectItem value="60.1(19)">60.1(19) - Prevention Event</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => {
+                  setDateFilter("all");
+                  setValueFilter("all");
+                  setClauseFilter("all");
+                }}>
+                  Clear All
+                </Button>
+                <Button onClick={() => setShowMoreFilters(false)}>
+                  Apply Filters
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
           
-          <Button variant="outline" className="w-full md:w-auto">
+          <Button variant="outline" className="w-full md:w-auto" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
