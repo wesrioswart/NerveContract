@@ -743,8 +743,7 @@ export const purchaseOrders = pgTable("purchase_orders", {
   hireDuration: text("hire_duration"), // N/A for purchases
   estimatedCost: integer("estimated_cost").notNull(), // Stored in pennies/cents
   totalCost: integer("total_cost").notNull(), // Stored in pennies/cents
-  totalValue: integer("total_value").notNull(), // Legacy compatibility
-  value: integer("value").notNull(), // Legacy compatibility
+  totalValue: integer("total_value").notNull(), // Main value field
   vatIncluded: boolean("vat_included").notNull(),
   supplierId: integer("supplier_id").notNull().references(() => suppliers.id),
   deliveryDate: text("delivery_date").notNull(), // Using text to handle various formats like "After Easter"

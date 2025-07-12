@@ -182,7 +182,7 @@ export class ContractControlAgent {
         .from(compensationEvents)
         .where(and(
           eq(compensationEvents.projectId, projectId),
-          sql`${compensationEvents.submittedAt} >= ${sevenDaysAgo}`
+          gte(compensationEvents.submittedAt, sevenDaysAgo)
         ));
       
       for (const compEvent of recentCompEvents) {
