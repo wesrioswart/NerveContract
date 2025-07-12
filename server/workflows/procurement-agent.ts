@@ -617,8 +617,14 @@ Respond with JSON:
       let hireQuery = db.select().from(equipmentHires).where(eq(equipmentHires.supplierId, supplierId));
       
       if (projectId) {
-        orderQuery = orderQuery.where(eq(purchaseOrders.projectId, projectId));
-        hireQuery = hireQuery.where(eq(equipmentHires.projectId, projectId));
+        orderQuery = db.select().from(purchaseOrders).where(and(
+          eq(purchaseOrders.supplierId, supplierId),
+          eq(purchaseOrders.projectId, projectId)
+        ));
+        hireQuery = db.select().from(equipmentHires).where(and(
+          eq(equipmentHires.supplierId, supplierId),
+          eq(equipmentHires.projectId, projectId)
+        ));
       }
       
       const orders = await orderQuery;
