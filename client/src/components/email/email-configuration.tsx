@@ -418,13 +418,12 @@ function CustomMockEmailCreator() {
             )}
           </Button>
           
-          <Dialog>
+          <Dialog open={showSaveForm} onOpenChange={setShowSaveForm}>
             <DialogTrigger asChild>
               <Button 
                 type="button" 
                 variant="outline" 
                 className="w-full"
-                onClick={() => setShowSaveForm(true)}
                 disabled={!subject.trim() || !content.trim()}
               >
                 <Save className="mr-2 h-4 w-4" />

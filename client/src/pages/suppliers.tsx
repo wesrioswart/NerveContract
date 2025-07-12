@@ -42,6 +42,8 @@ export default function Suppliers() {
   const [invoiceSearchQuery, setInvoiceSearchQuery] = useState<string>("");
   const [selectedTab, setSelectedTab] = useState("approved-suppliers");
   const [isNewSupplierModalOpen, setIsNewSupplierModalOpen] = useState(false);
+  const [isPerformanceDialogOpen, setIsPerformanceDialogOpen] = useState(false);
+  const [selectedPerformanceRecord, setSelectedPerformanceRecord] = useState<any>(null);
 
   // Fetch suppliers
   const { data: suppliers = [] } = useQuery({
@@ -124,6 +126,25 @@ export default function Suppliers() {
         ))}
       </div>
     );
+  };
+
+  // Handler functions for missing implementations
+  const handleAddSupplier = () => {
+    setSelectedTab("add-new-supplier");
+  };
+
+  const handleAddPerformanceRecord = () => {
+    toast({
+      title: "Performance Record",
+      description: "Performance record creation will be available in the next update."
+    });
+  };
+
+  const handleAddInvoice = () => {
+    toast({
+      title: "Invoice Creation",
+      description: "Invoice creation will be available in the next update."
+    });
   };
 
   return (
@@ -277,7 +298,7 @@ export default function Suppliers() {
                   <Button variant="outline" onClick={() => setSelectedTab("approved-suppliers")}>
                     Cancel
                   </Button>
-                  <Button>Add Supplier</Button>
+                  <Button onClick={handleAddSupplier}>Add Supplier</Button>
                 </div>
               </form>
             </CardContent>
@@ -305,7 +326,7 @@ export default function Suppliers() {
                 <option value="service">Service</option>
                 <option value="price">Price</option>
               </select>
-              <Button className="flex items-center gap-2">
+              <Button className="flex items-center gap-2" onClick={handleAddPerformanceRecord}>
                 <Plus className="h-4 w-4" />
                 Add Performance Record
               </Button>
@@ -343,7 +364,15 @@ export default function Suppliers() {
                         <RatingStars rating={record.rating} />
                       </TableCell>
                       <TableCell className="max-w-[300px] truncate">
-                        <Dialog>
+                        <Dialog open={isPerformanceDialogOpen && selectedPerformanceRecord?.id === record.id} onOpenChange={(open) => {
+                          if (open) {
+                            setSelectedPerformanceRecord(record);
+                            setIsPerformanceDialogOpen(true);
+                          } else {
+                            setIsPerformanceDialogOpen(false);
+                            setSelectedPerformanceRecord(null);
+                          }
+                        }}>
                           <DialogTrigger asChild>
                             <Button variant="link" className="p-0 h-auto">
                               {record.comments}
@@ -404,7 +433,7 @@ export default function Suppliers() {
                 <option value="pending">Pending</option>
                 <option value="overdue">Overdue</option>
               </select>
-              <Button className="flex items-center gap-2">
+              <Button className="flex items-center gap-2" onClick={handleAddInvoice}>
                 <Plus className="h-4 w-4" />
                 Add Invoice
               </Button>

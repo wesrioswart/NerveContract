@@ -8,14 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { AlertTriangle, AlertCircle, Calendar, CheckCircle2, FileText, Download, Plus, Search } from "lucide-react";
 import { EarlyWarning } from "@shared/schema";
+import { format } from "date-fns";
 
 export default function EarlyWarnings() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [createFormOpen, setCreateFormOpen] = useState(false);
   const [selectedEW, setSelectedEW] = useState<number | null>(null);
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  const [dateFilter, setDateFilter] = useState("all");
   
   // For MVP, we'll assume project ID 1 and user ID 1
   const projectId = 1;
@@ -70,6 +75,34 @@ export default function EarlyWarnings() {
   
   const handleCloseDetails = () => {
     setSelectedEW(null);
+  };
+
+  // Export functionality
+  const handleExport = () => {
+    const headers = ['Reference', 'Description', 'Status', 'Risk Level', 'Identified Date', 'Meeting Date', 'Mitigation Plan'];
+    const csvData = earlyWarnings.map((ew: EarlyWarning) => [
+      ew.reference || '',
+      ew.description || '',
+      ew.status || '',
+      ew.riskLevel || '',
+      ew.identifiedDate ? format(new Date(ew.identifiedDate), 'yyyy-MM-dd') : '',
+      ew.meetingDate ? format(new Date(ew.meetingDate), 'yyyy-MM-dd') : '',
+      ew.mitigationPlan || ''
+    ]);
+    
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `early-warnings-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   };
   
   return (
@@ -152,12 +185,49 @@ export default function EarlyWarnings() {
             </Select>
           </div>
           
-          <Button variant="outline" className="w-full md:w-auto">
-            <Calendar className="w-4 h-4 mr-2" />
-            Filter by Date
-          </Button>
+          <Dialog open={showDateFilter} onOpenChange={setShowDateFilter}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full md:w-auto">
+                <Calendar className="w-4 h-4 mr-2" />
+                Filter by Date
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Date Filter</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="date-filter" className="text-right">
+                    Date Range
+                  </Label>
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select date range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Dates</SelectItem>
+                      <SelectItem value="last-7-days">Last 7 Days</SelectItem>
+                      <SelectItem value="last-30-days">Last 30 Days</SelectItem>
+                      <SelectItem value="last-90-days">Last 90 Days</SelectItem>
+                      <SelectItem value="this-month">This Month</SelectItem>
+                      <SelectItem value="last-month">Last Month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setDateFilter("all")}>
+                  Clear
+                </Button>
+                <Button onClick={() => setShowDateFilter(false)}>
+                  Apply Filter
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
           
-          <Button variant="outline" className="w-full md:w-auto">
+          <Button variant="outline" className="w-full md:w-auto" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>

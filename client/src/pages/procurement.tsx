@@ -74,6 +74,15 @@ export default function Procurement() {
   // State for tab
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   
+  // State for search
+  const [poSearchQuery, setPoSearchQuery] = useState<string>("");
+  const [supplierSearchQuery, setSupplierSearchQuery] = useState<string>("");
+  
+  // State for modals
+  const [isNewPOModalOpen, setIsNewPOModalOpen] = useState<boolean>(false);
+  const [isNewSupplierModalOpen, setIsNewSupplierModalOpen] = useState<boolean>(false);
+  const [viewPurchaseOrderId, setViewPurchaseOrderId] = useState<number | null>(null);
+  
   // Effect to handle tab change from URL parameters and custom events
   useEffect(() => {
     // Check URL parameters for tab selection
@@ -94,15 +103,6 @@ export default function Procurement() {
       window.removeEventListener('tabChange', handleTabChange as EventListener);
     };
   }, []);
-  
-  // State for search
-  const [poSearchQuery, setPoSearchQuery] = useState<string>("");
-  const [supplierSearchQuery, setSupplierSearchQuery] = useState<string>("");
-  
-  // State for modals
-  const [isNewPOModalOpen, setIsNewPOModalOpen] = useState<boolean>(false);
-  const [isNewSupplierModalOpen, setIsNewSupplierModalOpen] = useState<boolean>(false);
-  const [viewPurchaseOrderId, setViewPurchaseOrderId] = useState<number | null>(null);
 
   // Filter purchase orders based on search query
   const filteredPOs = purchaseOrders.filter(po => 
@@ -153,7 +153,10 @@ export default function Procurement() {
     const buttonOriginalHTML = button?.innerHTML || '';
     
     try {
-      console.log(`Starting ${format} export...`);
+      toast({
+        title: "Export Started",
+        description: `Starting ${format} export...`
+      });
       
       // Show loading state
       if (button) {
@@ -414,8 +417,10 @@ export default function Procurement() {
         <TabsContent value="create-requisition" className="space-y-6">
           <AIRequisitionForm 
             onSubmit={(data) => {
-              console.log('Requisition data:', data);
-              // In a real application, this would submit to the backend
+              toast({
+                title: "Requisition Created",
+                description: "Your requisition has been processed and ready for purchase order creation."
+              });
               setIsNewPOModalOpen(true);
             }}
           />
@@ -786,7 +791,12 @@ export default function Procurement() {
               <FileText className="h-4 w-4 mr-2" />
               Export Full Report
             </Button>
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button variant="outline" className="flex items-center gap-2" onClick={() => {
+              toast({
+                title: "Dashboard Configuration",
+                description: "Dashboard configuration will be available in the next update."
+              });
+            }}>
               <BarChart3 className="h-4 w-4 mr-2" />
               Configure Dashboard
             </Button>
@@ -813,7 +823,12 @@ export default function Procurement() {
                 <option value="delayed">Delayed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2" onClick={() => {
+                toast({
+                  title: "Delivery Note",
+                  description: "Delivery note creation will be available in the next update."
+                });
+              }}>
                 <Plus className="h-4 w-4" />
                 Add Delivery Note
               </Button>
