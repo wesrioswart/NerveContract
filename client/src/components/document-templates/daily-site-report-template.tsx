@@ -540,7 +540,10 @@ export default function DailySiteReportTemplate() {
   // Form component
   const FormView = () => (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit(handleSubmit)(e);
+      }} className="space-y-8">
         {/* AI Text Extraction Section */}
         <Card>
           <CardHeader>
@@ -1780,6 +1783,22 @@ export default function DailySiteReportTemplate() {
                     <Textarea 
                       placeholder="Any other observations, comments or notes about today's activities..." 
                       className="min-h-[150px]"
+                      onKeyDown={(e) => {
+                        // Prevent Enter from submitting the form
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          // Insert line break instead
+                          const start = e.currentTarget.selectionStart;
+                          const end = e.currentTarget.selectionEnd;
+                          const value = e.currentTarget.value;
+                          const newValue = value.substring(0, start) + '\n' + value.substring(end);
+                          field.onChange(newValue);
+                          // Set cursor position after line break
+                          setTimeout(() => {
+                            e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 1;
+                          }, 0);
+                        }
+                      }}
                       {...field} 
                     />
                   </FormControl>
@@ -2283,13 +2302,13 @@ export default function DailySiteReportTemplate() {
             </p>
           </div>
           <div className="flex items-center justify-center gap-4">
-            <AnimatedButton onClick={() => {
+            <AnimatedButton type="button" onClick={() => {
               setSubmissionComplete(false);
               form.reset();
             }}>
               Create New Report
             </AnimatedButton>
-            <Button variant="outline" onClick={handleDownloadPDF}>
+            <Button type="button" variant="outline" onClick={handleDownloadPDF}>
               <Download className="mr-2 h-4 w-4" />
               Download PDF
             </Button>
