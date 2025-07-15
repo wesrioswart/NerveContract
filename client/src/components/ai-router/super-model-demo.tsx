@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils';
 import { useAIStrategy } from '@/contexts/ai-strategy-context';
 import { ModelHealthIndicator } from '@/components/ai/model-health-indicator';
 import { AIErrorBoundary } from '@/components/ai/ai-error-boundary';
+import { useUserRole } from '@/hooks/useUserRole';
+import { SystemRoleIndicator } from '@/components/auth/system-role-indicator';
 
 interface SuperModelResponse {
   result: string;
@@ -68,6 +70,9 @@ export function SuperModelDemo() {
   } catch (error) {
     console.warn('AI Strategy context not available:', error);
   }
+
+  // Get user role for access control
+  const { canAccessAIHealthMonitoring } = useUserRole();
 
   // Auto-configure strategy based on AI Strategy Context
   useEffect(() => {
@@ -239,9 +244,12 @@ export function SuperModelDemo() {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Layers className="h-6 w-6" />
-              Super Model AI - One Brain Analysis
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Layers className="h-6 w-6" />
+                Super Model AI - One Brain Analysis
+              </div>
+              <SystemRoleIndicator />
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               All three AI models analyze your documents together as "one brain" to produce unified, comprehensive insights
@@ -292,7 +300,7 @@ export function SuperModelDemo() {
             </Card>
           </div>
 
-          <ModelHealthIndicator />
+          {canAccessAIHealthMonitoring && <ModelHealthIndicator />}
 
           <Tabs defaultValue="request" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
