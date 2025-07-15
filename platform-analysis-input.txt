@@ -1,0 +1,337 @@
+/**
+ * NEC4 Contract Management Platform - Core Architecture Analysis
+ * This is the Master Orchestrator and AI Strategy system for comprehensive review
+ */
+
+// Master Orchestrator Workflow System
+export class MasterOrchestrator {
+  private config: OrchestrationConfig;
+  private agentStatuses: Map<string, AgentStatus>;
+  private isRunning: boolean = false;
+  private monitoringTimer: NodeJS.Timeout | null = null;
+  private metrics: WorkflowMetrics;
+
+  constructor() {
+    this.config = {
+      enabledAgents: [
+        'email-intake',
+        'contract-control', 
+        'commercial',
+        'operational',
+        'procurement'
+      ],
+      monitoringInterval: 15, // 15 minutes
+      priorityThresholds: {
+        low: 24 * 60,     // 24 hours
+        medium: 4 * 60,   // 4 hours  
+        high: 60,         // 1 hour
+        critical: 15      // 15 minutes
+      },
+      escalationRules: {
+        timeoutMinutes: 30,
+        retryAttempts: 3,
+        escalateToHuman: true
+      }
+    };
+
+    this.agentStatuses = new Map();
+    this.metrics = {
+      totalEventsProcessed: 0,
+      agentCoordinations: 0,
+      averageResponseTime: 0,
+      errorRate: 0,
+      systemHealth: 'healthy'
+    };
+  }
+
+  async start(): Promise<void> {
+    try {
+      console.log('🎯 Master Orchestrator: Starting comprehensive agent coordination');
+      
+      this.isRunning = true;
+      
+      // Step 1: Initialize event bus
+      initializeEventBus();
+      
+      // Step 2: Validate system readiness
+      await this.validateSystemReadiness();
+      
+      // Step 3: Start periodic monitoring
+      this.startPeriodicMonitoring();
+      
+      // Step 4: Trigger initial agent runs
+      await this.triggerInitialAgentRuns();
+      
+      // Step 5: Start cross-agent coordination
+      this.startCrossAgentCoordination();
+      
+      console.log('✅ Master Orchestrator: All agents coordinated and monitoring active');
+      
+    } catch (error) {
+      console.error('❌ Master Orchestrator startup failed:', error);
+      this.handleSystemError(error);
+    }
+  }
+
+  private async validateSystemReadiness(): Promise<void> {
+    console.log('🔍 Validating system readiness...');
+    
+    // Check database connectivity
+    try {
+      await db.select().from(projects).limit(1);
+      console.log('✅ Database connectivity confirmed');
+    } catch (error) {
+      throw new Error('Database connectivity failed');
+    }
+    
+    // Validate agent configurations
+    for (const agentName of this.config.enabledAgents) {
+      const status = this.agentStatuses.get(agentName);
+      if (!status) {
+        throw new Error(`Agent ${agentName} not properly initialized`);
+      }
+    }
+    
+    console.log('✅ System readiness validation complete');
+  }
+
+  private startPeriodicMonitoring(): void {
+    console.log('⏰ Starting periodic monitoring (15 minute intervals)');
+    
+    this.monitoringTimer = setInterval(async () => {
+      await this.performHealthChecks();
+      await this.runScheduledAgents();
+      await this.updateMetrics();
+    }, this.config.monitoringInterval * 60 * 1000);
+  }
+
+  private async triggerInitialAgentRuns(): Promise<void> {
+    console.log('🚀 Triggering initial agent runs');
+    
+    for (const agentName of this.config.enabledAgents) {
+      try {
+        await this.runAgentBasedOnType(agentName);
+        await this.delay(2000); // Stagger agent starts
+      } catch (error) {
+        console.error(`Failed to start ${agentName}:`, error);
+      }
+    }
+  }
+
+  async runAgentBasedOnType(agentType: string, projectId?: number): Promise<void> {
+    console.log(`🎯 Starting initial run for ${agentType} agent`);
+    
+    const startTime = Date.now();
+    
+    try {
+      switch (agentType) {
+        case 'email-intake':
+          await emailIntakeAgent.processEmailInbox();
+          break;
+        case 'contract-control':
+          await contractControlAgent.runComplianceMonitoring();
+          break;
+        case 'commercial':
+          await commercialAgent.runCommercialAnalysis();
+          break;
+        case 'operational':
+          await operationalAgent.runOperationalAnalysis();
+          break;
+        case 'procurement':
+          await procurementAgent.runProcurementAnalysis();
+          break;
+        default:
+          throw new Error(`Unknown agent type: ${agentType}`);
+      }
+      
+      const duration = Date.now() - startTime;
+      this.updateAgentStatus(agentType, 'idle', duration, true);
+      
+    } catch (error) {
+      console.error(`❌ Agent ${agentType} execution failed:`, error);
+      this.updateAgentStatus(agentType, 'error', Date.now() - startTime, false);
+      throw error;
+    }
+  }
+}
+
+// AI Strategy Context System
+export interface ModelStrategy {
+  preferredModels: string[];
+  fusionStrategy: 'voting' | 'weighted' | 'sequential' | 'hybrid';
+  cacheTimeout: number;
+  requireConsensus: boolean;
+}
+
+export interface AIStrategyContextType {
+  activeModels: ('claude' | 'grok' | 'gpt4o')[];
+  fusionStrategy: 'voting' | 'weighted' | 'sequential' | 'hybrid';
+  routeStrategies: Map<string, ModelStrategy>;
+  modelHealth: {
+    claude: ModelHealth;
+    grok: ModelHealth;
+    gpt4o: ModelHealth;
+  };
+  updateStrategy: (route: string, strategy: ModelStrategy) => void;
+  getOptimalStrategy: (route: string) => ModelStrategy;
+  trackModelPerformance: (model: string, duration: number, success: boolean) => void;
+}
+
+const defaultRouteStrategies = new Map<string, ModelStrategy>([
+  ['/compensation-events', {
+    preferredModels: ['claude', 'grok'],
+    fusionStrategy: 'weighted',
+    cacheTimeout: 300000,
+    requireConsensus: true
+  }],
+  ['/early-warnings', {
+    preferredModels: ['grok', 'claude'],
+    fusionStrategy: 'hybrid',
+    cacheTimeout: 180000,
+    requireConsensus: true
+  }],
+  ['/ai-assistant', {
+    preferredModels: ['gpt4o', 'claude'],
+    fusionStrategy: 'sequential',
+    cacheTimeout: 60000,
+    requireConsensus: false
+  }],
+  ['/super-model-demo', {
+    preferredModels: ['claude', 'grok', 'gpt4o'],
+    fusionStrategy: 'hybrid',
+    cacheTimeout: 120000,
+    requireConsensus: false
+  }]
+]);
+
+// Super Model Router Implementation
+export class SuperModelRouter {
+  private openai: OpenAI;
+  private anthropic: Anthropic;
+  private grokClient: OpenAI;
+
+  constructor() {
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    this.anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+
+    this.grokClient = new OpenAI({
+      baseURL: "https://api.x.ai/v1",
+      apiKey: process.env.XAI_API_KEY,
+    });
+  }
+
+  async processSuperModel(request: SuperModelRequest): Promise<SuperModelResponse> {
+    const startTime = Date.now();
+
+    try {
+      let individualResponses: SuperModelResponse['individualResponses'] = [];
+
+      if (request.useParallelProcessing) {
+        // Process all models in parallel
+        const [grokResponse, claudeResponse, gptResponse] = await Promise.allSettled([
+          this.processWithGrok(request),
+          this.processWithClaude(request),
+          this.processWithGPT4o(request)
+        ]);
+
+        individualResponses = [
+          this.handleResponse('grok-3', grokResponse),
+          this.handleResponse('claude-3.5-sonnet', claudeResponse),
+          this.handleResponse('gpt-4o', gptResponse)
+        ];
+      } else {
+        // Sequential processing for complex tasks
+        individualResponses = await this.processSequentially(request);
+      }
+
+      // Apply fusion strategy
+      const fusedResult = await this.applyFusionStrategy(
+        request.fusionStrategy || 'weighted',
+        individualResponses,
+        request
+      );
+
+      const totalProcessingTime = Date.now() - startTime;
+
+      return {
+        result: fusedResult.result,
+        confidence: fusedResult.confidence,
+        modelsUsed: individualResponses.map(r => r.model),
+        consensusReached: fusedResult.consensusReached,
+        individualResponses,
+        fusionReasoning: fusedResult.reasoning,
+        totalProcessingTime
+      };
+
+    } catch (error) {
+      console.error('Super Model Router Error:', error);
+      throw error;
+    }
+  }
+
+  private async processWithGrok(request: SuperModelRequest): Promise<string> {
+    const response = await this.grokClient.chat.completions.create({
+      model: "grok-2-1212",
+      messages: [
+        {
+          role: "system",
+          content: "You are Grok, a code review expert. Provide detailed technical analysis with emphasis on performance optimization and scalability."
+        },
+        {
+          role: "user",
+          content: `Task: ${request.task}\n\nContent: ${request.content}\n\nContext: ${request.context || 'None'}`
+        }
+      ],
+      max_tokens: 1500
+    });
+
+    return response.choices[0].message.content || '';
+  }
+
+  private async processWithClaude(request: SuperModelRequest): Promise<string> {
+    const response = await this.anthropic.messages.create({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 1500,
+      messages: [
+        {
+          role: "user",
+          content: `You are Claude, a software architecture expert. Focus on code quality, maintainability, and best practices.
+
+Task: ${request.task}
+
+Content: ${request.content}
+
+Context: ${request.context || 'None'}
+
+Please provide comprehensive analysis with specific recommendations.`
+        }
+      ]
+    });
+
+    return response.content[0].type === 'text' ? response.content[0].text : '';
+  }
+
+  private async processWithGPT4o(request: SuperModelRequest): Promise<string> {
+    const response = await this.openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are GPT-4o, a comprehensive code analysis expert. Focus on security, error handling, and enterprise patterns."
+        },
+        {
+          role: "user",
+          content: `Task: ${request.task}\n\nContent: ${request.content}\n\nContext: ${request.context || 'None'}`
+        }
+      ],
+      max_tokens: 1500
+    });
+
+    return response.choices[0].message.content || '';
+  }
+}
