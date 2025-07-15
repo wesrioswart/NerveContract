@@ -89,37 +89,39 @@ export function AIStrategyProvider({ children }: { children: React.ReactNode }) 
         checkModelStatus('gpt4o')
       ]);
 
-      const newHealth = { ...modelHealth };
-      
-      healthChecks.forEach((result, index) => {
-        const modelName = ['claude', 'grok', 'gpt4o'][index] as keyof typeof modelHealth;
+      setModelHealth(prevHealth => {
+        const newHealth = { ...prevHealth };
         
-        if (result.status === 'fulfilled') {
-          newHealth[modelName] = {
-            ...result.value,
-            lastCheck: new Date()
-          };
-        } else {
-          newHealth[modelName] = {
-            ...defaultModelHealth,
-            ...(modelHealth[modelName] || {}),
-            status: 'down',
-            errorCount: (modelHealth[modelName]?.errorCount || 0) + 1,
-            lastCheck: new Date()
-          };
-        }
-      });
+        healthChecks.forEach((result, index) => {
+          const modelName = ['claude', 'grok', 'gpt4o'][index] as keyof typeof modelHealth;
+          
+          if (result.status === 'fulfilled') {
+            newHealth[modelName] = {
+              ...result.value,
+              lastCheck: new Date()
+            };
+          } else {
+            newHealth[modelName] = {
+              ...defaultModelHealth,
+              ...(prevHealth[modelName] || {}),
+              status: 'down',
+              errorCount: (prevHealth[modelName]?.errorCount || 0) + 1,
+              lastCheck: new Date()
+            };
+          }
+        });
 
-      setModelHealth(newHealth);
-      
-      // Auto-adjust active models based on health
-      const healthyModels = Object.entries(newHealth)
-        .filter(([_, health]) => health.status === 'healthy')
-        .map(([model, _]) => model as 'claude' | 'grok' | 'gpt4o');
-      
-      if (healthyModels.length > 0) {
-        setActiveModels(healthyModels);
-      }
+        // Auto-adjust active models based on health
+        const healthyModels = Object.entries(newHealth)
+          .filter(([_, health]) => health.status === 'healthy')
+          .map(([model, _]) => model as 'claude' | 'grok' | 'gpt4o');
+        
+        if (healthyModels.length > 0) {
+          setActiveModels(healthyModels);
+        }
+
+        return newHealth;
+      });
     };
 
     // Initial check
