@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
-import { Brain, Code, Zap, ChevronRight, Clock, CheckCircle, AlertCircle, Users, Layers, GitBranch } from 'lucide-react';
+import { Brain, Code, Zap, ChevronRight, Clock, CheckCircle, AlertCircle, Users, Layers, GitBranch, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAIStrategy } from '@/contexts/ai-strategy-context';
 import { ModelHealthIndicator } from '@/components/ai/model-health-indicator';
@@ -54,6 +54,7 @@ export function SuperModelDemo() {
   const [response, setResponse] = useState<SuperModelResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   // Auto-configure strategy based on AI Strategy Context
   useEffect(() => {
@@ -65,6 +66,33 @@ export function SuperModelDemo() {
       useParallelProcessing: strategy.preferredModels.length > 1
     }));
   }, [getOptimalStrategy]);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File size must be less than 10MB');
+      return;
+    }
+
+    setUploadedFile(file);
+    setError(null);
+
+    try {
+      const text = await file.text();
+      setRequest(prev => ({
+        ...prev,
+        content: text,
+        task: prev.task || `Analyze ${file.name}`,
+        context: prev.context || `File: ${file.name} (${file.type})`
+      }));
+    } catch (err) {
+      setError('Failed to read file. Please try again.');
+      setUploadedFile(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -254,6 +282,31 @@ export function SuperModelDemo() {
                     onChange={(e) => setRequest({...request, content: e.target.value})}
                     required
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="document-upload">Upload Document</Label>
+                  <input
+                    type="file"
+                    id="document-upload"
+                    accept=".pdf,.doc,.docx,.txt,.md,.json"
+                    onChange={handleFileUpload}
+                    className="w-full p-2 border rounded-md file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supports: PDF, Word, Text, Markdown, and JSON files (max 10MB)
+                  </p>
+                  {uploadedFile && (
+                    <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium">{uploadedFile.name}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {(uploadedFile.size / 1024).toFixed(1)}KB
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
