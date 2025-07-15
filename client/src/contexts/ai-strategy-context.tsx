@@ -101,9 +101,10 @@ export function AIStrategyProvider({ children }: { children: React.ReactNode }) 
           };
         } else {
           newHealth[modelName] = {
-            ...modelHealth[modelName],
+            ...defaultModelHealth,
+            ...(modelHealth[modelName] || {}),
             status: 'down',
-            errorCount: modelHealth[modelName].errorCount + 1,
+            errorCount: (modelHealth[modelName]?.errorCount || 0) + 1,
             lastCheck: new Date()
           };
         }
