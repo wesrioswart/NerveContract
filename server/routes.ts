@@ -2871,6 +2871,21 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   app.use('/api/ai', aiRouterRoutes);
   app.use('/api/grok-tests', grokTestSuiteRoutes);
 
+  // Super Model API endpoint
+  app.post('/api/super-model/process', async (req: Request, res: Response) => {
+    try {
+      const { superModelRouter } = await import('./utils/super-model-router.js');
+      const result = await superModelRouter.processSuperModel(req.body);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      console.error('Super Model processing error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
   // Serve investor diagrams as static content
   app.get('/investor-workflow-diagrams.html', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'investor-workflow-diagrams.html'));
