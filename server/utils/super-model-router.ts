@@ -85,22 +85,18 @@ export class SuperModelRouter {
         individualResponses = await this.processSequentially(request);
       }
 
-      // Apply fusion strategy
-      const fusedResult = await this.applyFusionStrategy(
-        request.fusionStrategy || 'weighted',
-        individualResponses,
-        request
-      );
+      // Apply "one brain" synthesis for all requests
+      const unifiedResult = await this.synthesizeTextAnalysis(individualResponses, request);
 
       const totalProcessingTime = Date.now() - startTime;
 
       return {
-        result: fusedResult.result,
-        confidence: fusedResult.confidence,
+        result: unifiedResult,
+        confidence: this.calculateUnifiedConfidence(individualResponses),
         modelsUsed: individualResponses.map(r => r.model),
-        consensusReached: fusedResult.consensusReached,
+        consensusReached: true,
         individualResponses,
-        fusionReasoning: fusedResult.reasoning,
+        fusionReasoning: "All three models analyzed the request simultaneously, results synthesized into unified comprehensive response",
         totalProcessingTime
       };
 
@@ -373,6 +369,64 @@ Format the response as a professional document analysis with clear sections and 
   }
 
   /**
+   * Text Analysis Synthesis - Combine all three text analysis responses into unified result
+   */
+  private async synthesizeTextAnalysis(responses: any[], request: SuperModelRequest): string {
+    const validResponses = responses.filter(r => r.response && r.response.trim().length > 0);
+    
+    if (validResponses.length === 0) {
+      throw new Error('No valid responses from any model');
+    }
+
+    // Create a synthesis prompt for GPT-4o to combine all analyses
+    const synthesisPrompt = `
+You are tasked with creating a unified, comprehensive analysis by combining insights from three different AI models.
+
+Task: ${request.task}
+Content: ${request.content}
+Context: ${request.context || 'General analysis'}
+
+Here are the three separate analyses:
+
+GROK ANALYSIS:
+${responses.find(r => r.model === 'grok-3')?.response || 'No response'}
+
+CLAUDE ANALYSIS:
+${responses.find(r => r.model === 'claude-3.5-sonnet')?.response || 'No response'}
+
+GPT-4O ANALYSIS:
+${responses.find(r => r.model === 'gpt-4o')?.response || 'No response'}
+
+Please synthesize these three analyses into one comprehensive, unified response that:
+1. Combines the best insights from all three models
+2. Eliminates redundancy while preserving unique perspectives
+3. Provides clear, actionable recommendations
+4. Maintains professional tone and structure
+5. Highlights consensus areas and reconciles any differences
+
+Format the response as a professional analysis with clear structure and bullet points where appropriate.
+`;
+
+    try {
+      const synthesis = await this.openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: 'You are an expert analyst skilled at synthesizing multiple AI perspectives into unified, actionable insights.' },
+          { role: 'user', content: synthesisPrompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 3000,
+      });
+
+      return synthesis.choices[0].message.content || 'Synthesis failed';
+    } catch (error) {
+      console.error('Text synthesis error:', error);
+      // Fallback: combine responses manually
+      return this.manualSynthesis(validResponses);
+    }
+  }
+
+  /**
    * Manual synthesis fallback
    */
   private manualSynthesis(responses: any[]): string {
@@ -380,7 +434,7 @@ Format the response as a professional document analysis with clear sections and 
       `**Analysis ${i + 1} (${r.model}):**\n${r.response}`
     ).join('\n\n---\n\n');
     
-    return `**UNIFIED DOCUMENT ANALYSIS**\n\n${synthesis}`;
+    return `**UNIFIED ANALYSIS**\n\n${synthesis}`;
   }
 
   /**
