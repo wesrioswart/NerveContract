@@ -41,7 +41,6 @@ interface SuperModelRequest {
 }
 
 export function SuperModelDemo() {
-  const { getOptimalStrategy, modelHealth, trackModelPerformance } = useAIStrategy();
   const [request, setRequest] = useState<SuperModelRequest>({
     task: '',
     content: '',
@@ -56,16 +55,30 @@ export function SuperModelDemo() {
   const [error, setError] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
+  // Safely get AI strategy context
+  let aiStrategy = null;
+  try {
+    aiStrategy = useAIStrategy();
+  } catch (error) {
+    console.warn('AI Strategy context not available:', error);
+  }
+
   // Auto-configure strategy based on AI Strategy Context
   useEffect(() => {
-    const strategy = getOptimalStrategy('/super-model-demo');
-    setRequest(prev => ({
-      ...prev,
-      fusionStrategy: strategy.fusionStrategy,
-      requireConsensus: strategy.requireConsensus,
-      useParallelProcessing: strategy.preferredModels.length > 1
-    }));
-  }, [getOptimalStrategy]);
+    if (aiStrategy?.getOptimalStrategy) {
+      try {
+        const strategy = aiStrategy.getOptimalStrategy('/super-model-demo');
+        setRequest(prev => ({
+          ...prev,
+          fusionStrategy: strategy.fusionStrategy,
+          requireConsensus: strategy.requireConsensus,
+          useParallelProcessing: strategy.preferredModels.length > 1
+        }));
+      } catch (error) {
+        console.warn('Failed to get optimal strategy:', error);
+      }
+    }
+  }, [aiStrategy]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
