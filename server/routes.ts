@@ -2886,6 +2886,45 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
+  // Super Model Document Analysis endpoint
+  app.post('/api/super-model/analyze-document', requireAuth, documentUpload.single('document'), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: 'No document provided' });
+      }
+
+      const { superModelRouter } = await import('./utils/super-model-router.js');
+      
+      // Read the uploaded document
+      const documentContent = fs.readFileSync(req.file.path, 'utf8');
+      
+      const analysisRequest = {
+        task: req.body.task || 'Comprehensive document analysis',
+        content: req.body.content || '',
+        context: req.body.context || 'Contract management platform',
+        documentContent: documentContent,
+        documentType: req.file.originalname.split('.').pop(),
+        isDocumentAnalysis: true,
+        requireConsensus: true,
+        useParallelProcessing: true,
+        fusionStrategy: 'weighted' as const
+      };
+
+      const result = await superModelRouter.processSuperModel(analysisRequest);
+      
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+      
+      res.json({ success: true, data: result });
+    } catch (error) {
+      console.error('Super Model document analysis error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Document analysis failed' 
+      });
+    }
+  });
+
   // AI Health Check endpoint
   app.post('/api/ai/health-check', async (req: Request, res: Response) => {
     try {

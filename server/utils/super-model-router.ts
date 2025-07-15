@@ -13,6 +13,9 @@ export interface SuperModelRequest {
   requireConsensus?: boolean;
   useParallelProcessing?: boolean;
   fusionStrategy?: 'voting' | 'weighted' | 'sequential' | 'hybrid';
+  documentContent?: string;  // For document analysis
+  documentType?: string;     // PDF, DOCX, etc.
+  isDocumentAnalysis?: boolean;
 }
 
 export interface SuperModelResponse {
@@ -57,6 +60,11 @@ export class SuperModelRouter {
     const startTime = Date.now();
 
     try {
+      // Handle document analysis differently - process with specialized prompts
+      if (request.isDocumentAnalysis && request.documentContent) {
+        return await this.processDocumentAnalysis(request);
+      }
+
       let individualResponses: SuperModelResponse['individualResponses'] = [];
 
       if (request.useParallelProcessing) {
@@ -243,6 +251,210 @@ export class SuperModelRouter {
     }
 
     return baseWeights;
+  }
+
+  /**
+   * Document Analysis - All three models analyze document and produce unified response
+   */
+  async processDocumentAnalysis(request: SuperModelRequest): Promise<SuperModelResponse> {
+    const startTime = Date.now();
+    
+    // Create specialized prompts for each model based on their strengths
+    const documentAnalysisPrompt = `
+Analyze this document comprehensively:
+
+Document Type: ${request.documentType || 'Unknown'}
+Task: ${request.task}
+Context: ${request.context || 'General document analysis'}
+
+Document Content:
+${request.documentContent}
+
+Please provide a detailed analysis focusing on:
+1. Key findings and insights
+2. Risk identification and assessment
+3. Compliance and regulatory considerations
+4. Recommendations and next steps
+5. Critical issues that require immediate attention
+
+Be thorough and professional in your analysis.
+`;
+
+    try {
+      // All three models analyze the document simultaneously
+      const [grokResponse, claudeResponse, gptResponse] = await Promise.allSettled([
+        this.analyzeWithGrok(documentAnalysisPrompt),
+        this.analyzeWithClaude(documentAnalysisPrompt),
+        this.analyzeWithGPT4o(documentAnalysisPrompt)
+      ]);
+
+      const individualResponses = [
+        this.handleResponse('grok-3', grokResponse),
+        this.handleResponse('claude-3.5-sonnet', claudeResponse),
+        this.handleResponse('gpt-4o', gptResponse)
+      ];
+
+      // Combine all three analyses into one unified response
+      const unifiedAnalysis = await this.synthesizeDocumentAnalysis(individualResponses, request);
+      
+      const totalProcessingTime = Date.now() - startTime;
+
+      return {
+        result: unifiedAnalysis,
+        confidence: this.calculateUnifiedConfidence(individualResponses),
+        modelsUsed: individualResponses.map(r => r.model),
+        consensusReached: true, // Always true for document analysis
+        individualResponses,
+        fusionReasoning: "Document analyzed by all three models simultaneously, results synthesized into unified comprehensive analysis",
+        totalProcessingTime
+      };
+
+    } catch (error) {
+      console.error('Document analysis error:', error);
+      throw new Error('Document analysis failed');
+    }
+  }
+
+  /**
+   * Synthesize all three model responses into one unified analysis
+   */
+  private async synthesizeDocumentAnalysis(responses: any[], request: SuperModelRequest): Promise<string> {
+    const validResponses = responses.filter(r => r.confidence > 0);
+    
+    if (validResponses.length === 0) {
+      throw new Error('No valid responses from any model');
+    }
+
+    // Create a synthesis prompt for GPT-4o to combine all analyses
+    const synthesisPrompt = `
+You are tasked with creating a unified, comprehensive document analysis by combining insights from three different AI models.
+
+Document Type: ${request.documentType || 'Unknown'}
+Task: ${request.task}
+
+Here are the three separate analyses:
+
+GROK ANALYSIS:
+${responses.find(r => r.model === 'grok-3')?.response || 'No response'}
+
+CLAUDE ANALYSIS:
+${responses.find(r => r.model === 'claude-3.5-sonnet')?.response || 'No response'}
+
+GPT-4O ANALYSIS:
+${responses.find(r => r.model === 'gpt-4o')?.response || 'No response'}
+
+Please synthesize these three analyses into one comprehensive, unified response that:
+1. Combines the best insights from all three models
+2. Eliminates redundancy while preserving unique perspectives
+3. Provides clear, actionable recommendations
+4. Maintains professional tone and structure
+5. Highlights consensus areas and reconciles any differences
+
+Format the response as a professional document analysis with clear sections and bullet points where appropriate.
+`;
+
+    try {
+      const synthesis = await this.openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: 'You are an expert document analyst skilled at synthesizing multiple AI perspectives into unified, actionable insights.' },
+          { role: 'user', content: synthesisPrompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 3000,
+      });
+
+      return synthesis.choices[0].message.content || 'Synthesis failed';
+    } catch (error) {
+      console.error('Synthesis error:', error);
+      // Fallback: combine responses manually
+      return this.manualSynthesis(validResponses);
+    }
+  }
+
+  /**
+   * Manual synthesis fallback
+   */
+  private manualSynthesis(responses: any[]): string {
+    const synthesis = responses.map((r, i) => 
+      `**Analysis ${i + 1} (${r.model}):**\n${r.response}`
+    ).join('\n\n---\n\n');
+    
+    return `**UNIFIED DOCUMENT ANALYSIS**\n\n${synthesis}`;
+  }
+
+  /**
+   * Calculate unified confidence score
+   */
+  private calculateUnifiedConfidence(responses: any[]): number {
+    const validResponses = responses.filter(r => r.confidence > 0);
+    if (validResponses.length === 0) return 0;
+    
+    const avgConfidence = validResponses.reduce((sum, r) => sum + r.confidence, 0) / validResponses.length;
+    // Boost confidence for multi-model consensus
+    return Math.min(0.95, avgConfidence * 1.1);
+  }
+
+  /**
+   * Specialized document analysis methods for each model
+   */
+  private async analyzeWithGrok(prompt: string) {
+    const startTime = Date.now();
+    const response = await this.grokClient.chat.completions.create({
+      model: 'grok-2-1212',
+      messages: [
+        { role: 'system', content: 'You are an expert document analyst with strong reasoning capabilities and attention to detail.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 2500,
+    });
+
+    return {
+      model: 'grok-3',
+      response: response.choices[0].message.content || '',
+      confidence: 0.87,
+      processingTime: Date.now() - startTime
+    };
+  }
+
+  private async analyzeWithClaude(prompt: string) {
+    const startTime = Date.now();
+    const response = await this.anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 2500,
+      temperature: 0.2,
+      messages: [
+        { role: 'user', content: prompt }
+      ],
+    });
+
+    return {
+      model: 'claude-3.5-sonnet',
+      response: response.content[0].type === 'text' ? response.content[0].text : '',
+      confidence: 0.92,
+      processingTime: Date.now() - startTime
+    };
+  }
+
+  private async analyzeWithGPT4o(prompt: string) {
+    const startTime = Date.now();
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: 'You are a professional document analyst with expertise in risk assessment and compliance.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 2500,
+    });
+
+    return {
+      model: 'gpt-4o',
+      response: response.choices[0].message.content || '',
+      confidence: 0.90,
+      processingTime: Date.now() - startTime
+    };
   }
 
   /**

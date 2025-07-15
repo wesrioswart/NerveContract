@@ -115,6 +115,12 @@ export function SuperModelDemo() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!request.task.trim() || (!request.content.trim() && !uploadedFile)) {
+      setError('Please provide task and either content or upload a document');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setResponse(null);
@@ -122,11 +128,28 @@ export function SuperModelDemo() {
     const startTime = Date.now();
 
     try {
-      const res = await fetch('/api/super-model/process', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(request)
-      });
+      let res;
+      
+      if (uploadedFile) {
+        // Document analysis mode - use the Super Model backend analysis
+        const formData = new FormData();
+        formData.append('document', uploadedFile);
+        formData.append('task', request.task);
+        formData.append('content', request.content);
+        formData.append('context', request.context || '');
+        
+        res = await fetch('/api/super-model/analyze-document', {
+          method: 'POST',
+          body: formData
+        });
+      } else {
+        // Regular text analysis mode
+        res = await fetch('/api/super-model/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(request)
+        });
+      }
 
       if (!res.ok) {
         throw new Error('Super Model processing failed');
@@ -218,10 +241,10 @@ export function SuperModelDemo() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Layers className="h-6 w-6" />
-              Super Model AI Demo
+              Super Model AI - One Brain Analysis
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Combine all three AI models (Grok 3, Claude 3.5 Sonnet, GPT-4o) for enhanced capabilities
+              All three AI models analyze your documents together as "one brain" to produce unified, comprehensive insights
             </p>
           </CardHeader>
         <CardContent>
@@ -299,33 +322,60 @@ export function SuperModelDemo() {
                     className="min-h-[120px]"
                     value={request.content}
                     onChange={(e) => setRequest({...request, content: e.target.value})}
-                    required
+                    required={!uploadedFile}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="document-upload">Upload Document</Label>
-                  <input
-                    type="file"
-                    id="document-upload"
-                    accept=".pdf,.doc,.docx,.txt,.md,.json"
-                    onChange={handleFileUpload}
-                    className="w-full p-2 border rounded-md file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Supports: PDF, Word, Text, Markdown, and JSON files (max 10MB)
-                  </p>
-                  {uploadedFile && (
-                    <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-medium">{uploadedFile.name}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {(uploadedFile.size / 1024).toFixed(1)}KB
-                        </Badge>
+                  <Label htmlFor="document-upload">📄 Document Analysis - "One Brain" Processing</Label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center bg-gradient-to-br from-purple-50 via-blue-50 to-green-50">
+                    <input
+                      type="file"
+                      id="document-upload"
+                      accept=".pdf,.doc,.docx,.txt,.md,.json"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    
+                    {uploadedFile ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                          <span className="text-sm font-medium">{uploadedFile.name}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {(uploadedFile.size / 1024).toFixed(1)}KB
+                          </Badge>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setUploadedFile(null)}
+                        >
+                          Remove Document
+                        </Button>
+                        <p className="text-xs text-green-600 font-medium">
+                          ✓ Ready for unified analysis by all three AI models
+                        </p>
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="space-y-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => document.getElementById('document-upload')?.click()}
+                        >
+                          Upload Document for Analysis
+                        </Button>
+                        <p className="text-xs text-muted-foreground">
+                          All three AI models will analyze your document together as "one brain" for comprehensive insights
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Supports: PDF, Word, Text, Markdown, and JSON files (max 10MB)
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
