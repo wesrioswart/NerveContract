@@ -2872,7 +2872,7 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   app.use('/api/grok-tests', grokTestSuiteRoutes);
 
   // Super Model API endpoint
-  app.post('/api/super-model/process', async (req: Request, res: Response) => {
+  app.post('/api/super-model/process', requireAuth, async (req: Request, res: Response) => {
     try {
       const { superModelRouter } = await import('./utils/super-model-router.js');
       const result = await superModelRouter.processSuperModel(req.body);
