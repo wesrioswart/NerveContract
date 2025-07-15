@@ -92,8 +92,18 @@ export function SuperModelDemo() {
   }, [aiStrategy]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('File upload triggered:', event.target.files);
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
+
+    console.log('File details:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
 
     // Check file size (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
@@ -105,15 +115,17 @@ export function SuperModelDemo() {
     setError(null);
 
     try {
-      const text = await file.text();
+      // Don't read file content for now, just set the file
       setRequest(prev => ({
         ...prev,
         content: '', // Keep content field empty for document uploads
         task: prev.task || `Analyze ${file.name}`,
         context: prev.context || `File: ${file.name} (${file.type})`
       }));
+      console.log('File uploaded successfully:', file.name);
     } catch (err) {
-      setError('Failed to read file. Please try again.');
+      console.error('File upload error:', err);
+      setError('Failed to process file. Please try again.');
       setUploadedFile(null);
     }
   };
@@ -377,7 +389,16 @@ export function SuperModelDemo() {
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => document.getElementById('document-upload')?.click()}
+                          onClick={() => {
+                            console.log('Upload button clicked');
+                            const fileInput = document.getElementById('document-upload') as HTMLInputElement;
+                            if (fileInput) {
+                              console.log('File input found, clicking...');
+                              fileInput.click();
+                            } else {
+                              console.error('File input not found');
+                            }
+                          }}
                         >
                           Upload Document for Analysis
                         </Button>
