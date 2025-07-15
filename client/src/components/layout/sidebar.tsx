@@ -121,22 +121,20 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { path: "/templates", label: "All Templates", icon: FileText },
   ];
   
-  // Core navigation items
-  const coreNavItems = [
+  // Main navigation items - simplified business model approach
+  const mainNavItems = [
     { path: "/", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/ai-assistant", label: "AI Assistant", icon: MessageCircle },
-    { path: "/super-model-demo", label: "Super Model AI", icon: Brain, badge: "SUPER" },
   ];
 
-  // Contract management items
-  const contractNavItems = [
-    { 
-      path: "/compensation-events", 
-      label: "Compensation Events", 
-      icon: CheckCircle, 
-      activityCount: activityCounts.compensationEvents,
-      activityVariant: "warning"
-    },
+  // Contract Intelligence - AI integrated throughout
+  const contractIntelligenceItems = [
+    { path: "/ai-assistant", label: "Contract Assistant", icon: MessageCircle, badge: "AI" },
+    { path: "/super-model-demo", label: "Super Model Analysis", icon: Brain, badge: "SUPER" },
+    { path: "/ai-reports", label: "AI Reports", icon: FileText, badge: "AI" },
+  ];
+
+  // Risk & Compliance
+  const riskComplianceItems = [
     { 
       path: "/early-warnings", 
       label: "Early Warnings", 
@@ -145,72 +143,65 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
       activityVariant: "danger"
     },
     { 
+      path: "/compensation-events", 
+      label: "Compensation Events", 
+      icon: CheckCircle, 
+      activityCount: activityCounts.compensationEvents,
+      activityVariant: "warning"
+    },
+    { 
       path: "/ncr-tqr", 
       label: "NCRs & TQRs", 
       icon: FileWarning, 
       activityCount: activityCounts.ncrs,
       activityVariant: "warning"
     },
+  ];
+
+  // Operations
+  const operationsItems = [
+    { path: "/programme", label: "Programme Management", icon: GanttChart },
     { 
       path: "/rfi-management", 
       label: "RFI Management", 
       icon: MessageSquare, 
-      badge: "New", 
       activityCount: activityCounts.rfis,
       activityVariant: "danger"
     },
-  ];
-
-  // Programme items
-  const programmeNavItems = [
-    { path: "/programme", label: "Programme", icon: GanttChart }
-  ];
-
-  // Financial items
-  const financialNavItems = [
-    { path: "/financial", label: "Financial", icon: DollarSign },
-    { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
-  ];
-  
-  // Procurement & Supplier items
-  const procurementNavItems = [
-    { path: "/procurement", label: "Procurement", icon: ShoppingCart },
-    { 
-      path: "/suppliers", 
-      label: "Supplier Accounts", 
-      icon: Building, 
-      badge: "New",
-      activityCount: activityCounts.pendingSuppliers,
-      activityVariant: "default"
-    },
-    { path: "/inventory", label: "Inventory", icon: Package2 },
-    { 
-      path: "/equipment-hire", 
-      label: "Equipment Hire", 
-      icon: Truck, 
-      badge: "New",
-      activityCount: activityCounts.equipmentHire,
-      activityVariant: "warning"
-    },
     { 
       path: "/resource-allocation", 
-      label: "Resource Allocation", 
+      label: "Resource Planning", 
       icon: Users, 
       badge: "AI"
     },
   ];
 
-  // Utility items
-  const utilityItems = [
-    { path: "/email-processor", label: "Email Processor", icon: Mail, badge: "New" },
+  // Commercial
+  const commercialItems = [
+    { path: "/financial", label: "Financial Overview", icon: DollarSign },
+    { path: "/procurement", label: "Procurement", icon: ShoppingCart },
+    { 
+      path: "/suppliers", 
+      label: "Supplier Management", 
+      icon: Building,
+      activityCount: activityCounts.pendingSuppliers,
+      activityVariant: "default"
+    },
+    { 
+      path: "/equipment-hire", 
+      label: "Equipment Hire", 
+      icon: Truck,
+      activityCount: activityCounts.equipmentHire,
+      activityVariant: "warning"
+    },
+    { path: "/payment-certificates", label: "Payment Certificates", icon: Receipt },
+  ];
+
+  // System & Admin (only for authorized users)
+  const systemItems = [
     { path: "/workflow-dashboard", label: "Agent Workflows", icon: Zap, badge: "AI" },
-    { path: "/investor-diagrams", label: "Investor Diagrams", icon: BarChart2, badge: "NEW" },
-    { path: "/ai-reports", label: "AI Reports", icon: FileText, badge: "AI" },
-    { path: "/ai-router-demo", label: "Multi-Model AI Router", icon: Zap, badge: "DEMO" },
-    { path: "/super-model-demo", label: "Super Model AI", icon: Brain, badge: "SUPER" },
-    { path: "/grok-test-suite", label: "Grok Test Suite", icon: Zap, badge: "TEST" },
+    { path: "/email-processor", label: "Email Processor", icon: Mail, badge: "NEW" },
     { path: "/settings", label: "Settings", icon: Settings },
-    { path: "/api/pdf/overview", label: "NEC4 Overview PDF", icon: FileText, badge: "PDF" },
   ];
   
   // Function to render nav items
@@ -385,69 +376,69 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
           
           {/* Core Navigation - Dashboard always visible */}
           <div className="mb-4">
-            {renderNavItems(coreNavItems)}
+            {renderNavItems(mainNavItems)}
           </div>
           
           {!collapsed && <Separator className="my-3" />}
           
-          {/* Contract Management */}
+          {/* Contract Intelligence */}
           {!collapsed ? (
             <CollapsibleSection 
-              title="Contract Management" 
-              section="contractManagement" 
+              title="Contract Intelligence" 
+              section="contractIntelligence" 
+              collapsed={collapsed}
+            >
+              {renderNavItems(contractIntelligenceItems)}
+            </CollapsibleSection>
+          ) : (
+            renderNavItems(contractIntelligenceItems)
+          )}
+          
+          {!collapsed && <Separator className="my-3" />}
+          
+          {/* Risk & Compliance */}
+          {!collapsed ? (
+            <CollapsibleSection 
+              title="Risk & Compliance" 
+              section="riskCompliance" 
               activityCount={contractManagementCount}
               collapsed={collapsed}
             >
-              {renderNavItems(contractNavItems)}
+              {renderNavItems(riskComplianceItems)}
             </CollapsibleSection>
           ) : (
-            renderNavItems(contractNavItems)
+            renderNavItems(riskComplianceItems)
           )}
           
           {!collapsed && <Separator className="my-3" />}
           
-          {/* Programme Management */}
+          {/* Operations */}
           {!collapsed ? (
             <CollapsibleSection 
-              title="Programme" 
-              section="programme" 
+              title="Operations" 
+              section="operations" 
               collapsed={collapsed}
             >
-              {renderNavItems(programmeNavItems)}
+              {renderNavItems(operationsItems)}
             </CollapsibleSection>
           ) : (
-            renderNavItems(programmeNavItems)
+            renderNavItems(operationsItems)
           )}
           
           {!collapsed && <Separator className="my-3" />}
           
-          {/* Financial Management */}
+          {/* Commercial */}
           {!collapsed ? (
             <CollapsibleSection 
-              title="Financial" 
-              section="financial" 
-              collapsed={collapsed}
-            >
-              {renderNavItems(financialNavItems)}
-            </CollapsibleSection>
-          ) : (
-            renderNavItems(financialNavItems)
-          )}
-          
-          {!collapsed && <Separator className="my-3" />}
-          
-          {/* Procurement & Inventory */}
-          {!collapsed ? (
-            <CollapsibleSection 
-              title="Resources" 
-              section="resources" 
+              title="Commercial" 
+              section="commercial" 
               activityCount={resourcesCount}
               collapsed={collapsed}
             >
-              {renderNavItems(procurementNavItems)}
+              {renderNavItems(commercialItems)}
             </CollapsibleSection>
           ) : (
-            renderNavItems(procurementNavItems)
+            renderNavItems(commercialItems)
           )}
         </nav>
       </div>
@@ -457,19 +448,19 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
         "w-full border-t border-gray-200 mt-auto",
         collapsed ? "p-2" : "p-3"
       )}>
-        {/* Utility Items */}
+        {/* System Items */}
         <div className="mb-2 space-y-1">
           {!collapsed ? (
             <CollapsibleSection 
-              title="Utilities" 
-              section="utility" 
+              title="System & Admin" 
+              section="system" 
               collapsed={collapsed}
               defaultOpen={true}
             >
-              {renderNavItems(utilityItems, false)}
+              {renderNavItems(systemItems, false)}
             </CollapsibleSection>
           ) : (
-            renderNavItems([utilityItems[0]], false)  // Just show email processor when collapsed
+            renderNavItems([systemItems[0]], false)  // Just show agent workflows when collapsed
           )}
         </div>
         
