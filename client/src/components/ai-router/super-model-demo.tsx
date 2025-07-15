@@ -53,6 +53,12 @@ export function SuperModelDemo() {
   const [response, setResponse] = useState<SuperModelResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track model performance (placeholder implementation)
+  const trackModelPerformance = (model: string, duration: number, success: boolean) => {
+    // This would normally send metrics to analytics
+    console.log(`Model ${model} performance: ${duration}ms, success: ${success}`);
+  };
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   // Safely get AI strategy context
