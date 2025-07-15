@@ -125,6 +125,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   const coreNavItems = [
     { path: "/", label: "Dashboard", icon: LayoutDashboard },
     { path: "/ai-assistant", label: "AI Assistant", icon: MessageCircle },
+    { path: "/super-model-demo", label: "Super Model AI", icon: Brain, badge: "SUPER" },
   ];
 
   // Contract management items
@@ -463,6 +464,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
               title="Utilities" 
               section="utility" 
               collapsed={collapsed}
+              defaultOpen={true}
             >
               {renderNavItems(utilityItems, false)}
             </CollapsibleSection>
