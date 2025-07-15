@@ -108,7 +108,7 @@ export function SuperModelDemo() {
       const text = await file.text();
       setRequest(prev => ({
         ...prev,
-        content: text,
+        content: '', // Keep content field empty for document uploads
         task: prev.task || `Analyze ${file.name}`,
         context: prev.context || `File: ${file.name} (${file.type})`
       }));
@@ -326,12 +326,18 @@ export function SuperModelDemo() {
                   <Label htmlFor="content">Content to Process</Label>
                   <Textarea
                     id="content"
-                    placeholder="Paste your contract text, code, or analysis request here..."
+                    placeholder={uploadedFile ? "Optional: Add additional context or instructions..." : "Paste your contract text, code, or analysis request here..."}
                     className="min-h-[120px]"
                     value={request.content}
                     onChange={(e) => setRequest({...request, content: e.target.value})}
                     required={!uploadedFile}
+                    disabled={uploadedFile ? false : false}
                   />
+                  {uploadedFile && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Your document content will be analyzed automatically. This field is optional for additional context.
+                    </p>
+                  )}
                 </div>
 
                 <div>
