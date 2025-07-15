@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,9 @@ import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Brain, Code, Zap, ChevronRight, Clock, CheckCircle, AlertCircle, Users, Layers, GitBranch } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAIStrategy } from '@/contexts/ai-strategy-context';
+import { ModelHealthIndicator } from '@/components/ai/model-health-indicator';
+import { AIErrorBoundary } from '@/components/ai/ai-error-boundary';
 
 interface SuperModelResponse {
   result: string;
@@ -38,6 +41,7 @@ interface SuperModelRequest {
 }
 
 export function SuperModelDemo() {
+  const { getOptimalStrategy, modelHealth, trackModelPerformance } = useAIStrategy();
   const [request, setRequest] = useState<SuperModelRequest>({
     task: '',
     content: '',
@@ -51,11 +55,24 @@ export function SuperModelDemo() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Auto-configure strategy based on AI Strategy Context
+  useEffect(() => {
+    const strategy = getOptimalStrategy('/super-model-demo');
+    setRequest(prev => ({
+      ...prev,
+      fusionStrategy: strategy.fusionStrategy,
+      requireConsensus: strategy.requireConsensus,
+      useParallelProcessing: strategy.preferredModels.length > 1
+    }));
+  }, [getOptimalStrategy]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     setResponse(null);
+
+    const startTime = Date.now();
 
     try {
       const res = await fetch('/api/super-model/process', {
@@ -70,8 +87,21 @@ export function SuperModelDemo() {
 
       const data = await res.json();
       setResponse(data.data);
+      
+      // Track successful performance
+      const duration = Date.now() - startTime;
+      data.data.modelsUsed?.forEach((model: string) => {
+        trackModelPerformance(model, duration, true);
+      });
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
+      
+      // Track failed performance
+      const duration = Date.now() - startTime;
+      ['grok', 'claude', 'gpt4o'].forEach(model => {
+        trackModelPerformance(model, duration, false);
+      });
     } finally {
       setIsLoading(false);
     }
@@ -135,17 +165,18 @@ export function SuperModelDemo() {
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Layers className="h-6 w-6" />
-            Super Model AI Demo
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Combine all three AI models (Grok 3, Claude 3.5 Sonnet, GPT-4o) for enhanced capabilities
-          </p>
-        </CardHeader>
+    <AIErrorBoundary fallbackStrategy="fallback" maxRetries={3}>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Layers className="h-6 w-6" />
+              Super Model AI Demo
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Combine all three AI models (Grok 3, Claude 3.5 Sonnet, GPT-4o) for enhanced capabilities
+            </p>
+          </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3 mb-6">
             <Card className="border-dashed border-purple-200">
@@ -190,6 +221,8 @@ export function SuperModelDemo() {
               </CardContent>
             </Card>
           </div>
+
+          <ModelHealthIndicator />
 
           <Tabs defaultValue="request" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
@@ -393,6 +426,7 @@ export function SuperModelDemo() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </AIErrorBoundary>
   );
 }

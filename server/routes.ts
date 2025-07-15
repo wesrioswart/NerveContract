@@ -2886,6 +2886,30 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
+  // AI Health Check endpoint
+  app.post('/api/ai/health-check', async (req: Request, res: Response) => {
+    try {
+      const { model } = req.body;
+      
+      // Simple health check - return healthy status
+      // In production, this would test actual model connectivity
+      res.json({ 
+        success: true, 
+        data: {
+          model,
+          status: 'healthy',
+          latency: Math.random() * 200 + 100, // Simulate latency
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Health check failed' 
+      });
+    }
+  });
+
   // Serve investor diagrams as static content
   app.get('/investor-workflow-diagrams.html', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'investor-workflow-diagrams.html'));

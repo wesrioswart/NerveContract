@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { ProjectProvider } from "./contexts/project-context";
 import { UserProvider, useUser } from "./contexts/user-context";
 import { SidebarProvider } from "./contexts/sidebar-context";
+import { AIStrategyProvider } from "./contexts/ai-strategy-context";
 import FloatingAssistant from "./components/ai-assistant/floating-assistant";
 import { Loader2 } from "lucide-react";
 
@@ -206,8 +207,10 @@ function AppContent() {
 function App() {
   return (
     <UserProvider>
-      <AppContent />
-      <Toaster />
+      <AIStrategyProvider>
+        <AppContent />
+        <Toaster />
+      </AIStrategyProvider>
     </UserProvider>
   );
 }
