@@ -583,24 +583,29 @@ Respond with JSON:
 
   // Helper methods and additional functionality
   private async getProjectSuppliers(projectId: number): Promise<any[]> {
-    // Get suppliers involved in project through purchase orders and equipment hires
-    const orderSuppliers = await db.select()
-      .from(purchaseOrders)
-      .leftJoin(suppliers, eq(purchaseOrders.supplierId, suppliers.id))
-      .where(eq(purchaseOrders.projectId, projectId));
-    
-    const equipmentSuppliers = await db.select()
-      .from(equipmentHires)
-      .leftJoin(suppliers, eq(equipmentHires.supplierId, suppliers.id))
-      .where(eq(equipmentHires.projectId, projectId));
-    
-    // Combine and deduplicate
-    const allSuppliers = [...orderSuppliers, ...equipmentSuppliers];
-    const uniqueSuppliers = allSuppliers.filter((supplier, index, self) => 
-      index === self.findIndex(s => s.suppliers?.id === supplier.suppliers?.id)
-    );
-    
-    return uniqueSuppliers.map(s => s.suppliers).filter(Boolean);
+    try {
+      // Get suppliers involved in project through purchase orders and equipment hires
+      const orderSuppliers = await db.select()
+        .from(purchaseOrders)
+        .leftJoin(suppliers, eq(purchaseOrders.supplierId, suppliers.id))
+        .where(eq(purchaseOrders.projectId, projectId));
+      
+      const equipmentSuppliers = await db.select()
+        .from(equipmentHires)
+        .leftJoin(suppliers, eq(equipmentHires.supplierRef, suppliers.id))
+        .where(eq(equipmentHires.projectId, projectId));
+      
+      // Combine and deduplicate
+      const allSuppliers = [...orderSuppliers, ...equipmentSuppliers];
+      const uniqueSuppliers = allSuppliers.filter((supplier, index, self) => 
+        index === self.findIndex(s => s.suppliers?.id === supplier.suppliers?.id)
+      );
+      
+      return uniqueSuppliers.map(s => s.suppliers).filter(Boolean);
+    } catch (error) {
+      console.error('Error fetching project suppliers:', error);
+      return [];
+    }
   }
 
   private async assessSupplierPerformance(supplierId: number, projectId: number): Promise<SupplierAssessment> {
@@ -614,7 +619,7 @@ Respond with JSON:
   private async gatherSupplierPerformanceData(supplierId: number, projectId?: number): Promise<any> {
     try {
       let orderQuery = db.select().from(purchaseOrders).where(eq(purchaseOrders.supplierId, supplierId));
-      let hireQuery = db.select().from(equipmentHires).where(eq(equipmentHires.supplierId, supplierId));
+      let hireQuery = db.select().from(equipmentHires).where(eq(equipmentHires.supplierRef, supplierId));
       
       if (projectId) {
         orderQuery = db.select().from(purchaseOrders).where(and(
@@ -622,7 +627,7 @@ Respond with JSON:
           eq(purchaseOrders.projectId, projectId)
         ));
         hireQuery = db.select().from(equipmentHires).where(and(
-          eq(equipmentHires.supplierId, supplierId),
+          eq(equipmentHires.supplierRef, supplierId),
           eq(equipmentHires.projectId, projectId)
         ));
       }
