@@ -196,18 +196,29 @@ export function AIStrategyProvider({ children }: { children: React.ReactNode }) 
   };
 
   const trackModelPerformance = (model: string, duration: number, success: boolean) => {
-    setModelHealth(prev => ({
-      ...prev,
-      [model]: {
-        ...prev[model as keyof typeof prev],
-        latency: duration,
+    setModelHealth(prev => {
+      const currentHealth = prev[model as keyof typeof prev] || {
+        status: 'healthy' as const,
+        latency: 0,
         lastCheck: new Date(),
-        errorCount: success ? Math.max(0, prev[model as keyof typeof prev].errorCount - 1) : prev[model as keyof typeof prev].errorCount + 1,
-        status: success ? 
-          (duration > 5000 ? 'degraded' : 'healthy') : 
-          (prev[model as keyof typeof prev].errorCount > 3 ? 'down' : 'degraded')
-      }
-    }));
+        errorCount: 0
+      };
+      
+      const newErrorCount = success ? Math.max(0, currentHealth.errorCount - 1) : currentHealth.errorCount + 1;
+      
+      return {
+        ...prev,
+        [model]: {
+          ...currentHealth,
+          latency: duration,
+          lastCheck: new Date(),
+          errorCount: newErrorCount,
+          status: success ? 
+            (duration > 5000 ? 'degraded' : 'healthy') : 
+            (newErrorCount > 3 ? 'down' : 'degraded')
+        }
+      };
+    });
   };
 
   return (
