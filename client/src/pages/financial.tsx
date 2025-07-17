@@ -4,6 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { useProject } from "@/contexts/project-context";
 import { 
   Calculator, 
@@ -42,6 +44,8 @@ interface CostSummary {
 export default function Financial() {
   const { projectId, currentProject } = useProject();
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedEquipmentCost, setSelectedEquipmentCost] = useState<EquipmentCost | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
   // Fetch cost summary data
   const { data: costSummary, isLoading: summaryLoading } = useQuery<CostSummary>({
@@ -128,6 +132,11 @@ export default function Financial() {
       style: 'currency', 
       currency: 'GBP' 
     }).format(amount);
+  };
+
+  const handleViewDetails = (cost: EquipmentCost) => {
+    setSelectedEquipmentCost(cost);
+    setIsDetailsDialogOpen(true);
   };
 
   return (
@@ -295,7 +304,12 @@ export default function Financial() {
                     </div>
                     <div className="text-right ml-4">
                       <div className="text-lg font-bold">{formatCurrency(cost.totalCost)}</div>
-                      <Button variant="outline" size="sm" className="mt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-2"
+                        onClick={() => handleViewDetails(cost)}
+                      >
                         View Details
                       </Button>
                     </div>
@@ -348,6 +362,77 @@ export default function Financial() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Equipment Details Dialog */}
+      {selectedEquipmentCost && (
+        <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>{selectedEquipmentCost.equipmentName}</DialogTitle>
+              <DialogDescription>
+                Equipment hire details and validation information
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Supplier</Label>
+                  <div className="mt-1 text-sm">{selectedEquipmentCost.supplierName}</div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Reference</Label>
+                  <div className="mt-1 text-sm font-mono">{selectedEquipmentCost.hireReference}</div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Daily Rate</Label>
+                  <div className="mt-1 text-sm">{formatCurrency(selectedEquipmentCost.dailyRate)}</div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Total Days</Label>
+                  <div className="mt-1 text-sm">{selectedEquipmentCost.totalDays}</div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Start Date</Label>
+                  <div className="mt-1 text-sm">{selectedEquipmentCost.startDate}</div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">End Date</Label>
+                  <div className="mt-1 text-sm">{selectedEquipmentCost.endDate}</div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Status</Label>
+                  <div className="mt-1">
+                    {getStatusBadge(selectedEquipmentCost.status, selectedEquipmentCost.sccCompliant)}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Total Cost</Label>
+                  <div className="mt-1 text-lg font-bold">{formatCurrency(selectedEquipmentCost.totalCost)}</div>
+                </div>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium">Validation Notes</Label>
+                <div className="mt-1 text-sm p-3 bg-gray-50 rounded border">
+                  {selectedEquipmentCost.validationNotes}
+                </div>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium">SCC Compliance</Label>
+                <div className="mt-1 text-sm">
+                  {selectedEquipmentCost.sccCompliant ? (
+                    <div className="text-green-700">✓ Compliant with Schedule of Cost Components Item 2</div>
+                  ) : (
+                    <div className="text-red-700">⚠ Requires review for SCC compliance</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
