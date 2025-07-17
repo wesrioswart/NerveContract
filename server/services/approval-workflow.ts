@@ -9,7 +9,11 @@ import {
   compensationEvents, 
   earlyWarnings, 
   users, 
-  projects 
+  projects,
+  approvalHierarchy,
+  approvalAuditTrail,
+  type ApprovalHierarchy,
+  type ApprovalAuditTrail
 } from '../../shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { eventBus } from '../event-bus';
@@ -18,7 +22,7 @@ import { sendEmail } from './email-service';
 export interface ApprovalRequest {
   id: string;
   projectId: number;
-  changeType: 'compensation_event' | 'early_warning' | 'programme_change';
+  changeType: 'compensation_event' | 'early_warning' | 'programme_change' | 'budget_change' | 'resource_change' | 'contract_modification' | 'procurement_change';
   title: string;
   description: string;
   impact: {
@@ -40,6 +44,27 @@ export interface ApprovalRequest {
   approvedBy?: string;
   approvedAt?: Date;
   rejectedReason?: string;
+  // Enhanced authorization tracking
+  authorizedBy?: number;
+  authorizationLevel?: 'project_manager' | 'senior_manager' | 'director' | 'board';
+  authorizationNotes?: string;
+  reviewedBy?: number;
+  reviewedAt?: Date;
+  reviewNotes?: string;
+  urgencyLevel?: 'low' | 'normal' | 'high' | 'critical';
+  estimatedValue?: number;
+  budgetImpact?: {
+    originalBudget: number;
+    newBudget: number;
+    variance: number;
+    reason: string;
+  };
+  riskAssessment?: {
+    level: 'low' | 'medium' | 'high' | 'critical';
+    mitigations: string[];
+    probabilityOfCost: number;
+    probabilityOfDelay: number;
+  };
 }
 
 export interface ApprovalDecision {
@@ -56,11 +81,81 @@ export interface ApprovalDecision {
 export class ApprovalWorkflowService {
   
   /**
+   * Setup approval hierarchy for a project
+   */
+  async setupApprovalHierarchy(
+    projectId: number,
+    userId: number,
+    authorizationLevel: 'project_manager' | 'senior_manager' | 'director' | 'board',
+    maxApprovalValue: number,
+    canApproveTypes: string[]
+  ): Promise<void> {
+    await db.insert(approvalHierarchy).values({
+      projectId,
+      userId,
+      authorizationLevel,
+      maxApprovalValue,
+      canApproveTypes: JSON.stringify(canApproveTypes),
+      isActive: true,
+    });
+  }
+
+  /**
+   * Get authorized approvers for a specific change type and value
+   */
+  async getAuthorizedApprovers(
+    projectId: number,
+    changeType: string,
+    estimatedValue: number
+  ): Promise<ApprovalHierarchy[]> {
+    const approvers = await db
+      .select()
+      .from(approvalHierarchy)
+      .where(and(
+        eq(approvalHierarchy.projectId, projectId),
+        eq(approvalHierarchy.isActive, true)
+      ));
+
+    return approvers.filter(approver => {
+      const canApproveTypes = JSON.parse(approver.canApproveTypes as string || '[]');
+      return canApproveTypes.includes(changeType) && 
+             (approver.maxApprovalValue || 0) >= estimatedValue;
+    });
+  }
+
+  /**
+   * Log audit trail for approval actions
+   */
+  async logAuditTrail(
+    approvalId: string,
+    action: 'created' | 'reviewed' | 'approved' | 'rejected' | 'modified',
+    performedBy: number,
+    previousStatus?: string,
+    newStatus?: string,
+    comments?: string,
+    changes?: any,
+    ipAddress?: string,
+    userAgent?: string
+  ): Promise<void> {
+    await db.insert(approvalAuditTrail).values({
+      approvalId,
+      action,
+      performedBy,
+      previousStatus,
+      newStatus,
+      comments,
+      changes: JSON.stringify(changes),
+      ipAddress,
+      userAgent,
+    });
+  }
+
+  /**
    * Analyze impact and determine approval requirements
    */
   async analyzeImpactAndRoute(
     projectId: number,
-    changeType: 'compensation_event' | 'early_warning' | 'programme_change',
+    changeType: 'compensation_event' | 'early_warning' | 'programme_change' | 'budget_change' | 'resource_change' | 'contract_modification' | 'procurement_change',
     eventData: any
   ): Promise<ApprovalRequest> {
     console.log(`🔍 Analyzing impact for ${changeType} in project ${projectId}`);

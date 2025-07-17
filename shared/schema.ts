@@ -57,7 +57,7 @@ export const insertProjectSchema = createInsertSchema(projects).pick({
 export const programmeApprovals = pgTable("programme_approvals", {
   id: text("id").primaryKey(),
   projectId: integer("project_id").notNull(),
-  changeType: text("change_type").notNull(), // 'compensation_event', 'early_warning', 'programme_change'
+  changeType: text("change_type").notNull(), // 'compensation_event', 'early_warning', 'programme_change', 'budget_change', 'resource_change', 'contract_modification', 'procurement_change'
   title: text("title").notNull(),
   description: text("description").notNull(),
   impactDays: integer("impact_days").notNull(),
@@ -71,9 +71,50 @@ export const programmeApprovals = pgTable("programme_approvals", {
   approvedAt: timestamp("approved_at"),
   approvedBy: text("approved_by"),
   rejectedReason: text("rejected_reason"),
+  // Enhanced authorization tracking
+  authorizedBy: integer("authorized_by").references(() => users.id), // User who authorized the approval
+  authorizationLevel: text("authorization_level"), // 'project_manager', 'senior_manager', 'director', 'board'
+  authorizationNotes: text("authorization_notes"), // Additional notes from authorizer
+  reviewedBy: integer("reviewed_by").references(() => users.id), // User who reviewed before approval
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  urgencyLevel: text("urgency_level").default('normal'), // 'low', 'normal', 'high', 'critical'
+  estimatedValue: decimal("estimated_value", { precision: 15, scale: 2 }), // Financial value of the change
+  budgetImpact: jsonb("budget_impact"), // {originalBudget, newBudget, variance, reason}
+  riskAssessment: jsonb("risk_assessment"), // {level, mitigations, probabilityOfCost, probabilityOfDelay}
+});
+
+// Approval hierarchy table
+export const approvalHierarchy = pgTable("approval_hierarchy", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  authorizationLevel: text("authorization_level").notNull(), // 'project_manager', 'senior_manager', 'director', 'board'
+  maxApprovalValue: decimal("max_approval_value", { precision: 15, scale: 2 }), // Maximum value they can approve
+  canApproveTypes: jsonb("can_approve_types"), // Array of approval types they can handle
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Approval audit trail
+export const approvalAuditTrail = pgTable("approval_audit_trail", {
+  id: serial("id").primaryKey(),
+  approvalId: text("approval_id").notNull().references(() => programmeApprovals.id),
+  action: text("action").notNull(), // 'created', 'reviewed', 'approved', 'rejected', 'modified'
+  performedBy: integer("performed_by").notNull().references(() => users.id),
+  performedAt: timestamp("performed_at").defaultNow(),
+  previousStatus: text("previous_status"),
+  newStatus: text("new_status"),
+  comments: text("comments"),
+  changes: jsonb("changes"), // What specifically changed
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
 });
 
 export const insertProgrammeApprovalSchema = createInsertSchema(programmeApprovals);
+export const insertApprovalHierarchySchema = createInsertSchema(approvalHierarchy);
+export const insertApprovalAuditTrailSchema = createInsertSchema(approvalAuditTrail);
 export type ProgrammeApproval = typeof programmeApprovals.$inferSelect;
 export type InsertProgrammeApproval = typeof programmeApprovals.$inferInsert;
 
@@ -375,6 +416,12 @@ export const insertProgrammeAnalysisSchema = createInsertSchema(programmeAnalyse
 
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+
+export type ApprovalHierarchy = typeof approvalHierarchy.$inferSelect;
+export type InsertApprovalHierarchy = z.infer<typeof insertApprovalHierarchySchema>;
+
+export type ApprovalAuditTrail = typeof approvalAuditTrail.$inferSelect;
+export type InsertApprovalAuditTrail = z.infer<typeof insertApprovalAuditTrailSchema>;
 
 // Programme Annotations
 export const programmeAnnotations = pgTable("programme_annotations", {

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, CheckCircle, Clock, Activity, TrendingUp, TrendingDown, Zap } from "lucide-react";
+import { AlertTriangle, CheckCircle, Clock, Activity, TrendingUp, TrendingDown, Zap, Shield } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -363,31 +363,59 @@ export default function AIDashboard() {
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2 text-sm">
-                        <span className="text-gray-500">NEC4 Clause:</span>
-                        <Badge variant="outline" className="text-xs">
-                          {approval.nec4Compliance.clause}
-                        </Badge>
-                        <span className={approval.nec4Compliance.isValid ? 'text-green-600' : 'text-red-600'}>
-                          {approval.nec4Compliance.isValid ? 'Valid' : 'Invalid'}
-                        </span>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2 text-sm">
+                          <span className="text-gray-500">NEC4 Clause:</span>
+                          <Badge variant="outline" className="text-xs">
+                            {approval.nec4Compliance.clause}
+                          </Badge>
+                          <span className={approval.nec4Compliance.isValid ? 'text-green-600' : 'text-red-600'}>
+                            {approval.nec4Compliance.isValid ? 'Valid' : 'Invalid'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleApproval(approval.id, false)}
+                          >
+                            Reject
+                          </Button>
+                          <Button 
+                            size="sm"
+                            onClick={() => handleApproval(approval.id, true)}
+                          >
+                            Approve & Authorize
+                          </Button>
+                        </div>
                       </div>
                       
-                      <div className="flex space-x-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleApproval(approval.id, false)}
-                        >
-                          Reject
-                        </Button>
-                        <Button 
-                          size="sm"
-                          onClick={() => handleApproval(approval.id, true)}
-                        >
-                          Approve
-                        </Button>
+                      {/* Authorization Requirements */}
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Shield className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-800">Authorization Required</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-blue-700">
+                          <div>
+                            <span className="font-medium">Required Level:</span> 
+                            {approval.impact.cost > 50000 ? ' Director' : ' Project Manager'}
+                          </div>
+                          <div>
+                            <span className="font-medium">Max Value:</span> 
+                            £{approval.impact.cost > 50000 ? '250,000' : '75,000'}
+                          </div>
+                          <div>
+                            <span className="font-medium">Audit Trail:</span> 
+                            Full tracking enabled
+                          </div>
+                          <div>
+                            <span className="font-medium">Urgency:</span> 
+                            {approval.impact.affectsCriticalPath ? 'High' : 'Normal'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
