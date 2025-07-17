@@ -12,6 +12,7 @@ import { AnimatedButton } from '@/components/ui/animated-button';
 import PMITemplate from '@/components/document-templates/pmi-template';
 import EarlyWarningTemplate from '@/components/document-templates/early-warning-template';
 import CompensationEventTemplate from '@/components/document-templates/compensation-event-template';
+import CompensationEventQuotationTemplate from '@/components/document-templates/compensation-event-quotation-template';
 import NCRTemplate from '@/components/document-templates/ncr-template';
 import TechnicalQueryTemplate from '@/components/document-templates/technical-query-template';
 import PaymentApplicationTemplate from '@/components/document-templates/payment-application-template';
@@ -38,6 +39,7 @@ export default function TemplatesPage() {
     { value: 'pmi', label: 'Project Manager\'s Instruction (PMI)', icon: FileText },
     { value: 'early-warning', label: 'Early Warning Notice', icon: AlertTriangle },
     { value: 'compensation-event', label: 'Compensation Event', icon: DollarSign },
+    { value: 'compensation-event-quotation', label: 'Compensation Event Quotation', icon: DollarSign },
     { value: 'ncr', label: 'Non-Conformance Report', icon: AlertOctagon },
     { value: 'technical-query', label: 'Technical Query', icon: HelpCircle },
     { value: 'payment-application', label: 'Payment Application', icon: Receipt },
@@ -52,6 +54,8 @@ export default function TemplatesPage() {
         return <EarlyWarningTemplate />;
       case 'compensation-event':
         return <CompensationEventTemplate />;
+      case 'compensation-event-quotation':
+        return <CompensationEventQuotationTemplate />;
       case 'ncr':
         return <NCRTemplate />;
       case 'technical-query':

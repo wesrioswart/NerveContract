@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, CalendarIcon, Download, FileText, Pound, Calculator, Clock, AlertCircle, CheckCircle } from "lucide-react";
+import { Calendar, CalendarIcon, Download, FileText, PoundSterling, Calculator, Clock, AlertCircle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -290,7 +290,7 @@ export default function CompensationEventQuotationTemplate() {
             <div>
               <Label htmlFor="people">People (£)</Label>
               <div className="relative">
-                <Pound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="people"
                   type="number"
@@ -304,7 +304,7 @@ export default function CompensationEventQuotationTemplate() {
             <div>
               <Label htmlFor="equipment">Equipment (£)</Label>
               <div className="relative">
-                <Pound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="equipment"
                   type="number"
@@ -318,7 +318,7 @@ export default function CompensationEventQuotationTemplate() {
             <div>
               <Label htmlFor="plantMaterials">Plant and Materials (£)</Label>
               <div className="relative">
-                <Pound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="plantMaterials"
                   type="number"
@@ -332,7 +332,7 @@ export default function CompensationEventQuotationTemplate() {
             <div>
               <Label htmlFor="subcontractors">Subcontractors (£)</Label>
               <div className="relative">
-                <Pound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="subcontractors"
                   type="number"
@@ -346,7 +346,7 @@ export default function CompensationEventQuotationTemplate() {
             <div>
               <Label htmlFor="workingAreaOverhead">Working Area Overhead (£)</Label>
               <div className="relative">
-                <Pound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="workingAreaOverhead"
                   type="number"
@@ -360,7 +360,7 @@ export default function CompensationEventQuotationTemplate() {
             <div>
               <Label htmlFor="overheads">Overheads (£)</Label>
               <div className="relative">
-                <Pound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="overheads"
                   type="number"
@@ -374,7 +374,7 @@ export default function CompensationEventQuotationTemplate() {
             <div>
               <Label htmlFor="fee">Fee (£)</Label>
               <div className="relative">
-                <Pound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="fee"
                   type="number"
