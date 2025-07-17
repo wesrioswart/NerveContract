@@ -164,7 +164,14 @@ export default function AIDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">🤖 AI Schedule Manager Dashboard</h1>
+        <div>
+          <h1 className="text-2xl font-bold">🤖 AI Schedule Manager Dashboard</h1>
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>💡 Demo Ready:</strong> This dashboard demonstrates automated programme changes triggered by compensation events and early warnings, with intelligent approval workflows - a major competitive advantage for the investor demo.
+            </p>
+          </div>
+        </div>
         <div className="flex items-center space-x-2">
           <div className="flex items-center space-x-1">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
