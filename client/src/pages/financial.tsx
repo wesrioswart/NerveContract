@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useProject } from "@/contexts/project-context";
+import { Link } from "wouter";
 import { 
   Calculator, 
   TrendingUp, 
@@ -354,7 +355,14 @@ export default function Financial() {
                     <div className="text-2xl font-bold text-red-600 mb-1">
                       {displayEquipmentCosts.filter(c => !c.sccCompliant).length}
                     </div>
-                    <p className="text-sm text-gray-600">Items needing validation</p>
+                    <p className="text-sm text-gray-600 mb-3">Items needing validation</p>
+                    {displayEquipmentCosts.filter(c => !c.sccCompliant).length > 0 && (
+                      <Link href="/equipment-cost-review">
+                        <Button variant="outline" size="sm" className="w-full">
+                          Review Items
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>

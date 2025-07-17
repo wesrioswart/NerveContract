@@ -179,6 +179,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   // Commercial
   const commercialItems = [
     { path: "/financial", label: "Financial Overview", icon: DollarSign },
+    { path: "/equipment-cost-review", label: "Equipment Cost Review", icon: BadgeCheck },
     { path: "/procurement", label: "Procurement", icon: ShoppingCart },
     { 
       path: "/suppliers", 

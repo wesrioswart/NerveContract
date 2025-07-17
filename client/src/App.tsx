@@ -23,6 +23,7 @@ import EquipmentHire from "@/pages/equipment-hire";
 import RfiManagement from "@/pages/rfi-management";
 import ResourceAllocation from "@/pages/resource-allocation";
 import Financial from "@/pages/financial";
+import EquipmentCostReview from "@/pages/equipment-cost-review";
 import Settings from "@/pages/settings";
 import Login from "@/pages/login";
 import GrokDemo from "@/pages/grok-demo";
@@ -137,6 +138,7 @@ function AppContent() {
                   <Route path="/suppliers" component={Suppliers} />
                   <Route path="/inventory" component={Inventory} />
                   <Route path="/equipment-hire" component={EquipmentHire} />
+                  <Route path="/equipment-cost-review" component={EquipmentCostReview} />
                   <Route path="/financial" component={Financial} />
                   <Route path="/email-processor" component={EmailProcessor} />
                   <Route path="/workflow-dashboard" component={WorkflowDashboard} />
@@ -178,6 +180,7 @@ function AppContent() {
                   <Route path="/projects/:id/suppliers" component={Suppliers} />
                   <Route path="/projects/:id/inventory" component={Inventory} />
                   <Route path="/projects/:id/equipment-hire" component={EquipmentHire} />
+                  <Route path="/projects/:id/equipment-cost-review" component={EquipmentCostReview} />
                   <Route path="/projects/:id/financial" component={Financial} />
                   <Route path="/projects/:id/email-processor" component={EmailProcessor} />
                   <Route path="/projects/:id/rfi-management" component={RfiManagement} />
