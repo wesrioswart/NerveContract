@@ -307,8 +307,64 @@ export default function TemplatesPage() {
             </CardFooter>
           </AnimatedCard>
 
-          {/* Template Card - Daily Site Report */}
+          {/* Template Card - CE Quotation */}
           <AnimatedCard animation="hover" index={7}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>CE Quotation</CardTitle>
+                <PoundSterling className="text-emerald-500 w-5 h-5" />
+              </div>
+              <CardDescription>
+                Compensation Event Quotation with detailed cost analysis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Professional quotation template for compensation events with detailed cost breakdown, 
+                time analysis, and risk assessment. Includes AI-powered cost validation and NEC4 compliance.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <AnimatedButton 
+                onClick={() => setActiveTemplate('compensation-event-quotation')}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                animation="default"
+              >
+                Create CE Quotation
+              </AnimatedButton>
+            </CardFooter>
+          </AnimatedCard>
+
+          {/* Template Card - Programme Revision */}
+          <AnimatedCard animation="hover" index={8}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Programme Revision</CardTitle>
+                <TrendingUp className="text-amber-500 w-5 h-5" />
+              </div>
+              <CardDescription>
+                AI-powered programme revision notice with approval workflow
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Create programme revision notices with AI analysis integration. Automatically loads 
+                technical justification and approval data from your AI dashboard for seamless workflow.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <AnimatedButton 
+                onClick={() => setActiveTemplate('programme-revision')}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                animation="default"
+              >
+                Create Programme Revision
+              </AnimatedButton>
+            </CardFooter>
+          </AnimatedCard>
+
+          {/* Template Card - Daily Site Report */}
+          <AnimatedCard animation="hover" index={9}>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Daily Site Report</CardTitle>
