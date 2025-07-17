@@ -53,6 +53,30 @@ export const insertProjectSchema = createInsertSchema(projects).pick({
   endDate: true,
 });
 
+// Programme Approvals
+export const programmeApprovals = pgTable("programme_approvals", {
+  id: text("id").primaryKey(),
+  projectId: integer("project_id").notNull(),
+  changeType: text("change_type").notNull(), // 'compensation_event', 'early_warning', 'programme_change'
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  impactDays: integer("impact_days").notNull(),
+  impactCost: decimal("impact_cost", { precision: 15, scale: 2 }).notNull(),
+  affectsCriticalPath: boolean("affects_critical_path").notNull(),
+  confidence: real("confidence").notNull(),
+  nec4Clause: text("nec4_clause"),
+  autoApproved: boolean("auto_approved").notNull(),
+  status: text("status").notNull(), // 'pending', 'approved', 'rejected', 'auto_approved'
+  requestedAt: timestamp("requested_at").notNull(),
+  approvedAt: timestamp("approved_at"),
+  approvedBy: text("approved_by"),
+  rejectedReason: text("rejected_reason"),
+});
+
+export const insertProgrammeApprovalSchema = createInsertSchema(programmeApprovals);
+export type ProgrammeApproval = typeof programmeApprovals.$inferSelect;
+export type InsertProgrammeApproval = typeof programmeApprovals.$inferInsert;
+
 // Compensation Events (CEs)
 export const compensationEvents = pgTable("compensation_events", {
   id: serial("id").primaryKey(),

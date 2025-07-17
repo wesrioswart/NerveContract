@@ -30,6 +30,7 @@ import GrokDemo from "@/pages/grok-demo";
 import AIRouterDemo from "@/pages/ai-router-demo";
 import SuperModelDemo from "@/pages/super-model-demo";
 import GrokTestSuite from "@/pages/grok-test-suite";
+import AIDashboard from "@/pages/ai-dashboard";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { ProjectProvider } from "./contexts/project-context";
@@ -164,6 +165,7 @@ function AppContent() {
                   <Route path="/ai-router-demo" component={AIRouterDemo} />
                   <Route path="/super-model-demo" component={SuperModelDemo} />
                   <Route path="/grok-test-suite" component={GrokTestSuite} />
+                  <Route path="/ai-dashboard" component={AIDashboard} />
                   
                   {/* Project-specific routes */}
                   <Route path="/projects/:id/dashboard" component={Dashboard} />

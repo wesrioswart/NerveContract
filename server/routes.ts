@@ -29,6 +29,7 @@ import grokReviewRoutes from "./routes/grok-review";
 import aiRouterRoutes from "./routes/ai-router";
 import grokTestSuiteRoutes from "./routes/grok-test-suite";
 import programmeAutomationRoutes from "./routes/programme-automation";
+import approvalRoutes from "./routes/approval-routes";
 import { requireAuth, requireProjectAccess, hasProjectAccess } from "./middleware/auth-middleware";
 import { populateForm, compareProgrammes } from "./controllers/ai-assistant-controller";
 import { exportProcurementReport, downloadReport } from "./controllers/export-controller";
@@ -2875,6 +2876,7 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
   app.use('/api/ai', aiRouterRoutes);
   app.use('/api/grok-tests', grokTestSuiteRoutes);
   app.use('/api/programme-automation', programmeAutomationRoutes);
+  app.use('/api', approvalRoutes);
 
   // Super Model API endpoint
   app.post('/api/super-model/process', requireAuth, async (req: Request, res: Response) => {

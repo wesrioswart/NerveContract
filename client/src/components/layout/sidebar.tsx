@@ -33,7 +33,8 @@ import {
   Zap,
   Menu,
   X,
-  Brain
+  Brain,
+  Bot
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -200,6 +201,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
 
   // System & Admin (only for authorized users)
   const systemItems = [
+    { path: "/ai-dashboard", label: "AI Schedule Manager", icon: Bot, badge: "AI" },
     { path: "/workflow-dashboard", label: "Agent Workflows", icon: Zap, badge: "AI" },
     { path: "/email-processor", label: "Email Processor", icon: Mail, badge: "NEW" },
     { path: "/settings", label: "Settings", icon: Settings },
