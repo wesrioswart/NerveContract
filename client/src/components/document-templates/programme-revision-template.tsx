@@ -99,27 +99,45 @@ export function ProgrammeRevisionTemplate() {
     setFormData(prev => ({ ...prev, [field]: date }));
   };
 
+  // Check URL parameters for approval reference
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const approvalParam = urlParams.get('approval');
+    if (approvalParam) {
+      setFormData(prev => ({
+        ...prev,
+        approvalReference: approvalParam
+      }));
+      // Auto-load approval data
+      loadApprovalData(approvalParam);
+    }
+  }, []);
+
   // AI Integration - Auto-populate from approval dashboard
-  const loadApprovalData = async () => {
+  const loadApprovalData = async (approvalRef?: string) => {
     try {
-      // Connect to your AI approval system
+      const refToUse = approvalRef || formData.approvalReference;
       const response = await fetch('/api/ai-dashboard/programme-changes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approvalReference: formData.approvalReference })
+        body: JSON.stringify({ approvalReference: refToUse })
       });
       
       if (response.ok) {
         const approvalData = await response.json();
         setFormData(prev => ({
           ...prev,
+          approvalReference: refToUse,
           aiAnalysisSummary: approvalData.technicalAnalysis || "",
           criticalPathAnalysis: approvalData.criticalPathImpact || "",
           timeExtension: approvalData.timeExtension || "",
           approvalJustification: approvalData.approvalReason || "",
           approvedBy: approvalData.approvedBy || "",
           approvalDate: approvalData.approvalDate ? new Date(approvalData.approvalDate) : null,
-          aiConfidenceScore: approvalData.confidenceScore || 0
+          aiConfidenceScore: approvalData.confidenceScore || 0,
+          programmeRevisionRef: `PR-${refToUse}-${Date.now().toString().slice(-6)}`,
+          revisionDate: new Date(),
+          submissionDate: new Date()
         }));
       }
     } catch (error) {

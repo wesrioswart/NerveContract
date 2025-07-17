@@ -444,9 +444,19 @@ export default function AIDashboard() {
                     <h4 className="font-medium text-green-800">Weather Delay - Phase 2 Foundation</h4>
                     <p className="text-sm text-green-600">+2 days, £12,500 cost impact</p>
                   </div>
-                  <div className="text-right text-sm text-green-600">
-                    <p className="font-medium">Approved by: Jane Cooper</p>
-                    <p>2 hours ago</p>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right text-sm text-green-600">
+                      <p className="font-medium">Approved by: Jane Cooper</p>
+                      <p>2 hours ago</p>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => window.location.href = '/templates?template=programme-revision&approval=CE_WEATHER_001'}
+                      className="bg-white hover:bg-gray-50"
+                    >
+                      Generate Programme Revision
+                    </Button>
                   </div>
                 </div>
                 
@@ -455,9 +465,19 @@ export default function AIDashboard() {
                     <h4 className="font-medium text-green-800">Material Delivery Delay</h4>
                     <p className="text-sm text-green-600">+1 day, £8,200 cost impact</p>
                   </div>
-                  <div className="text-right text-sm text-green-600">
-                    <p className="font-medium">Approved by: Jane Cooper</p>
-                    <p>1 day ago</p>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right text-sm text-green-600">
+                      <p className="font-medium">Approved by: Jane Cooper</p>
+                      <p>1 day ago</p>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => window.location.href = '/templates?template=programme-revision&approval=CE_MATERIAL_001'}
+                      className="bg-white hover:bg-gray-50"
+                    >
+                      Generate Programme Revision
+                    </Button>
                   </div>
                 </div>
                 
