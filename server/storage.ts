@@ -35,6 +35,7 @@ export interface IStorage {
   
   // Compensation Events
   getCompensationEvent(id: number): Promise<CompensationEvent | undefined>;
+  getCompensationEventByRef(reference: string): Promise<CompensationEvent | undefined>;
   getCompensationEventsByProject(projectId: number): Promise<CompensationEvent[]>;
   getCompensationEventsWithRelations(projectId: number): Promise<any[]>;
   createCompensationEvent(ce: InsertCompensationEvent): Promise<CompensationEvent>;
@@ -484,6 +485,10 @@ export class MemStorage implements IStorage {
   // Compensation Events methods
   async getCompensationEvent(id: number): Promise<CompensationEvent | undefined> {
     return this.compensationEvents.get(id);
+  }
+
+  async getCompensationEventByRef(reference: string): Promise<CompensationEvent | undefined> {
+    return Array.from(this.compensationEvents.values()).find(ce => ce.reference === reference);
   }
 
   async getCompensationEventsByProject(projectId: number): Promise<CompensationEvent[]> {

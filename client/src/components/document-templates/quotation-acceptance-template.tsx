@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,27 +6,47 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, CalendarIcon, Download, FileText, Pound } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Calendar, CalendarIcon, Download, FileText, Pound, Calculator, Clock, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
-export default function QuotationAcceptanceTemplate() {
+export default function CompensationEventQuotationTemplate() {
   const [formData, setFormData] = useState({
     projectName: "",
     contractNumber: "",
     quotationRef: "",
     quotationDate: null as Date | null,
-    acceptanceDate: null as Date | null,
+    compensationEventRef: "",
     contractorName: "",
     description: "",
-    quotedAmount: "",
-    acceptedAmount: "",
-    implementationDate: null as Date | null,
-    additionalConditions: "",
-    projectManager: "",
-    approvalAuthority: "",
-    compensationEventRef: ""
+    // Defined Cost breakdown
+    people: "",
+    equipment: "",
+    plantMaterials: "",
+    subcontractors: "",
+    workingAreaOverhead: "",
+    overheads: "",
+    fee: "",
+    // Time impact
+    timeImpact: "",
+    completionDateChange: null as Date | null,
+    keyDatesImpact: "",
+    // Programme impact
+    programmeImpact: "",
+    criticalPathImpact: "",
+    // Assumptions
+    assumptions: "",
+    quotationValidity: "",
+    // Totals
+    totalCost: "",
+    timeExtension: "",
+    // Submission details
+    submittedBy: "",
+    submissionDate: null as Date | null,
+    approvalStatus: "pending",
+    aiConfidenceScore: 0
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -37,31 +57,98 @@ export default function QuotationAcceptanceTemplate() {
     setFormData(prev => ({ ...prev, [field]: date }));
   };
 
+  // AI Integration - Auto-populate from Commercial Agent analysis
+  const loadAIAnalysis = async () => {
+    try {
+      // This would connect to your Commercial Agent's cost analysis
+      const response = await fetch('/api/ai/compensation-event-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ compensationEventRef: formData.compensationEventRef })
+      });
+      
+      if (response.ok) {
+        const aiData = await response.json();
+        setFormData(prev => ({
+          ...prev,
+          people: aiData.definedCost.people || "",
+          equipment: aiData.definedCost.equipment || "",
+          plantMaterials: aiData.definedCost.plantMaterials || "",
+          timeImpact: aiData.timeImpact || "",
+          programmeImpact: aiData.programmeImpact || "",
+          totalCost: aiData.totalCost || "",
+          aiConfidenceScore: aiData.confidenceScore || 0
+        }));
+      }
+    } catch (error) {
+      console.error('AI analysis failed:', error);
+    }
+  };
+
+  const calculateTotalCost = () => {
+    const costs = [
+      parseFloat(formData.people) || 0,
+      parseFloat(formData.equipment) || 0,
+      parseFloat(formData.plantMaterials) || 0,
+      parseFloat(formData.subcontractors) || 0,
+      parseFloat(formData.workingAreaOverhead) || 0,
+      parseFloat(formData.overheads) || 0,
+      parseFloat(formData.fee) || 0
+    ];
+    const total = costs.reduce((sum, cost) => sum + cost, 0);
+    setFormData(prev => ({ ...prev, totalCost: total.toFixed(2) }));
+  };
+
   const generateDocument = () => {
-    // Generate PDF or print functionality
-    console.log("Generating Quotation Acceptance document...");
+    console.log("Generating Compensation Event Quotation...");
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Quotation Acceptance Notice</h2>
-          <p className="text-gray-600">NEC4 Clause 62.3 - Acceptance of Contractor's Quotation</p>
+          <h2 className="text-2xl font-bold">Compensation Event Quotation</h2>
+          <p className="text-gray-600">NEC4 Clause 62.2 - Contractor's Quotation for Compensation Events</p>
         </div>
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-          NEC4 Clause 62.3
-        </Badge>
+        <div className="flex items-center space-x-2">
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            NEC4 Clause 62.2
+          </Badge>
+          {formData.aiConfidenceScore > 0 && (
+            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+              AI Confidence: {formData.aiConfidenceScore}%
+            </Badge>
+          )}
+        </div>
       </div>
 
-      <Card className="border-green-200">
-        <CardHeader className="bg-green-50">
-          <CardTitle className="text-green-800">NEC4 Compliance Note</CardTitle>
-          <CardDescription className="text-green-700">
-            "The Project Manager replies to a quotation submitted by the Contractor. The Project Manager may accept a quotation, instruct the Contractor to submit a revised quotation, or notify the Contractor that the quotation will not be accepted."
+      <Card className="border-blue-200">
+        <CardHeader className="bg-blue-50">
+          <CardTitle className="text-blue-800 flex items-center">
+            <Calculator className="mr-2 h-5 w-5" />
+            NEC4 Quotation Requirements
+          </CardTitle>
+          <CardDescription className="text-blue-700">
+            "The Contractor submits a quotation for a compensation event to the Project Manager. The quotation comprises proposed changes to the Prices and any delay to the Completion Date and is in the form of a lump sum or as changes to the Activity Schedule."
           </CardDescription>
         </CardHeader>
       </Card>
+
+      {formData.compensationEventRef && (
+        <Card className="border-purple-200">
+          <CardHeader className="bg-purple-50">
+            <CardTitle className="text-purple-800 flex items-center">
+              <AlertCircle className="mr-2 h-5 w-5" />
+              AI Analysis Available
+            </CardTitle>
+            <CardContent className="pt-4">
+              <Button onClick={loadAIAnalysis} variant="outline" className="w-full">
+                Load AI Cost Analysis for {formData.compensationEventRef}
+              </Button>
+            </CardContent>
+          </CardHeader>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>

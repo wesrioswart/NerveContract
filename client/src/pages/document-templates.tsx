@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, ClipboardList, FileText, FilePlus2, Info } from "lucide-react";
+import { AlertTriangle, ClipboardList, FileText, FilePlus2, Info, Calculator } from "lucide-react";
 import EarlyWarningTemplate from "@/components/document-templates/early-warning-template";
+import CompensationEventQuotationTemplate from "@/components/document-templates/compensation-event-quotation-template";
 
 export default function DocumentTemplates() {
   const [activeTab, setActiveTab] = useState("gallery");
@@ -40,6 +41,7 @@ export default function DocumentTemplates() {
               {activeTemplate === "early-warning" ? "Early Warning Notice" : 
                activeTemplate === "pmi" ? "Project Manager's Instruction" : 
                activeTemplate === "compensation-event" ? "Compensation Event Notice" : 
+               activeTemplate === "compensation-event-quotation" ? "Compensation Event Quotation" :
                "Template Editor"}
             </TabsTrigger>
           )}
@@ -157,6 +159,44 @@ export default function DocumentTemplates() {
                 </Button>
               </CardFooter>
             </Card>
+
+            {/* Compensation Event Quotation Template Card */}
+            <Card className="border-2 border-blue-500">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Compensation Event Quotation</CardTitle>
+                  <Calculator className="text-blue-500 w-5 h-5" />
+                </div>
+                <CardDescription>
+                  Template for submitting CE quotations under NEC4 Clause 62.2
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm mb-4">
+                  Use this template to submit detailed quotations for compensation events, including 
+                  Defined Cost breakdowns, time impacts, and programme assessments with AI integration.
+                </p>
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-3 text-xs text-blue-800">
+                  <p className="font-medium">NEC4 Clause 62.2</p>
+                  <p>
+                    "The Contractor submits a quotation for a compensation event to the Project Manager. 
+                    The quotation comprises proposed changes to the Prices and any delay to the Completion Date."
+                  </p>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  className="w-full bg-blue-500 hover:bg-blue-600"
+                  onClick={() => {
+                    setActiveTemplate("compensation-event-quotation");
+                    setActiveTab("editor");
+                  }}
+                >
+                  <Calculator className="w-4 h-4 mr-2" />
+                  Create Quotation
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
 
           <div className="mt-8 bg-blue-50 border border-blue-200 rounded-md p-4 flex items-start space-x-3">
@@ -174,6 +214,8 @@ export default function DocumentTemplates() {
 
         <TabsContent value="editor">
           {activeTemplate === "early-warning" && <EarlyWarningTemplate />}
+          
+          {activeTemplate === "compensation-event-quotation" && <CompensationEventQuotationTemplate />}
           
           {activeTemplate === "pmi" && (
             <div className="bg-white p-8 rounded-lg shadow-sm text-center">
