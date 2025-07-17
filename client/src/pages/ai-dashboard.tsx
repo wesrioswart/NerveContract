@@ -474,9 +474,17 @@ export default function AIDashboard() {
                       size="sm" 
                       variant="outline"
                       onClick={() => window.location.href = '/templates?template=programme-revision&approval=CE_MATERIAL_001'}
-                      className="bg-white hover:bg-gray-50"
+                      className="bg-white hover:bg-gray-50 mr-2"
                     >
                       Generate Programme Revision
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="default"
+                      onClick={() => window.location.href = '/stakeholder-notifications?approval=CE_MATERIAL_001&documentType=Programme Revision'}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Send Notifications
                     </Button>
                   </div>
                 </div>

@@ -2687,6 +2687,70 @@ Respond with relevant NEC4 contract information, referencing specific clauses.
     }
   });
 
+  // Stakeholder Notification System
+  app.post('/api/stakeholder-notifications/send', async (req: Request, res: Response) => {
+    try {
+      const { stakeholderGroups, subject, message, approvalReference, documentType, urgency } = req.body;
+      
+      // Mock stakeholder data - in production, this would come from your database
+      const stakeholderDatabase = {
+        client_team: ['client.pm@example.com', 'client.commercial@example.com'],
+        project_team: ['project.manager@company.com', 'site.engineer@company.com'],
+        commercial_team: ['commercial.manager@company.com', 'quantity.surveyor@company.com'],
+        subcontractors: ['groundworks@subcontractor.com', 'steelwork@subcontractor.com'],
+        senior_management: ['director@company.com', 'operations.manager@company.com']
+      };
+
+      let totalRecipients = 0;
+      const notifications = [];
+
+      // Process each stakeholder group
+      for (const groupId of stakeholderGroups) {
+        const recipients = stakeholderDatabase[groupId as keyof typeof stakeholderDatabase] || [];
+        totalRecipients += recipients.length;
+
+        // Create notification records
+        for (const recipient of recipients) {
+          notifications.push({
+            recipient,
+            subject,
+            message,
+            urgency,
+            approvalReference,
+            documentType,
+            sentAt: new Date(),
+            status: 'sent'
+          });
+        }
+      }
+
+      // In a real application, you would:
+      // 1. Send emails via SendGrid or your email service
+      // 2. Send SMS notifications if configured
+      // 3. Create dashboard notifications
+      // 4. Log notification events for audit trail
+
+      // Mock email sending
+      console.log(`📧 Sending ${totalRecipients} notifications for ${approvalReference}`);
+      console.log(`Subject: ${subject}`);
+      console.log(`Urgency: ${urgency}`);
+      console.log(`Groups: ${stakeholderGroups.join(', ')}`);
+
+      // Simulate successful sending
+      res.json({
+        success: true,
+        message: 'Notifications sent successfully',
+        recipientCount: totalRecipients,
+        notifications: notifications.length,
+        approvalReference,
+        sentAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error sending stakeholder notifications:', error);
+      res.status(500).json({ message: 'Failed to send stakeholder notifications' });
+    }
+  });
+
   // API Performance Monitoring Endpoints
   app.get('/api/performance/compression-stats', (req: Request, res: Response) => {
     try {

@@ -31,6 +31,7 @@ import AIRouterDemo from "@/pages/ai-router-demo";
 import SuperModelDemo from "@/pages/super-model-demo";
 import GrokTestSuite from "@/pages/grok-test-suite";
 import AIDashboard from "@/pages/ai-dashboard";
+import StakeholderNotifications from "@/pages/stakeholder-notifications";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { ProjectProvider } from "./contexts/project-context";
@@ -135,6 +136,7 @@ function AppContent() {
                   <Route path="/payment-certificates" component={PaymentCertificates} />
                   <Route path="/reports" component={Reports} />
                   <Route path="/templates" component={Templates} />
+                  <Route path="/stakeholder-notifications" component={StakeholderNotifications} />
                   <Route path="/procurement" component={Procurement} />
                   <Route path="/suppliers" component={Suppliers} />
                   <Route path="/inventory" component={Inventory} />
