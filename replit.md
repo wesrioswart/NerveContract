@@ -147,6 +147,17 @@ UI preferences: Keep report preview format with Total Events, Total Value, Compl
 
 ## Recent Changes
 
+- July 17, 2025: **SIMPLIFIED APPROVAL SYSTEM COMPLETE** - Position-Based Authority with Clear Post-Approval Tracking
+  - **Simplified User Interface**: Removed confusing "approve" and "authorize" tabs for single streamlined approval process
+  - **Position-Based Authority**: Users see their position (Project Manager, Commercial Manager, Director) with clear spending limits
+  - **Automatic Authority Checking**: Buttons disabled for changes above user's authority level with clear escalation messages
+  - **Clear Authority Display**: Shows user's maximum approval limit (£75,000 for Project Manager, £100,000 for Commercial Manager, £250,000 for Director)
+  - **Post-Approval Tracking**: "Recently Approved Changes" section shows exactly where approved changes go and who approved them
+  - **Automatic Escalation**: High-value changes automatically routed to appropriate authority level
+  - **Complete Audit Trail**: Full tracking of who approved what and when for governance compliance
+  - **User-Friendly Design**: Platform access determines approval rights based on user position as requested
+  - **Investor Demo Ready**: Clear demonstration of 24/7 automated schedule management with appropriate human oversight
+
 - July 17, 2025: **AI DASHBOARD WITH APPROVAL WORKFLOW SYSTEM COMPLETE** - Investor Demo Ready AI Schedule Manager
   - **AI Schedule Manager Dashboard**: Created comprehensive AI Dashboard component with real-time monitoring and approval management
   - **Complete Approval Workflow System**: Implemented automated approval workflow with new database schema and API routes

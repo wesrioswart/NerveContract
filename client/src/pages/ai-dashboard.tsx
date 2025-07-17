@@ -327,6 +327,9 @@ export default function AIDashboard() {
                 <AlertTriangle className="h-5 w-5 mr-2 text-amber-500" />
                 Pending Approvals ({mockApprovals.filter(a => a.status === 'pending').length})
               </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                You are logged in as <span className="font-medium">Jane Cooper - Project Manager</span>
+              </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -386,40 +389,86 @@ export default function AIDashboard() {
                           <Button 
                             size="sm"
                             onClick={() => handleApproval(approval.id, true)}
+                            disabled={approval.impact.cost > 75000}
                           >
-                            Approve & Authorize
+                            {approval.impact.cost > 75000 ? 'Requires Director Approval' : 'Approve'}
                           </Button>
                         </div>
                       </div>
                       
-                      {/* Authorization Requirements */}
-                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      {/* Your Authority Level */}
+                      <div className={`p-3 border rounded-lg ${approval.impact.cost > 75000 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
                         <div className="flex items-center space-x-2 mb-2">
                           <Shield className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm font-medium text-blue-800">Authorization Required</span>
+                          <span className="text-sm font-medium text-blue-800">Your Authority</span>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-blue-700">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                           <div>
-                            <span className="font-medium">Required Level:</span> 
-                            {approval.impact.cost > 50000 ? ' Director' : ' Project Manager'}
+                            <span className="font-medium">Position:</span> Project Manager
                           </div>
                           <div>
-                            <span className="font-medium">Max Value:</span> 
-                            £{approval.impact.cost > 50000 ? '250,000' : '75,000'}
+                            <span className="font-medium">Max Approval:</span> £75,000
                           </div>
                           <div>
-                            <span className="font-medium">Audit Trail:</span> 
-                            Full tracking enabled
+                            <span className="font-medium">This Request:</span> £{approval.impact.cost.toLocaleString()}
                           </div>
                           <div>
-                            <span className="font-medium">Urgency:</span> 
-                            {approval.impact.affectsCriticalPath ? 'High' : 'Normal'}
+                            <span className="font-medium">Status:</span> 
+                            <span className={approval.impact.cost > 75000 ? 'text-red-600' : 'text-green-600'}>
+                              {approval.impact.cost > 75000 ? ' Above Authority' : ' Within Authority'}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Approved Changes Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
+                Recently Approved Changes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-green-800">Weather Delay - Phase 2 Foundation</h4>
+                    <p className="text-sm text-green-600">+2 days, £12,500 cost impact</p>
+                  </div>
+                  <div className="text-right text-sm text-green-600">
+                    <p className="font-medium">Approved by: Jane Cooper</p>
+                    <p>2 hours ago</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-green-800">Material Delivery Delay</h4>
+                    <p className="text-sm text-green-600">+1 day, £8,200 cost impact</p>
+                  </div>
+                  <div className="text-right text-sm text-green-600">
+                    <p className="font-medium">Approved by: Jane Cooper</p>
+                    <p>1 day ago</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-blue-800">Major Design Change</h4>
+                    <p className="text-sm text-blue-600">+14 days, £125,000 cost impact</p>
+                  </div>
+                  <div className="text-right text-sm text-blue-600">
+                    <p className="font-medium">Approved by: Director Smith</p>
+                    <p>3 days ago</p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
