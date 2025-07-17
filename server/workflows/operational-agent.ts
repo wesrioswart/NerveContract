@@ -168,53 +168,113 @@ export class OperationalAgent {
     }
   }
 
+
+
   /**
-   * Make intelligent programme adjustments based on analysis
+   * Make intelligent programme adjustments using new automation service
    */
   private async makeIntelligentAdjustments(projectId: number): Promise<void> {
     try {
       console.log(`🤖 Making intelligent programme adjustments for project ${projectId}`);
       
-      // Get current programme analysis
-      const analysis = await this.analyzeProgrammeStatus(projectId);
+      // Import the new programme automation service
+      const { programmeAutomation } = await import('../services/programme-automation');
       
-      if (analysis.overallStatus === 'delayed' || analysis.overallStatus === 'at_risk') {
-        // Get programme and activities
-        const programme = await db.select()
-          .from(programmes)
-          .where(eq(programmes.projectId, projectId))
-          .then(p => p[0]);
-          
-        if (!programme) return;
-        
-        const activities = await db.select()
-          .from(programmeActivities)
-          .where(eq(programmeActivities.programmeId, programme.id));
-        
-        // Identify specific adjustments needed
-        const adjustments = await this.identifyRequiredAdjustments(activities, analysis);
-        
-        // Apply adjustments
-        for (const adjustment of adjustments) {
-          await this.applyProgrammeAdjustment(adjustment);
-          
-          // Log the adjustment
-          console.log(`📅 Applied adjustment: ${adjustment.type} for activity ${adjustment.activityId}`);
-          
-          // Create early warning if significant change
-          if (adjustment.impactDays > 7) {
-            await this.createDelayEarlyWarning(projectId, adjustment);
-          }
+      // Get recent compensation events and early warnings
+      const [recentCEs, recentEWs] = await Promise.all([
+        db.select()
+          .from(compensationEvents)
+          .where(and(
+            eq(compensationEvents.projectId, projectId),
+            gte(compensationEvents.raisedAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) // Last 7 days
+          )),
+        db.select()
+          .from(earlyWarnings)
+          .where(and(
+            eq(earlyWarnings.projectId, projectId),
+            gte(earlyWarnings.raisedAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) // Last 7 days
+          ))
+      ]);
+      
+      // Process automated programme changes
+      const updateResult = await programmeAutomation.processAutomatedProgrammeChanges(
+        projectId,
+        {
+          compensationEvents: recentCEs,
+          earlyWarnings: recentEWs,
+          externalDelays: [{
+            reason: 'Weather impact analysis',
+            delayDays: 3,
+            keywords: ['external', 'concrete', 'foundation'],
+            workAreas: ['foundation', 'concrete']
+          }]
         }
-        
-        // Recalculate critical path after adjustments
-        await this.recalculateCriticalPath(programme.id);
-        
-        console.log(`✅ Programme adjustments complete - ${adjustments.length} changes made`);
-      }
+      );
+      
+      console.log(`✅ Programme automation complete - ${updateResult.summary.totalChanges} changes made`);
+      console.log(`📊 Critical path impact: ${updateResult.summary.criticalPathImpact} activities affected`);
+      
+      // Create notification for project team
+      await this.createAlert({
+        agentType: 'operational',
+        severity: updateResult.summary.criticalPathImpact > 0 ? 'high' : 'medium',
+        title: 'Automated Programme Update Complete',
+        message: `Programme automatically updated with ${updateResult.summary.totalChanges} changes. ${updateResult.summary.criticalPathImpact} critical path activities affected.`,
+        actionRequired: updateResult.summary.criticalPathImpact > 0,
+        relatedEntity: { type: 'programme', id: projectId },
+        projectId: projectId
+      });
       
     } catch (error) {
-      console.error('❌ Programme adjustment error:', error);
+      console.error('❌ Programme automation error:', error);
+      
+      // Fallback to basic adjustments if automation fails
+      await this.makeBasicAdjustments(projectId);
+    }
+  }
+
+  /**
+   * Fallback basic programme adjustments
+   */
+  private async makeBasicAdjustments(projectId: number): Promise<void> {
+    console.log(`🔄 Applying basic programme adjustments for project ${projectId}`);
+    
+    // Get current programme analysis
+    const analysis = await this.analyzeProgrammeStatus(projectId);
+    
+    if (analysis.overallStatus === 'delayed' || analysis.overallStatus === 'at_risk') {
+      // Get programme and activities
+      const programme = await db.select()
+        .from(programmes)
+        .where(eq(programmes.projectId, projectId))
+        .then(p => p[0]);
+        
+      if (!programme) return;
+      
+      const activities = await db.select()
+        .from(programmeActivities)
+        .where(eq(programmeActivities.programmeId, programme.id));
+      
+      // Identify specific adjustments needed
+      const adjustments = await this.identifyRequiredAdjustments(activities, analysis);
+      
+      // Apply adjustments
+      for (const adjustment of adjustments) {
+        await this.applyProgrammeAdjustment(adjustment);
+        
+        // Log the adjustment
+        console.log(`📅 Applied adjustment: ${adjustment.type} for activity ${adjustment.activityId}`);
+        
+        // Create early warning if significant change
+        if (adjustment.impactDays > 7) {
+          await this.createDelayEarlyWarning(projectId, adjustment);
+        }
+      }
+      
+      // Recalculate critical path after adjustments
+      await this.recalculateCriticalPath(programme.id);
+      
+      console.log(`✅ Basic programme adjustments complete - ${adjustments.length} changes made`);
     }
   }
 

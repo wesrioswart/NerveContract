@@ -94,6 +94,7 @@ export interface IStorage {
   // Programme Activities
   getProgrammeActivity(id: number): Promise<ProgrammeActivity | undefined>;
   getProgrammeActivitiesByProgramme(programmeId: number): Promise<ProgrammeActivity[]>;
+  getProgrammeActivities(projectId: number): Promise<ProgrammeActivity[]>;
   createProgrammeActivity(activity: InsertProgrammeActivity): Promise<ProgrammeActivity>;
   updateProgrammeActivity(id: number, activity: Partial<ProgrammeActivity>): Promise<ProgrammeActivity>;
   
@@ -1147,6 +1148,22 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(programmeActivities)
       .where(eq(programmeActivities.programmeId, programmeId));
+  }
+
+  async getProgrammeActivities(projectId: number): Promise<ProgrammeActivity[]> {
+    // Get all programmes for the project first
+    const projectProgrammes = await this.getProgrammesByProject(projectId);
+    
+    if (projectProgrammes.length === 0) {
+      return [];
+    }
+    
+    // Get activities from all programmes for this project
+    const programmeIds = projectProgrammes.map(p => p.id);
+    return db
+      .select()
+      .from(programmeActivities)
+      .where(inArray(programmeActivities.programmeId, programmeIds));
   }
 
   async createProgrammeActivity(activity: InsertProgrammeActivity): Promise<ProgrammeActivity> {

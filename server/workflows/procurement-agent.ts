@@ -239,9 +239,24 @@ export class ProcurementAgent {
    */
   private async reviewInventoryLevels(projectId: number): Promise<InventoryAnalysis> {
     try {
-      const inventoryList = await db.select()
+      // Get inventory items used in this project through purchase orders
+      const projectInventory = await db.select({
+        inventoryItem: inventoryItems,
+        purchaseOrder: purchaseOrders,
+      })
         .from(inventoryItems)
-        .where(eq(inventoryItems.projectId, projectId));
+        .leftJoin(purchaseOrders, eq(purchaseOrders.projectId, projectId))
+        .where(eq(purchaseOrders.projectId, projectId));
+
+      const inventoryList = projectInventory.map(item => ({
+        ...item.inventoryItem,
+        currentQuantity: item.purchaseOrder?.quantity || 0,
+        minimumQuantity: item.inventoryItem.minStockLevel || 10,
+        maximumQuantity: item.inventoryItem.maxStockLevel || 1000,
+        unitPrice: (item.inventoryItem.unitCost || 0) / 100, // Convert from pennies
+        lastUsedDate: item.purchaseOrder?.orderDate || null,
+        usageRate: 1, // Default usage rate
+      }));
       
       const lowStockItems = inventoryList.filter(item => 
         item.currentQuantity <= (item.minimumQuantity || 10)
