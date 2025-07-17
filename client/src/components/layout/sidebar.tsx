@@ -124,6 +124,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
   // NEC4 Templates - Only show "All Templates" link
   const templateItems = [
     { path: "/templates", label: "All Templates", icon: FileText },
+    { path: "/stakeholder-notifications", label: "Stakeholder Notifications", icon: Bell },
   ];
   
   // Main navigation items - simplified business model approach
