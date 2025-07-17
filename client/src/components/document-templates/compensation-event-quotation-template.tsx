@@ -104,8 +104,92 @@ export default function CompensationEventQuotationTemplate() {
     calculateTotalCost();
   }, [formData.people, formData.equipment, formData.plantMaterials, formData.subcontractors, formData.workingAreaOverhead, formData.overheads, formData.fee]);
 
-  const generateDocument = () => {
-    console.log("Generating Compensation Event Quotation...");
+  const generateDocument = async () => {
+    try {
+      // Generate HTML content for the document
+      const documentHtml = `
+        <html>
+          <head>
+            <title>Compensation Event Quotation - ${formData.compensationEventRef}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+              .section { margin: 20px 0; }
+              .cost-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+              .cost-table th, .cost-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              .cost-table th { background-color: #f2f2f2; }
+              .total-row { background-color: #e8f4f8; font-weight: bold; }
+              .signature-section { margin-top: 40px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>Compensation Event Quotation</h1>
+              <p>NEC4 Clause 62.2 - Contractor's Quotation for Compensation Events</p>
+            </div>
+            
+            <div class="section">
+              <h2>Event Details</h2>
+              <p><strong>Compensation Event Reference:</strong> ${formData.compensationEventRef}</p>
+              <p><strong>Event Date:</strong> ${formData.eventDate ? format(formData.eventDate, "PPP") : "Not specified"}</p>
+              <p><strong>NEC4 Clause:</strong> ${formData.nec4Clause}</p>
+              <p><strong>Description:</strong> ${formData.description}</p>
+            </div>
+            
+            <div class="section">
+              <h2>Defined Cost Breakdown (NEC4 Clause 11.2(23))</h2>
+              <table class="cost-table">
+                <tr><th>Cost Component</th><th>Amount (£)</th></tr>
+                <tr><td>People</td><td>${formData.people}</td></tr>
+                <tr><td>Equipment</td><td>${formData.equipment}</td></tr>
+                <tr><td>Plant and Materials</td><td>${formData.plantMaterials}</td></tr>
+                <tr><td>Subcontractors</td><td>${formData.subcontractors}</td></tr>
+                <tr><td>Working Area Overhead</td><td>${formData.workingAreaOverhead}</td></tr>
+                <tr><td>Overheads</td><td>${formData.overheads}</td></tr>
+                <tr><td>Fee</td><td>${formData.fee}</td></tr>
+                <tr class="total-row"><td><strong>Total Cost</strong></td><td><strong>£${formData.totalCost}</strong></td></tr>
+              </table>
+            </div>
+            
+            <div class="section">
+              <h2>Time Impact Assessment</h2>
+              <p><strong>Time Impact:</strong> ${formData.timeImpact}</p>
+              <p><strong>Time Extension:</strong> ${formData.timeExtension} days</p>
+              <p><strong>Key Dates Impact:</strong> ${formData.keyDatesImpact}</p>
+            </div>
+            
+            <div class="section">
+              <h2>Programme Impact & Assumptions</h2>
+              <p><strong>Programme Impact:</strong> ${formData.programmeImpact}</p>
+              <p><strong>Key Assumptions:</strong> ${formData.assumptions}</p>
+              <p><strong>Quotation Validity:</strong> ${formData.quotationValidity}</p>
+            </div>
+            
+            <div class="signature-section">
+              <p><strong>Submitted By:</strong> ${formData.submittedBy}</p>
+              <p><strong>Submission Date:</strong> ${formData.submissionDate ? format(formData.submissionDate, "PPP") : "Not specified"}</p>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      // Create and download the document
+      const blob = new Blob([documentHtml], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `CE_Quotation_${formData.compensationEventRef || 'Draft'}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      // Show success message
+      alert('Document generated successfully!');
+    } catch (error) {
+      console.error('Document generation failed:', error);
+      alert('Failed to generate document. Please try again.');
+    }
   };
 
   const submitForApproval = async () => {
