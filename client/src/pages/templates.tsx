@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { FileText, AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt, BarChart2, Calendar, PoundSterling } from 'lucide-react';
+import { FileText, AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt, BarChart2, Calendar, PoundSterling, TrendingUp } from 'lucide-react';
 import { AnimationWrapper } from '@/components/ui/animation-wrapper';
 import { AnimatedCard } from '@/components/ui/animated-card';
 import { AnimatedButton } from '@/components/ui/animated-button';
@@ -13,6 +13,7 @@ import PMITemplate from '@/components/document-templates/pmi-template';
 import EarlyWarningTemplate from '@/components/document-templates/early-warning-template';
 import CompensationEventTemplate from '@/components/document-templates/compensation-event-template';
 import CompensationEventQuotationTemplate from '@/components/document-templates/compensation-event-quotation-template';
+import { ProgrammeRevisionTemplate } from '@/components/document-templates/programme-revision-template';
 import NCRTemplate from '@/components/document-templates/ncr-template';
 import TechnicalQueryTemplate from '@/components/document-templates/technical-query-template';
 import PaymentApplicationTemplate from '@/components/document-templates/payment-application-template';
@@ -40,6 +41,7 @@ export default function TemplatesPage() {
     { value: 'early-warning', label: 'Early Warning Notice', icon: AlertTriangle },
     { value: 'compensation-event', label: 'Compensation Event', icon: DollarSign },
     { value: 'compensation-event-quotation', label: 'Compensation Event Quotation', icon: PoundSterling },
+    { value: 'programme-revision', label: 'Programme Revision Notice', icon: TrendingUp },
     { value: 'ncr', label: 'Non-Conformance Report', icon: AlertOctagon },
     { value: 'technical-query', label: 'Technical Query', icon: HelpCircle },
     { value: 'payment-application', label: 'Payment Application', icon: Receipt },
@@ -56,6 +58,8 @@ export default function TemplatesPage() {
         return <CompensationEventTemplate />;
       case 'compensation-event-quotation':
         return <CompensationEventQuotationTemplate />;
+      case 'programme-revision':
+        return <ProgrammeRevisionTemplate />;
       case 'ncr':
         return <NCRTemplate />;
       case 'technical-query':

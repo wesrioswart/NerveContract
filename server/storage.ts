@@ -163,6 +163,9 @@ export interface IStorage {
     details: string;
     userId?: number | null;
   }): Promise<void>;
+  
+  // Approval Data Integration
+  getApprovalData(approvalReference: string): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -1602,6 +1605,26 @@ export class DatabaseStorage implements IStorage {
     
     // Store in memory for demo purposes (would be database in production)
     // await db.insert(agentActivityLogs).values(logEntry);
+  }
+
+  async getApprovalData(approvalReference: string): Promise<any> {
+    // Mock approval data for demonstration
+    // In production, this would query an approval workflow database
+    const mockApprovalData = {
+      approvalReference,
+      aiAnalysis: "AI analysis indicates programme change is justified based on unforeseen ground conditions discovered during excavation. Impact analysis shows 3-day extension is optimal solution.",
+      criticalPathAnalysis: "Critical path analysis reveals Foundation Works activity affects subsequent structural activities. 3-day extension can be absorbed through parallel working in Services phase.",
+      timeExtension: "3",
+      justification: "Programme revision approved based on technical merit and comprehensive AI impact analysis. Unforeseen ground conditions require additional excavation work, justified by site investigation findings.",
+      approvedBy: "Sarah Johnson - Project Manager",
+      approvalDate: new Date().toISOString(),
+      confidenceScore: 97,
+      technicalReason: "Unforeseen ground conditions requiring additional excavation",
+      mitigationPlan: "Accelerate Services installation through additional resources to maintain overall programme",
+      riskAssessment: "Low risk - change is contained within Foundation phase with proven recovery plan"
+    };
+    
+    return mockApprovalData;
   }
 }
 

@@ -35,7 +35,8 @@ import {
   X,
   Brain,
   Bot,
-  PoundSterling
+  PoundSterling,
+  TrendingUp
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +104,7 @@ export default function Sidebar({ user, onLogout, collapsed = false, onToggle }:
     { value: 'early-warning', label: 'Early Warning Notice', icon: AlertTriangle },
     { value: 'compensation-event', label: 'Compensation Event', icon: DollarSign },
     { value: 'compensation-event-quotation', label: 'Compensation Event Quotation', icon: PoundSterling },
+    { value: 'programme-revision', label: 'Programme Revision Notice', icon: TrendingUp },
     { value: 'ncr', label: 'Non-Conformance Report', icon: AlertOctagon },
     { value: 'technical-query', label: 'Technical Query', icon: HelpCircle },
     { value: 'payment-application', label: 'Payment Application', icon: Receipt },
