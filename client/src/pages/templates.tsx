@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { FileText, AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt, BarChart2, Calendar } from 'lucide-react';
+import { FileText, AlertTriangle, DollarSign, AlertOctagon, HelpCircle, Receipt, BarChart2, Calendar, PoundSterling } from 'lucide-react';
 import { AnimationWrapper } from '@/components/ui/animation-wrapper';
 import { AnimatedCard } from '@/components/ui/animated-card';
 import { AnimatedButton } from '@/components/ui/animated-button';
@@ -39,7 +39,7 @@ export default function TemplatesPage() {
     { value: 'pmi', label: 'Project Manager\'s Instruction (PMI)', icon: FileText },
     { value: 'early-warning', label: 'Early Warning Notice', icon: AlertTriangle },
     { value: 'compensation-event', label: 'Compensation Event', icon: DollarSign },
-    { value: 'compensation-event-quotation', label: 'Compensation Event Quotation', icon: DollarSign },
+    { value: 'compensation-event-quotation', label: 'Compensation Event Quotation', icon: PoundSterling },
     { value: 'ncr', label: 'Non-Conformance Report', icon: AlertOctagon },
     { value: 'technical-query', label: 'Technical Query', icon: HelpCircle },
     { value: 'payment-application', label: 'Payment Application', icon: Receipt },
