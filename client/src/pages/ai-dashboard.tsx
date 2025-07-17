@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle, CheckCircle, Clock, Activity, TrendingUp, TrendingDown, Zap, Shield } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import DataFlowDiagram from "@/components/data-flow-diagram";
 
 interface ApprovalRequest {
   id: string;
@@ -283,6 +284,7 @@ export default function AIDashboard() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="approvals">Pending Approvals</TabsTrigger>
           <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+          <TabsTrigger value="data-flow">Data Sources</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -507,6 +509,10 @@ export default function AIDashboard() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="data-flow" className="space-y-4">
+          <DataFlowDiagram />
         </TabsContent>
       </Tabs>
     </div>
